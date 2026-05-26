@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
