@@ -14,7 +14,219 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          nombre: string | null
+          related_id: string | null
+          tipo: string
+          user_id: string
+          vencimiento: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          id?: string
+          nombre?: string | null
+          related_id?: string | null
+          tipo: string
+          user_id: string
+          vencimiento?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          nombre?: string | null
+          related_id?: string | null
+          tipo?: string
+          user_id?: string
+          vencimiento?: string | null
+        }
+        Relationships: []
+      }
+      drivers: {
+        Row: {
+          carnet_vencimiento: string | null
+          celular: string | null
+          clase_licencia: string | null
+          created_at: string
+          foto_url: string | null
+          id: string
+          licencia_vencimiento: string | null
+          nombre_completo: string
+          rut: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carnet_vencimiento?: string | null
+          celular?: string | null
+          clase_licencia?: string | null
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          licencia_vencimiento?: string | null
+          nombre_completo: string
+          rut?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carnet_vencimiento?: string | null
+          celular?: string | null
+          clase_licencia?: string | null
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          licencia_vencimiento?: string | null
+          nombre_completo?: string
+          rut?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cargo: string | null
+          certificado_sii_url: string | null
+          correo: string | null
+          created_at: string
+          direccion: string | null
+          id: string
+          nombre_contacto: string | null
+          poliza_seguro_url: string | null
+          poliza_seguro_vencimiento: string | null
+          razon_social: string | null
+          region: string | null
+          rut_empresa: string | null
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string | null
+          certificado_sii_url?: string | null
+          correo?: string | null
+          created_at?: string
+          direccion?: string | null
+          id: string
+          nombre_contacto?: string | null
+          poliza_seguro_url?: string | null
+          poliza_seguro_vencimiento?: string | null
+          razon_social?: string | null
+          region?: string | null
+          rut_empresa?: string | null
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string | null
+          certificado_sii_url?: string | null
+          correo?: string | null
+          created_at?: string
+          direccion?: string | null
+          id?: string
+          nombre_contacto?: string | null
+          poliza_seguro_url?: string | null
+          poliza_seguro_vencimiento?: string | null
+          razon_social?: string | null
+          region?: string | null
+          rut_empresa?: string | null
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rates: {
+        Row: {
+          created_at: string
+          destino: string
+          id: string
+          origen: string
+          precio_base_clp: number | null
+          precio_km_adicional: number | null
+          tipo_camion: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          destino: string
+          id?: string
+          origen: string
+          precio_base_clp?: number | null
+          precio_km_adicional?: number | null
+          tipo_camion?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          destino?: string
+          id?: string
+          origen?: string
+          precio_base_clp?: number | null
+          precio_km_adicional?: number | null
+          tipo_camion?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trucks: {
+        Row: {
+          anio: number | null
+          capacidad_toneladas: number | null
+          created_at: string
+          id: string
+          marca: string | null
+          modelo: string | null
+          numero_ejes: number | null
+          patente: string
+          permiso_circulacion_vencimiento: string | null
+          revision_tecnica_vencimiento: string | null
+          soap_vencimiento: string | null
+          tipo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anio?: number | null
+          capacidad_toneladas?: number | null
+          created_at?: string
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          numero_ejes?: number | null
+          patente: string
+          permiso_circulacion_vencimiento?: string | null
+          revision_tecnica_vencimiento?: string | null
+          soap_vencimiento?: string | null
+          tipo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anio?: number | null
+          capacidad_toneladas?: number | null
+          created_at?: string
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          numero_ejes?: number | null
+          patente?: string
+          permiso_circulacion_vencimiento?: string | null
+          revision_tecnica_vencimiento?: string | null
+          soap_vencimiento?: string | null
+          tipo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
