@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
@@ -58,9 +58,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-8">
+        <header className="flex h-16 items-center justify-between border-b border-primary-dark bg-primary px-4 text-primary-foreground md:px-8">
           <button className="md:hidden" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-          <div className="flex-1" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground text-primary">
+              <Globe className="h-5 w-5" />
+            </div>
+            <span className="text-lg font-bold tracking-tight">TN CHILE</span>
+          </div>
+          <div className="hidden text-xs italic opacity-90 md:block">La logística la hacemos juntos.</div>
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
