@@ -54,35 +54,35 @@
   --popover-foreground: oklch(0.2 0.03 160);
 
   /* TN Chile brand: #2D7A45 primary, #1E5C32 dark, #E8F5EE soft */
-  --primary: oklch(0.52 0.13 148);
-  --primary-foreground: oklch(0.99 0.005 150);
-  --primary-dark: oklch(0.42 0.12 148);
-  --primary-soft: oklch(0.95 0.04 150);
+  --primary: #2D7A45;
+  --primary-foreground: #FFFFFF;
+  --primary-dark: #1E5C32;
+  --primary-soft: #E8F5EE;
 
-  --secondary: oklch(0.95 0.02 150);
-  --secondary-foreground: oklch(0.25 0.05 150);
-  --muted: oklch(0.96 0.01 150);
-  --muted-foreground: oklch(0.5 0.03 150);
-  --accent: oklch(0.95 0.04 150);
-  --accent-foreground: oklch(0.3 0.08 150);
+  --secondary: #E8F5EE;
+  --secondary-foreground: #1E5C32;
+  --muted: #F1F7F3;
+  --muted-foreground: oklch(0.5 0.02 150);
+  --accent: #E8F5EE;
+  --accent-foreground: #1E5C32;
   --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.99 0.005 150);
-  --success: oklch(0.62 0.16 148);
-  --success-foreground: oklch(0.99 0.005 150);
+  --destructive-foreground: #FFFFFF;
+  --success: #2D7A45;
+  --success-foreground: #FFFFFF;
   --warning: oklch(0.78 0.16 75);
   --warning-foreground: oklch(0.25 0.05 75);
   --border: oklch(0.9 0.015 150);
   --input: oklch(0.92 0.012 150);
-  --ring: oklch(0.52 0.13 148);
+  --ring: #2D7A45;
 
-  --sidebar: oklch(0.42 0.12 148);
-  --sidebar-foreground: oklch(0.97 0.02 150);
-  --sidebar-primary: oklch(0.99 0.005 150);
-  --sidebar-primary-foreground: oklch(0.42 0.12 148);
-  --sidebar-accent: oklch(0.36 0.11 148);
-  --sidebar-accent-foreground: oklch(0.97 0.02 150);
-  --sidebar-border: oklch(0.36 0.11 148);
-  --sidebar-ring: oklch(0.62 0.16 148);
+  --sidebar: #1E5C32;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FFFFFF;
+  --sidebar-primary-foreground: #1E5C32;
+  --sidebar-accent: #2D7A45;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #2D7A45;
+  --sidebar-ring: #2D7A45;
 }
 
 @layer base {
