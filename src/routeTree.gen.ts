@@ -9,38 +9,209 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
+import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
+import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppTarifasRoute = AppTarifasRouteImport.update({
+  id: '/tarifas',
+  path: '/tarifas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentosRoute = AppDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChoferesRoute = AppChoferesRouteImport.update({
+  id: '/choferes',
+  path: '/choferes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCamionesRoute = AppCamionesRouteImport.update({
+  id: '/camiones',
+  path: '/camiones',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/camiones': typeof AppCamionesRoute
+  '/choferes': typeof AppChoferesRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/documentos': typeof AppDocumentosRoute
+  '/perfil': typeof AppPerfilRoute
+  '/tarifas': typeof AppTarifasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/camiones': typeof AppCamionesRoute
+  '/choferes': typeof AppChoferesRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/documentos': typeof AppDocumentosRoute
+  '/perfil': typeof AppPerfilRoute
+  '/tarifas': typeof AppTarifasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_app/camiones': typeof AppCamionesRoute
+  '/_app/choferes': typeof AppChoferesRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/documentos': typeof AppDocumentosRoute
+  '/_app/perfil': typeof AppPerfilRoute
+  '/_app/tarifas': typeof AppTarifasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/camiones'
+    | '/choferes'
+    | '/dashboard'
+    | '/documentos'
+    | '/perfil'
+    | '/tarifas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/camiones'
+    | '/choferes'
+    | '/dashboard'
+    | '/documentos'
+    | '/perfil'
+    | '/tarifas'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/_app/camiones'
+    | '/_app/choferes'
+    | '/_app/dashboard'
+    | '/_app/documentos'
+    | '/_app/perfil'
+    | '/_app/tarifas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +219,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/tarifas': {
+      id: '/_app/tarifas'
+      path: '/tarifas'
+      fullPath: '/tarifas'
+      preLoaderRoute: typeof AppTarifasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/perfil': {
+      id: '/_app/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documentos': {
+      id: '/_app/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof AppDocumentosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/choferes': {
+      id: '/_app/choferes'
+      path: '/choferes'
+      fullPath: '/choferes'
+      preLoaderRoute: typeof AppChoferesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/camiones': {
+      id: '/_app/camiones'
+      path: '/camiones'
+      fullPath: '/camiones'
+      preLoaderRoute: typeof AppCamionesRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppCamionesRoute: typeof AppCamionesRoute
+  AppChoferesRoute: typeof AppChoferesRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppDocumentosRoute: typeof AppDocumentosRoute
+  AppPerfilRoute: typeof AppPerfilRoute
+  AppTarifasRoute: typeof AppTarifasRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppCamionesRoute: AppCamionesRoute,
+  AppChoferesRoute: AppChoferesRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppDocumentosRoute: AppDocumentosRoute,
+  AppPerfilRoute: AppPerfilRoute,
+  AppTarifasRoute: AppTarifasRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
