@@ -28,10 +28,13 @@ export function diasHasta(fecha: string | null | undefined): number | null {
   return Math.floor((d.getTime() - hoy.getTime()) / 86400000);
 }
 
-export function estadoVencimiento(fecha: string | null | undefined): "ok" | "warn" | "danger" | "none" {
+export type EstadoVenc = "ok" | "warn" | "soon" | "danger" | "none";
+
+export function estadoVencimiento(fecha: string | null | undefined): EstadoVenc {
   const d = diasHasta(fecha);
   if (d === null) return "none";
-  if (d < 15) return "danger";
-  if (d <= 30) return "warn";
+  if (d < 0) return "danger";      // vencido → rojo
+  if (d <= 15) return "soon";      // ≤15 días → naranjo
+  if (d <= 30) return "warn";      // ≤30 días → amarillo
   return "ok";
 }
