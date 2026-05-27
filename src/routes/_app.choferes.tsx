@@ -85,9 +85,10 @@ function ChoferesPage() {
           : items.map((d) => (
             <div key={d.id} className="rounded-xl border bg-card p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                {d.foto_url ? (
-                  <img src={supabase.storage.from("driver-photos").getPublicUrl(d.foto_url).data.publicUrl}
+                {d.foto_url && photoUrls[d.id] ? (
+                  <img src={photoUrls[d.id]}
                     alt="" className="h-14 w-14 rounded-full object-cover" />
+
                 ) : (
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft font-semibold text-primary">
                     {d.nombre_completo?.[0] ?? "?"}
