@@ -27,8 +27,8 @@ function ForgotPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-soft to-background px-4">
       <div className="w-full max-w-md rounded-xl border bg-card p-8 shadow-lg">
-        <div className="mb-6 flex justify-center"><Logo /></div>
-        <h1 className="text-center text-2xl font-bold">Recuperar contraseña</h1>
+        <div className="mb-6 flex justify-center"><Logo variant="full" className="h-20 w-auto" /></div>
+        <h1 className="text-center text-2xl font-bold text-primary-dark">Recuperar contraseña</h1>
         {sent ? (
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Revisa tu correo para restablecer tu contraseña.

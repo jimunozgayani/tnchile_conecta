@@ -39,8 +39,8 @@ function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-soft to-background px-4 py-10">
       <div className="w-full max-w-md rounded-xl border bg-card p-8 shadow-lg">
-        <div className="mb-6 flex justify-center"><Logo /></div>
-        <h1 className="text-center text-2xl font-bold">Crear cuenta de proveedor</h1>
+        <div className="mb-6 flex justify-center"><Logo variant="full" className="h-20 w-auto" /></div>
+        <h1 className="text-center text-2xl font-bold text-primary-dark">Crear cuenta de proveedor</h1>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
