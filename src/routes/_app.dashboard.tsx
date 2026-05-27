@@ -95,15 +95,22 @@ function Dashboard() {
         ) : (
           <ul className="divide-y">
             {alertas.map((a, i) => {
-              const danger = a.dias < 15;
+              const style =
+                a.dias < 0
+                  ? "bg-destructive/15 text-destructive"
+                  : a.dias <= 15
+                  ? "bg-orange/20 text-orange"
+                  : "bg-warning/30 text-warning-foreground";
+              const texto =
+                a.dias < 0 ? `Vencido hace ${Math.abs(a.dias)} d` : `${a.dias} d restantes`;
               return (
                 <li key={i} className="flex items-center justify-between px-5 py-3">
                   <div>
                     <p className="font-medium">{a.entidad}</p>
                     <p className="text-sm text-muted-foreground">{a.tipo} · vence {a.vencimiento}</p>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${danger ? "bg-destructive/15 text-destructive" : "bg-warning/20 text-warning-foreground"}`}>
-                    {a.dias < 0 ? `Vencido hace ${Math.abs(a.dias)} d` : `${a.dias} d`}
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${style}`}>
+                    {texto}
                   </span>
                 </li>
               );
