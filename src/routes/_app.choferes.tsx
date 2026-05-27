@@ -17,6 +17,7 @@ const EMPTY = {
 
 function ChoferesPage() {
   const [items, setItems] = useState<any[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(EMPTY);
@@ -28,6 +29,14 @@ function ChoferesPage() {
     if (user) setUserId(user.id);
     const { data } = await supabase.from("drivers").select("*").order("created_at", { ascending: false });
     setItems(data ?? []);
+    const urls: Record<string, string> = {};
+    for (const d of data ?? []) {
+      if (d.foto_url) {
+        const { data: s } = await supabase.storage.from("driver-photos").createSignedUrl(d.foto_url, 3600);
+        if (s?.signedUrl) urls[d.id] = s.signedUrl;
+      }
+    }
+    setPhotoUrls(urls);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
