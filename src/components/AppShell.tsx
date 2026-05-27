@@ -3,6 +3,7 @@ import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
+import markUrl from "@/assets/tn-chile-mark.png";
 
 const NAV = [
   { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
@@ -62,7 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button className="md:hidden" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
-              <img src={new URL("../assets/tn-chile-mark.png", import.meta.url).href} alt="TN Chile" className="h-9 w-9" />
+              <img src={markUrl} alt="TN Chile" className="h-9 w-9" />
             </div>
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>
