@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, Globe } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-sidebar text-sidebar-foreground transition-transform md:relative md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          <div className="text-sidebar-foreground"><Logo /></div>
+          <Logo variant="with-text" textClassName="text-sidebar-foreground" />
           <button className="md:hidden" onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="space-y-1 p-3">
@@ -60,9 +60,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b border-primary-dark bg-primary px-4 text-primary-foreground md:px-8">
           <button className="md:hidden" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground text-primary">
-              <Globe className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
+              <img src={new URL("../assets/tn-chile-mark.png", import.meta.url).href} alt="TN Chile" className="h-9 w-9" />
             </div>
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>

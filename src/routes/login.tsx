@@ -36,8 +36,8 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-soft to-background px-4">
       <div className="w-full max-w-md rounded-xl border bg-card p-8 shadow-lg">
-        <div className="mb-6 flex justify-center"><Logo /></div>
-        <h1 className="text-center text-2xl font-bold">Iniciar sesión</h1>
+        <div className="mb-6 flex justify-center"><Logo variant="full" className="h-20 w-auto" /></div>
+        <h1 className="text-center text-2xl font-bold text-primary-dark">Iniciar sesión</h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">La logística la hacemos juntos.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
