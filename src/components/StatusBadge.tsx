@@ -8,7 +8,8 @@ export function StatusBadge({ fecha, label }: { fecha: string | null | undefined
   }
   const styles = {
     ok: "bg-success/15 text-success",
-    warn: "bg-warning/20 text-warning-foreground",
+    warn: "bg-warning/30 text-warning-foreground",
+    soon: "bg-orange/20 text-orange",
     danger: "bg-destructive/15 text-destructive",
   }[estado];
   const texto =
