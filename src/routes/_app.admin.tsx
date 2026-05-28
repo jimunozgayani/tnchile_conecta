@@ -119,6 +119,20 @@ function AdminPage() {
     return items.sort((a, b) => a.dias - b.dias);
   }, [profiles, trucks, drivers]);
 
+  const cumplimiento = useMemo(() => {
+    const tally = (fechas: (string | null | undefined)[]) => {
+      const total = fechas.filter((f) => f).length;
+      const valid = fechas.filter((f) => estadoVencimiento(f) === "ok").length;
+      return { total, valid };
+    };
+    return [
+      { label: "SOAP", ...tally(trucks.map((t) => t.soap_vencimiento)) },
+      { label: "Permiso de circulación", ...tally(trucks.map((t) => t.permiso_circulacion_vencimiento)) },
+      { label: "Revisión técnica", ...tally(trucks.map((t) => t.revision_tecnica_vencimiento)) },
+      { label: "Pólizas de seguro", ...tally(profiles.map((p) => p.poliza_seguro_vencimiento)) },
+    ];
+  }, [trucks, profiles]);
+
   if (checking) return <p className="text-muted-foreground">Verificando permisos...</p>;
   if (!isAdmin) {
     return (
@@ -138,11 +152,19 @@ function AdminPage() {
         <p className="text-muted-foreground">Vista global de todos los proveedores TN Chile.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard icon={Users} label="Proveedores activos" value={stats.activos} sub={`${stats.proveedores} totales`} />
-        <StatCard icon={Truck} label="Camiones totales" value={stats.camiones} />
-        <StatCard icon={FileText} label="Por vencer (≤30 días)" value={stats.porVencer} tone="warn" />
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+        <StatCard icon={Users} label="Proveedores" value={stats.proveedores} sub={`${stats.activos} activos`} />
+        <StatCard icon={Truck} label="Camiones" value={stats.camiones} />
+        <StatCard icon={Users} label="Choferes" value={drivers.length} />
+        <StatCard icon={FileText} label="Por vencer (≤30d)" value={stats.porVencer} tone="warn" />
         <StatCard icon={AlertTriangle} label="Vencidos" value={stats.vencidos} tone="danger" />
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold">Cumplimiento documental</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {cumplimiento.map((c) => <ComplianceBar key={c.label} {...c} />)}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -175,7 +197,6 @@ function AdminPage() {
           )}
         </div>
       </div>
-
       <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-lg font-semibold">Proveedores</h2>
@@ -185,6 +206,7 @@ function AdminPage() {
             <thead className="bg-primary-soft text-left text-xs uppercase tracking-wide text-primary-dark">
               <tr>
                 <th className="px-4 py-3">Proveedor</th>
+                <th className="px-4 py-3">RUT</th>
                 <th className="px-4 py-3">Región</th>
                 <th className="px-4 py-3 text-center">Camiones</th>
                 <th className="px-4 py-3 text-center">Choferes</th>
@@ -199,6 +221,8 @@ function AdminPage() {
                     <p className="font-medium">{p.razon_social || "—"}</p>
                     <p className="text-xs text-muted-foreground">{p.correo}</p>
                   </td>
+                  <td className="px-4 py-3 text-sm">{p.rut_empresa || "—"}</td>
+                  <td className="px-4 py-3">{p.region || "—"}</td>
                   <td className="px-4 py-3">{p.region || "—"}</td>
                   <td className="px-4 py-3 text-center">{tc}</td>
                   <td className="px-4 py-3 text-center">{dc}</td>
@@ -234,6 +258,23 @@ function StatCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: s
     </div>
   );
 }
+
+function ComplianceBar({ label, valid, total }: { label: string; valid: number; total: number }) {
+  const pct = total === 0 ? 0 : Math.round((valid / total) * 100);
+  const tone = total === 0 ? "bg-muted-foreground/30" : pct >= 80 ? "bg-primary" : pct >= 50 ? "bg-warning" : "bg-destructive";
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">{valid}/{total || 0} <span className="ml-1 text-xs">({pct}%)</span></span>
+      </div>
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className={`h-full ${tone} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 
 function DocBadge({ status }: { status: "ok" | "warning" | "expired" }) {
   const cfg = {
