@@ -221,6 +221,8 @@ function AdminPage() {
                     <p className="font-medium">{p.razon_social || "—"}</p>
                     <p className="text-xs text-muted-foreground">{p.correo}</p>
                   </td>
+                  <td className="px-4 py-3 text-sm">{p.rut_empresa || "—"}</td>
+                  <td className="px-4 py-3">{p.region || "—"}</td>
                   <td className="px-4 py-3">{p.region || "—"}</td>
                   <td className="px-4 py-3 text-center">{tc}</td>
                   <td className="px-4 py-3 text-center">{dc}</td>
