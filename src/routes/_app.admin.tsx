@@ -138,11 +138,19 @@ function AdminPage() {
         <p className="text-muted-foreground">Vista global de todos los proveedores TN Chile.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard icon={Users} label="Proveedores activos" value={stats.activos} sub={`${stats.proveedores} totales`} />
-        <StatCard icon={Truck} label="Camiones totales" value={stats.camiones} />
-        <StatCard icon={FileText} label="Por vencer (≤30 días)" value={stats.porVencer} tone="warn" />
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+        <StatCard icon={Users} label="Proveedores" value={stats.proveedores} sub={`${stats.activos} activos`} />
+        <StatCard icon={Truck} label="Camiones" value={stats.camiones} />
+        <StatCard icon={Users} label="Choferes" value={drivers.length} />
+        <StatCard icon={FileText} label="Por vencer (≤30d)" value={stats.porVencer} tone="warn" />
         <StatCard icon={AlertTriangle} label="Vencidos" value={stats.vencidos} tone="danger" />
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold">Cumplimiento documental</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {cumplimiento.map((c) => <ComplianceBar key={c.label} {...c} />)}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
