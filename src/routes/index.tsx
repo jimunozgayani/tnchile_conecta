@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Globe, Truck, Users, FileText } from "lucide-react";
+import { Truck, Users, FileText } from "lucide-react";
+import logoFull from "@/assets/tn-chile-full.png";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
