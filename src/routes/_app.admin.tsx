@@ -119,6 +119,20 @@ function AdminPage() {
     return items.sort((a, b) => a.dias - b.dias);
   }, [profiles, trucks, drivers]);
 
+  const cumplimiento = useMemo(() => {
+    const tally = (fechas: (string | null | undefined)[]) => {
+      const total = fechas.filter((f) => f).length;
+      const valid = fechas.filter((f) => estadoVencimiento(f) === "ok").length;
+      return { total, valid };
+    };
+    return [
+      { label: "SOAP", ...tally(trucks.map((t) => t.soap_vencimiento)) },
+      { label: "Permiso de circulación", ...tally(trucks.map((t) => t.permiso_circulacion_vencimiento)) },
+      { label: "Revisión técnica", ...tally(trucks.map((t) => t.revision_tecnica_vencimiento)) },
+      { label: "Pólizas de seguro", ...tally(profiles.map((p) => p.poliza_seguro_vencimiento)) },
+    ];
+  }, [trucks, profiles]);
+
   if (checking) return <p className="text-muted-foreground">Verificando permisos...</p>;
   if (!isAdmin) {
     return (
