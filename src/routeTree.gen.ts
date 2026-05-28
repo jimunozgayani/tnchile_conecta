@@ -21,6 +21,7 @@ import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
+import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -81,6 +82,11 @@ const AppCamionesRoute = AppCamionesRouteImport.update({
   path: '/camiones',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
   '/choferes': typeof AppChoferesRoute
   '/dashboard': typeof AppDashboardRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
   '/choferes': typeof AppChoferesRoute
   '/dashboard': typeof AppDashboardRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_app/admin': typeof AppAdminRoute
   '/_app/camiones': typeof AppCamionesRoute
   '/_app/choferes': typeof AppChoferesRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/admin'
     | '/camiones'
     | '/choferes'
     | '/dashboard'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/admin'
     | '/camiones'
     | '/choferes'
     | '/dashboard'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/_app/admin'
     | '/_app/camiones'
     | '/_app/choferes'
     | '/_app/dashboard'
@@ -261,10 +273,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCamionesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
   AppCamionesRoute: typeof AppCamionesRoute
   AppChoferesRoute: typeof AppChoferesRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -274,6 +294,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
   AppCamionesRoute: AppCamionesRoute,
   AppChoferesRoute: AppChoferesRoute,
   AppDashboardRoute: AppDashboardRoute,
