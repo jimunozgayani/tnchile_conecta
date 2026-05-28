@@ -255,6 +255,7 @@ function StatCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: s
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
+}
 
 function ComplianceBar({ label, valid, total }: { label: string; valid: number; total: number }) {
   const pct = total === 0 ? 0 : Math.round((valid / total) * 100);
