@@ -206,6 +206,7 @@ function AdminPage() {
             <thead className="bg-primary-soft text-left text-xs uppercase tracking-wide text-primary-dark">
               <tr>
                 <th className="px-4 py-3">Proveedor</th>
+                <th className="px-4 py-3">RUT</th>
                 <th className="px-4 py-3">Región</th>
                 <th className="px-4 py-3 text-center">Camiones</th>
                 <th className="px-4 py-3 text-center">Choferes</th>
