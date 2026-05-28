@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Globe, Truck, Users, FileText } from "lucide-react";
+import { Truck, Users, FileText } from "lucide-react";
+import logoFull from "@/assets/tn-chile-full.png";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
@@ -23,9 +24,7 @@ function Landing() {
 
       <main className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center">
-          <div className="mx-auto mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-            <Globe className="h-8 w-8" />
-          </div>
+          <img src={logoFull} alt="TN Chile" className="mx-auto mb-6 h-24 w-auto" />
           <h1 className="text-5xl font-bold tracking-tight text-foreground">Portal de Proveedores</h1>
           <p className="mt-4 text-2xl font-medium text-primary">"La logística la hacemos juntos."</p>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
