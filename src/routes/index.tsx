@@ -23,8 +23,8 @@ function Landing() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center">
           <img src={logoFull} alt="TN Chile" className="mx-auto mb-6 h-24 w-auto" />
-          </div>
           <h1 className="text-5xl font-bold tracking-tight text-foreground">Portal de Proveedores</h1>
           <p className="mt-4 text-2xl font-medium text-primary">"La logística la hacemos juntos."</p>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
