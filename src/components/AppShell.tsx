@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
 import markUrl from "@/assets/tn-chile-mark.png";
@@ -18,11 +18,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      setIsAdmin((data ?? []).some((r: any) => r.role === "admin"));
+    })();
+  }, []);
 
   const logout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/login" });
   };
+
 
   return (
     <div className="flex min-h-screen bg-background">
