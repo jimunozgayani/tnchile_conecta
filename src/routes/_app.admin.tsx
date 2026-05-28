@@ -255,7 +255,23 @@ function StatCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: s
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
+
+function ComplianceBar({ label, valid, total }: { label: string; valid: number; total: number }) {
+  const pct = total === 0 ? 0 : Math.round((valid / total) * 100);
+  const tone = total === 0 ? "bg-muted-foreground/30" : pct >= 80 ? "bg-primary" : pct >= 50 ? "bg-warning" : "bg-destructive";
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">{valid}/{total || 0} <span className="ml-1 text-xs">({pct}%)</span></span>
+      </div>
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className={`h-full ${tone} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
 }
+
 
 function DocBadge({ status }: { status: "ok" | "warning" | "expired" }) {
   const cfg = {
