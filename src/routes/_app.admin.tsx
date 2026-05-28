@@ -1,0 +1,280 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { diasHasta, estadoVencimiento } from "@/lib/regions";
+
+export const Route = createFileRoute("/_app/admin")({
+  component: AdminPage,
+});
+
+type Profile = {
+  id: string; razon_social: string | null; nombre_contacto: string | null;
+  correo: string | null; region: string | null; rut_empresa: string | null;
+  telefono: string | null; direccion: string | null; cargo: string | null;
+  poliza_seguro_vencimiento: string | null;
+};
+type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null };
+type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null };
+
+const PROFILE_FIELDS: (keyof Profile)[] = [
+  "razon_social", "rut_empresa", "nombre_contacto", "cargo",
+  "correo", "telefono", "direccion", "region", "poliza_seguro_vencimiento",
+];
+
+function AdminPage() {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [trucks, setTrucks] = useState<Truck[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate({ to: "/login" }); return; }
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      const admin = (roles ?? []).some((r: any) => r.role === "admin");
+      setIsAdmin(admin);
+      setChecking(false);
+      if (admin) loadAll();
+    })();
+  }, [navigate]);
+
+  const loadAll = async () => {
+    const [{ data: p }, { data: t }, { data: d }] = await Promise.all([
+      supabase.from("profiles").select("*"),
+      supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento"),
+      supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento"),
+    ]);
+    setProfiles((p ?? []) as Profile[]);
+    setTrucks((t ?? []) as Truck[]);
+    setDrivers((d ?? []) as Driver[]);
+    setLoading(false);
+  };
+
+  const stats = useMemo(() => {
+    const allDates: { fecha: string | null }[] = [
+      ...trucks.flatMap((x) => [{ fecha: x.soap_vencimiento }, { fecha: x.permiso_circulacion_vencimiento }, { fecha: x.revision_tecnica_vencimiento }]),
+      ...drivers.flatMap((x) => [{ fecha: x.licencia_vencimiento }, { fecha: x.carnet_vencimiento }]),
+      ...profiles.map((x) => ({ fecha: x.poliza_seguro_vencimiento })),
+    ];
+    let vencidos = 0, porVencer = 0;
+    for (const { fecha } of allDates) {
+      const e = estadoVencimiento(fecha);
+      if (e === "danger") vencidos++;
+      else if (e === "warn" || e === "soon") porVencer++;
+    }
+    const activos = profiles.filter((p) => trucks.some((t) => t.user_id === p.id) || drivers.some((d) => d.user_id === p.id)).length;
+    return { proveedores: profiles.length, activos, camiones: trucks.length, vencidos, porVencer };
+  }, [profiles, trucks, drivers]);
+
+  const flotaPorTipo = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const t of trucks) {
+      const k = t.tipo || "Sin tipo";
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return Array.from(m.entries()).map(([tipo, count]) => ({ tipo, count }));
+  }, [trucks]);
+
+  const filasProveedores = useMemo(() => {
+    return profiles.map((p) => {
+      const tc = trucks.filter((t) => t.user_id === p.id);
+      const dc = drivers.filter((d) => d.user_id === p.id);
+      const fechas = [
+        ...tc.flatMap((x) => [x.soap_vencimiento, x.permiso_circulacion_vencimiento, x.revision_tecnica_vencimiento]),
+        ...dc.flatMap((x) => [x.licencia_vencimiento, x.carnet_vencimiento]),
+        p.poliza_seguro_vencimiento,
+      ];
+      let docStatus: "ok" | "warning" | "expired" = "ok";
+      for (const f of fechas) {
+        const e = estadoVencimiento(f);
+        if (e === "danger") { docStatus = "expired"; break; }
+        if (e === "warn" || e === "soon") docStatus = "warning";
+      }
+      const filled = PROFILE_FIELDS.filter((k) => !!p[k]).length;
+      const completion = Math.round((filled / PROFILE_FIELDS.length) * 100);
+      return { p, trucks: tc.length, drivers: dc.length, docStatus, completion };
+    });
+  }, [profiles, trucks, drivers]);
+
+  const alertas = useMemo(() => {
+    const items: { tipo: string; quien: string; supplier: string; dias: number }[] = [];
+    const pMap = new Map(profiles.map((p) => [p.id, p.razon_social || p.nombre_contacto || p.correo || "—"]));
+    for (const t of trucks) {
+      const supplier = pMap.get(t.user_id) || "—";
+      [["SOAP", t.soap_vencimiento], ["Permiso circ.", t.permiso_circulacion_vencimiento], ["Rev. técnica", t.revision_tecnica_vencimiento]].forEach(([tipo, f]) => {
+        const d = diasHasta(f as string | null);
+        if (d !== null && d <= 30) items.push({ tipo: tipo as string, quien: t.patente, supplier, dias: d });
+      });
+    }
+    for (const dr of drivers) {
+      const supplier = pMap.get(dr.user_id) || "—";
+      const d = diasHasta(dr.licencia_vencimiento);
+      if (d !== null && d <= 30) items.push({ tipo: "Licencia", quien: dr.nombre_completo, supplier, dias: d });
+    }
+    return items.sort((a, b) => a.dias - b.dias);
+  }, [profiles, trucks, drivers]);
+
+  if (checking) return <p className="text-muted-foreground">Verificando permisos...</p>;
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-md rounded-xl border bg-card p-8 text-center shadow-sm">
+        <ShieldAlert className="mx-auto h-12 w-12 text-destructive" />
+        <h1 className="mt-4 text-2xl font-bold">Acceso restringido</h1>
+        <p className="mt-2 text-muted-foreground">Esta vista es sólo para administradores de TN Chile.</p>
+      </div>
+    );
+  }
+  if (loading) return <p className="text-muted-foreground">Cargando datos...</p>;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">Panel de Administración</h1>
+        <p className="text-muted-foreground">Vista global de todos los proveedores TN Chile.</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard icon={Users} label="Proveedores activos" value={stats.activos} sub={`${stats.proveedores} totales`} />
+        <StatCard icon={Truck} label="Camiones totales" value={stats.camiones} />
+        <StatCard icon={FileText} label="Por vencer (≤30 días)" value={stats.porVencer} tone="warn" />
+        <StatCard icon={AlertTriangle} label="Vencidos" value={stats.vencidos} tone="danger" />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-xl border bg-card p-6 shadow-sm lg:col-span-1">
+          <h2 className="mb-4 text-lg font-semibold">Flota por tipo de camión</h2>
+          <Donut data={flotaPorTipo} />
+        </div>
+
+        <div className="rounded-xl border bg-card p-6 shadow-sm lg:col-span-2">
+          <h2 className="mb-4 text-lg font-semibold">Alertas críticas</h2>
+          {alertas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Sin alertas. Todo al día.</p>
+          ) : (
+            <ul className="max-h-80 space-y-2 overflow-y-auto pr-2">
+              {alertas.map((a, i) => {
+                const venc = a.dias < 0;
+                return (
+                  <li key={i} className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${venc ? "border-destructive/40 bg-destructive/10" : a.dias <= 15 ? "border-orange/40 bg-orange/10" : "border-warning/40 bg-warning/15"}`}>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{a.tipo} — {a.quien}</p>
+                      <p className="truncate text-xs text-muted-foreground">{a.supplier}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${venc ? "bg-destructive text-destructive-foreground" : a.dias <= 15 ? "bg-orange text-orange-foreground" : "bg-warning text-warning-foreground"}`}>
+                      {venc ? `vencido hace ${-a.dias}d` : `${a.dias}d`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-card shadow-sm">
+        <div className="border-b px-6 py-4">
+          <h2 className="text-lg font-semibold">Proveedores</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-primary-soft text-left text-xs uppercase tracking-wide text-primary-dark">
+              <tr>
+                <th className="px-4 py-3">Proveedor</th>
+                <th className="px-4 py-3">Región</th>
+                <th className="px-4 py-3 text-center">Camiones</th>
+                <th className="px-4 py-3 text-center">Choferes</th>
+                <th className="px-4 py-3">Documentos</th>
+                <th className="px-4 py-3">Perfil</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filasProveedores.map(({ p, trucks: tc, drivers: dc, docStatus, completion }) => (
+                <tr key={p.id} className="border-t">
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{p.razon_social || "—"}</p>
+                    <p className="text-xs text-muted-foreground">{p.correo}</p>
+                  </td>
+                  <td className="px-4 py-3">{p.region || "—"}</td>
+                  <td className="px-4 py-3 text-center">{tc}</td>
+                  <td className="px-4 py-3 text-center">{dc}</td>
+                  <td className="px-4 py-3"><DocBadge status={docStatus} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full bg-primary" style={{ width: `${completion}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground">{completion}%</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: string; value: number; sub?: string; tone?: "warn" | "danger" }) {
+  const color = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-orange" : "text-primary";
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <Icon className={`h-5 w-5 ${color}`} />
+      </div>
+      <p className={`mt-2 text-3xl font-bold ${color}`}>{value}</p>
+      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
+function DocBadge({ status }: { status: "ok" | "warning" | "expired" }) {
+  const cfg = {
+    ok: { label: "OK", cls: "bg-success/15 text-success" },
+    warning: { label: "Por vencer", cls: "bg-warning/30 text-warning-foreground" },
+    expired: { label: "Vencido", cls: "bg-destructive/15 text-destructive" },
+  }[status];
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
+}
+
+const DONUT_COLORS = ["#2D7A45", "#1E5C32", "#5BA372", "#A3D4B5", "#0F3A1F", "#7BBF92"];
+
+function Donut({ data }: { data: { tipo: string; count: number }[] }) {
+  const total = data.reduce((s, d) => s + d.count, 0);
+  if (total === 0) return <p className="text-sm text-muted-foreground">Sin camiones registrados.</p>;
+  const r = 60, c = 2 * Math.PI * r;
+  let acc = 0;
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <svg viewBox="0 0 160 160" className="h-48 w-48 -rotate-90">
+        <circle cx="80" cy="80" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="22" />
+        {data.map((d, i) => {
+          const frac = d.count / total;
+          const dash = frac * c;
+          const offset = c - acc * c;
+          acc += frac;
+          return <circle key={d.tipo} cx="80" cy="80" r={r} fill="none" stroke={DONUT_COLORS[i % DONUT_COLORS.length]} strokeWidth="22" strokeDasharray={`${dash} ${c - dash}`} strokeDashoffset={offset} />;
+        })}
+        <text x="80" y="80" textAnchor="middle" dominantBaseline="central" transform="rotate(90 80 80)" className="fill-foreground text-xl font-bold">{total}</text>
+      </svg>
+      <ul className="w-full space-y-1 text-sm">
+        {data.map((d, i) => (
+          <li key={d.tipo} className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-sm" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+              {d.tipo}
+            </span>
+            <span className="text-muted-foreground">{d.count} ({Math.round((d.count / total) * 100)}%)</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
