@@ -197,7 +197,8 @@ function AdminPage() {
           )}
         </div>
       </div>
-
+                <th className="px-4 py-3">Proveedor</th>
+                <th className="px-4 py-3">RUT</th>
       <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-lg font-semibold">Proveedores</h2>
