@@ -1,12 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
+import { inviteSupplier } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
+
+type Invitation = {
+  id: string; email: string; company_name: string | null; rut: string | null;
+  status: "invited" | "active"; invited_at: string; activated_at: string | null;
+  user_id: string | null;
+};
+
 
 type Profile = {
   id: string; razon_social: string | null; nombre_contacto: string | null;
