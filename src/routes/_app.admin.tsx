@@ -319,6 +319,16 @@ function AdminPage() {
   );
 }
 
+function StatusBadge({ status }: { status: SupplierStatus }) {
+  const cfg = {
+    invitado: { label: "Invitado", cls: "bg-warning/30 text-warning-foreground" },
+    nuevo: { label: "Nuevo", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
+    activo: { label: "Activo", cls: "bg-success/15 text-success" },
+  }[status];
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
+}
+
+
 function StatCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: string; value: number; sub?: string; tone?: "warn" | "danger" }) {
   const color = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-orange" : "text-primary";
   return (
