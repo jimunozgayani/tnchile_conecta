@@ -252,6 +252,23 @@ function AdminPage() {
           )}
         </div>
       </div>
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Mail className="h-5 w-5 text-primary" /> Invitar proveedor</h2>
+        <p className="mb-4 text-sm text-muted-foreground">Envía una invitación por correo. El proveedor recibirá un enlace para activar su cuenta.</p>
+        <form onSubmit={handleInvite} className="grid gap-3 md:grid-cols-[2fr_2fr_1fr_auto]">
+          <input required type="email" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="correo@empresa.cl"
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <input value={invCompany} onChange={(e) => setInvCompany(e.target.value)} placeholder="Razón social (opcional)"
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <input value={invRut} onChange={(e) => setInvRut(e.target.value)} placeholder="RUT (opcional)"
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <button disabled={sending} type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60">
+            <Send className="h-4 w-4" /> {sending ? "Enviando..." : "Enviar invitación"}
+          </button>
+        </form>
+      </div>
+
       <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-lg font-semibold">Proveedores</h2>
@@ -265,29 +282,30 @@ function AdminPage() {
                 <th className="px-4 py-3">Región</th>
                 <th className="px-4 py-3 text-center">Camiones</th>
                 <th className="px-4 py-3 text-center">Choferes</th>
+                <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Documentos</th>
                 <th className="px-4 py-3">Perfil</th>
               </tr>
             </thead>
             <tbody>
-              {filasProveedores.map(({ p, trucks: tc, drivers: dc, docStatus, completion }) => (
-                <tr key={p.id} className="border-t">
+              {filasProveedores.map((r) => (
+                <tr key={r.key} className="border-t">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{p.razon_social || "—"}</p>
-                    <p className="text-xs text-muted-foreground">{p.correo}</p>
+                    <p className="font-medium">{r.name}</p>
+                    <p className="text-xs text-muted-foreground">{r.email}</p>
                   </td>
-                  <td className="px-4 py-3 text-sm">{p.rut_empresa || "—"}</td>
-                  <td className="px-4 py-3">{p.region || "—"}</td>
-                  <td className="px-4 py-3">{p.region || "—"}</td>
-                  <td className="px-4 py-3 text-center">{tc}</td>
-                  <td className="px-4 py-3 text-center">{dc}</td>
-                  <td className="px-4 py-3"><DocBadge status={docStatus} /></td>
+                  <td className="px-4 py-3 text-sm">{r.rut || "—"}</td>
+                  <td className="px-4 py-3">{r.region || "—"}</td>
+                  <td className="px-4 py-3 text-center">{r.trucks}</td>
+                  <td className="px-4 py-3 text-center">{r.drivers}</td>
+                  <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
+                  <td className="px-4 py-3">{r.status === "invitado" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${completion}%` }} />
+                        <div className="h-full bg-primary" style={{ width: `${r.completion}%` }} />
                       </div>
-                      <span className="text-xs text-muted-foreground">{completion}%</span>
+                      <span className="text-xs text-muted-foreground">{r.completion}%</span>
                     </div>
                   </td>
                 </tr>
@@ -296,6 +314,7 @@ function AdminPage() {
           </table>
         </div>
       </div>
+
     </div>
   );
 }
