@@ -62,16 +62,35 @@ function AdminPage() {
 
 
   const loadAll = async () => {
-    const [{ data: p }, { data: t }, { data: d }] = await Promise.all([
+    const [{ data: p }, { data: t }, { data: d }, { data: inv }] = await Promise.all([
       supabase.from("profiles").select("*"),
       supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento"),
       supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento"),
+      supabase.from("supplier_invitations").select("*").order("invited_at", { ascending: false }),
     ]);
     setProfiles((p ?? []) as Profile[]);
     setTrucks((t ?? []) as Truck[]);
     setDrivers((d ?? []) as Driver[]);
+    setInvitations((inv ?? []) as Invitation[]);
     setLoading(false);
   };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invEmail.trim()) return;
+    setSending(true);
+    try {
+      await invite({ data: { email: invEmail.trim(), company_name: invCompany || null, rut: invRut || null } });
+      toast.success(`Invitación enviada a ${invEmail}`);
+      setInvEmail(""); setInvCompany(""); setInvRut("");
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo enviar la invitación");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const stats = useMemo(() => {
     const allDates: { fecha: string | null }[] = [
