@@ -1,12 +1,24 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
+import { inviteSupplier } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
+
+type Invitation = {
+  id: string; email: string; company_name: string | null; rut: string | null;
+  status: "invited" | "active"; invited_at: string; activated_at: string | null;
+  user_id: string | null;
+};
+type SupplierStatus = "invitado" | "nuevo" | "activo";
+
+
 
 type Profile = {
   id: string; razon_social: string | null; nombre_contacto: string | null;
@@ -24,12 +36,19 @@ const PROFILE_FIELDS: (keyof Profile)[] = [
 
 function AdminPage() {
   const navigate = useNavigate();
+  const invite = useServerFn(inviteSupplier);
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [invEmail, setInvEmail] = useState("");
+  const [invCompany, setInvCompany] = useState("");
+  const [invRut, setInvRut] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -43,17 +62,37 @@ function AdminPage() {
     })();
   }, [navigate]);
 
+
   const loadAll = async () => {
-    const [{ data: p }, { data: t }, { data: d }] = await Promise.all([
+    const [{ data: p }, { data: t }, { data: d }, { data: inv }] = await Promise.all([
       supabase.from("profiles").select("*"),
       supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento"),
       supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento"),
+      supabase.from("supplier_invitations").select("*").order("invited_at", { ascending: false }),
     ]);
     setProfiles((p ?? []) as Profile[]);
     setTrucks((t ?? []) as Truck[]);
     setDrivers((d ?? []) as Driver[]);
+    setInvitations((inv ?? []) as Invitation[]);
     setLoading(false);
   };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invEmail.trim()) return;
+    setSending(true);
+    try {
+      await invite({ data: { email: invEmail.trim(), company_name: invCompany || null, rut: invRut || null } });
+      toast.success(`Invitación enviada a ${invEmail}`);
+      setInvEmail(""); setInvCompany(""); setInvRut("");
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo enviar la invitación");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const stats = useMemo(() => {
     const allDates: { fecha: string | null }[] = [
@@ -81,7 +120,10 @@ function AdminPage() {
   }, [trucks]);
 
   const filasProveedores = useMemo(() => {
-    return profiles.map((p) => {
+    const invByEmail = new Map(invitations.map((i) => [i.email.toLowerCase(), i]));
+    const linkedEmails = new Set<string>();
+
+    const rows = profiles.map((p) => {
       const tc = trucks.filter((t) => t.user_id === p.id);
       const dc = drivers.filter((d) => d.user_id === p.id);
       const fechas = [
@@ -97,9 +139,22 @@ function AdminPage() {
       }
       const filled = PROFILE_FIELDS.filter((k) => !!p[k]).length;
       const completion = Math.round((filled / PROFILE_FIELDS.length) * 100);
-      return { p, trucks: tc.length, drivers: dc.length, docStatus, completion };
+      const hasData = tc.length > 0 || dc.length > 0;
+      const status: SupplierStatus = hasData ? "activo" : "nuevo";
+      if (p.correo) linkedEmails.add(p.correo.toLowerCase());
+      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status };
     });
-  }, [profiles, trucks, drivers]);
+
+    const pendingRows = invitations
+      .filter((i) => i.status === "invited" && !linkedEmails.has(i.email.toLowerCase()))
+      .map((i) => ({
+        key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
+        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus,
+      }));
+
+    return [...pendingRows, ...rows];
+  }, [profiles, trucks, drivers, invitations]);
+
 
   const alertas = useMemo(() => {
     const items: { tipo: string; quien: string; supplier: string; dias: number }[] = [];
@@ -197,6 +252,23 @@ function AdminPage() {
           )}
         </div>
       </div>
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Mail className="h-5 w-5 text-primary" /> Invitar proveedor</h2>
+        <p className="mb-4 text-sm text-muted-foreground">Envía una invitación por correo. El proveedor recibirá un enlace para activar su cuenta.</p>
+        <form onSubmit={handleInvite} className="grid gap-3 md:grid-cols-[2fr_2fr_1fr_auto]">
+          <input required type="email" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="correo@empresa.cl"
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <input value={invCompany} onChange={(e) => setInvCompany(e.target.value)} placeholder="Razón social (opcional)"
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <input value={invRut} onChange={(e) => setInvRut(e.target.value)} placeholder="RUT (opcional)"
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <button disabled={sending} type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60">
+            <Send className="h-4 w-4" /> {sending ? "Enviando..." : "Enviar invitación"}
+          </button>
+        </form>
+      </div>
+
       <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="text-lg font-semibold">Proveedores</h2>
@@ -210,29 +282,30 @@ function AdminPage() {
                 <th className="px-4 py-3">Región</th>
                 <th className="px-4 py-3 text-center">Camiones</th>
                 <th className="px-4 py-3 text-center">Choferes</th>
+                <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Documentos</th>
                 <th className="px-4 py-3">Perfil</th>
               </tr>
             </thead>
             <tbody>
-              {filasProveedores.map(({ p, trucks: tc, drivers: dc, docStatus, completion }) => (
-                <tr key={p.id} className="border-t">
+              {filasProveedores.map((r) => (
+                <tr key={r.key} className="border-t">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{p.razon_social || "—"}</p>
-                    <p className="text-xs text-muted-foreground">{p.correo}</p>
+                    <p className="font-medium">{r.name}</p>
+                    <p className="text-xs text-muted-foreground">{r.email}</p>
                   </td>
-                  <td className="px-4 py-3 text-sm">{p.rut_empresa || "—"}</td>
-                  <td className="px-4 py-3">{p.region || "—"}</td>
-                  <td className="px-4 py-3">{p.region || "—"}</td>
-                  <td className="px-4 py-3 text-center">{tc}</td>
-                  <td className="px-4 py-3 text-center">{dc}</td>
-                  <td className="px-4 py-3"><DocBadge status={docStatus} /></td>
+                  <td className="px-4 py-3 text-sm">{r.rut || "—"}</td>
+                  <td className="px-4 py-3">{r.region || "—"}</td>
+                  <td className="px-4 py-3 text-center">{r.trucks}</td>
+                  <td className="px-4 py-3 text-center">{r.drivers}</td>
+                  <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
+                  <td className="px-4 py-3">{r.status === "invitado" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${completion}%` }} />
+                        <div className="h-full bg-primary" style={{ width: `${r.completion}%` }} />
                       </div>
-                      <span className="text-xs text-muted-foreground">{completion}%</span>
+                      <span className="text-xs text-muted-foreground">{r.completion}%</span>
                     </div>
                   </td>
                 </tr>
@@ -241,9 +314,20 @@ function AdminPage() {
           </table>
         </div>
       </div>
+
     </div>
   );
 }
+
+function StatusBadge({ status }: { status: SupplierStatus }) {
+  const cfg = {
+    invitado: { label: "Invitado", cls: "bg-warning/30 text-warning-foreground" },
+    nuevo: { label: "Nuevo", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
+    activo: { label: "Activo", cls: "bg-success/15 text-success" },
+  }[status];
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
+}
+
 
 function StatCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: string; value: number; sub?: string; tone?: "warn" | "danger" }) {
   const color = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-orange" : "text-primary";
