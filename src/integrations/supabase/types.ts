@@ -176,6 +176,48 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_invitations: {
+        Row: {
+          activated_at: string | null
+          company_name: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          rut: string | null
+          status: Database["public"]["Enums"]["invitation_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          company_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          rut?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          rut?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       trucks: {
         Row: {
           anio: number | null
@@ -263,6 +305,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "supplier"
+      invitation_status: "invited" | "active"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,6 +434,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "supplier"],
+      invitation_status: ["invited", "active"],
     },
   },
 } as const
