@@ -34,12 +34,19 @@ const PROFILE_FIELDS: (keyof Profile)[] = [
 
 function AdminPage() {
   const navigate = useNavigate();
+  const invite = useServerFn(inviteSupplier);
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [invEmail, setInvEmail] = useState("");
+  const [invCompany, setInvCompany] = useState("");
+  const [invRut, setInvRut] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -52,6 +59,7 @@ function AdminPage() {
       if (admin) loadAll();
     })();
   }, [navigate]);
+
 
   const loadAll = async () => {
     const [{ data: p }, { data: t }, { data: d }] = await Promise.all([
