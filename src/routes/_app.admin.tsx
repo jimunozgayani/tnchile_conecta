@@ -16,6 +16,8 @@ type Invitation = {
   status: "invited" | "active"; invited_at: string; activated_at: string | null;
   user_id: string | null;
 };
+type SupplierStatus = "invitado" | "nuevo" | "activo";
+
 
 
 type Profile = {
