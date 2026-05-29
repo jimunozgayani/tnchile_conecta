@@ -118,7 +118,10 @@ function AdminPage() {
   }, [trucks]);
 
   const filasProveedores = useMemo(() => {
-    return profiles.map((p) => {
+    const invByEmail = new Map(invitations.map((i) => [i.email.toLowerCase(), i]));
+    const linkedEmails = new Set<string>();
+
+    const rows = profiles.map((p) => {
       const tc = trucks.filter((t) => t.user_id === p.id);
       const dc = drivers.filter((d) => d.user_id === p.id);
       const fechas = [
@@ -134,9 +137,22 @@ function AdminPage() {
       }
       const filled = PROFILE_FIELDS.filter((k) => !!p[k]).length;
       const completion = Math.round((filled / PROFILE_FIELDS.length) * 100);
-      return { p, trucks: tc.length, drivers: dc.length, docStatus, completion };
+      const hasData = tc.length > 0 || dc.length > 0;
+      const status: SupplierStatus = hasData ? "activo" : "nuevo";
+      if (p.correo) linkedEmails.add(p.correo.toLowerCase());
+      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status };
     });
-  }, [profiles, trucks, drivers]);
+
+    const pendingRows = invitations
+      .filter((i) => i.status === "invited" && !linkedEmails.has(i.email.toLowerCase()))
+      .map((i) => ({
+        key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
+        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus,
+      }));
+
+    return [...pendingRows, ...rows];
+  }, [profiles, trucks, drivers, invitations]);
+
 
   const alertas = useMemo(() => {
     const items: { tipo: string; quien: string; supplier: string; dias: number }[] = [];
