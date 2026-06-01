@@ -53,8 +53,8 @@ type Profile = {
   telefono: string | null; direccion: string | null; cargo: string | null;
   poliza_seguro_vencimiento: string | null;
 };
-type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null };
-type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null };
+type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null; deleted_at: string | null };
+type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null; deleted_at: string | null };
 
 const PROFILE_FIELDS: (keyof Profile)[] = [
   "razon_social", "rut_empresa", "nombre_contacto", "cargo",
