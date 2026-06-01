@@ -14,9 +14,46 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          accion: string
+          created_at: string
+          datos_anteriores: Json | null
+          datos_nuevos: Json | null
+          id: string
+          registro_id: string | null
+          tabla_nombre: string
+          usuario_email: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          accion: string
+          created_at?: string
+          datos_anteriores?: Json | null
+          datos_nuevos?: Json | null
+          id?: string
+          registro_id?: string | null
+          tabla_nombre: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          datos_anteriores?: Json | null
+          datos_nuevos?: Json | null
+          id?: string
+          registro_id?: string | null
+          tabla_nombre?: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
+          deleted_at: string | null
           file_url: string
           id: string
           nombre: string | null
@@ -27,6 +64,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           file_url: string
           id?: string
           nombre?: string | null
@@ -37,6 +75,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           file_url?: string
           id?: string
           nombre?: string | null
@@ -53,6 +92,7 @@ export type Database = {
           celular: string | null
           clase_licencia: string | null
           created_at: string
+          deleted_at: string | null
           foto_url: string | null
           id: string
           licencia_vencimiento: string | null
@@ -66,6 +106,7 @@ export type Database = {
           celular?: string | null
           clase_licencia?: string | null
           created_at?: string
+          deleted_at?: string | null
           foto_url?: string | null
           id?: string
           licencia_vencimiento?: string | null
@@ -79,6 +120,7 @@ export type Database = {
           celular?: string | null
           clase_licencia?: string | null
           created_at?: string
+          deleted_at?: string | null
           foto_url?: string | null
           id?: string
           licencia_vencimiento?: string | null
@@ -116,6 +158,7 @@ export type Database = {
           certificado_sii_url: string | null
           correo: string | null
           created_at: string
+          deleted_at: string | null
           direccion: string | null
           id: string
           nombre_contacto: string | null
@@ -132,6 +175,7 @@ export type Database = {
           certificado_sii_url?: string | null
           correo?: string | null
           created_at?: string
+          deleted_at?: string | null
           direccion?: string | null
           id: string
           nombre_contacto?: string | null
@@ -148,6 +192,7 @@ export type Database = {
           certificado_sii_url?: string | null
           correo?: string | null
           created_at?: string
+          deleted_at?: string | null
           direccion?: string | null
           id?: string
           nombre_contacto?: string | null
@@ -164,6 +209,7 @@ export type Database = {
       rates: {
         Row: {
           created_at: string
+          deleted_at: string | null
           destino: string
           id: string
           origen: string
@@ -175,6 +221,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           destino: string
           id?: string
           origen: string
@@ -186,6 +233,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           destino?: string
           id?: string
           origen?: string
@@ -244,6 +292,7 @@ export type Database = {
           anio: number | null
           capacidad_toneladas: number | null
           created_at: string
+          deleted_at: string | null
           id: string
           marca: string | null
           modelo: string | null
@@ -260,6 +309,7 @@ export type Database = {
           anio?: number | null
           capacidad_toneladas?: number | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           marca?: string | null
           modelo?: string | null
@@ -276,6 +326,7 @@ export type Database = {
           anio?: number | null
           capacidad_toneladas?: number | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           marca?: string | null
           modelo?: string | null
