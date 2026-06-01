@@ -21,7 +21,7 @@ function TarifasPage() {
   const [editing, setEditing] = useState<string | null>(null);
 
   const load = async () => {
-    const { data } = await supabase.from("rates").select("*").order("origen").order("destino");
+    const { data } = await supabase.from("rates").select("*").is("deleted_at", null).order("origen").order("destino");
     setItems(data ?? []);
     setLoading(false);
   };
@@ -45,7 +45,7 @@ function TarifasPage() {
 
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar tarifa?")) return;
-    const { error } = await supabase.from("rates").delete().eq("id", id);
+    const { error } = await supabase.from("rates").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Eliminada"); load(); }
   };
 

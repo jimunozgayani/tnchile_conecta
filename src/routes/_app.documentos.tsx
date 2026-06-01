@@ -32,7 +32,7 @@ function DocumentosPage() {
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
-    const { data } = await supabase.from("documents").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("documents").select("*").is("deleted_at", null).order("created_at", { ascending: false });
     setItems(data ?? []);
     setLoading(false);
   };
@@ -65,11 +65,12 @@ function DocumentosPage() {
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
-  const remove = async (id: string, path: string) => {
+  const remove = async (id: string, _path: string) => {
     if (!confirm("¿Eliminar documento?")) return;
-    await supabase.storage.from("documents").remove([path]);
-    await supabase.from("documents").delete().eq("id", id);
-    toast.success("Eliminado"); load();
+    // Soft delete — preserve file in storage for audit/recovery
+    const { error } = await supabase.from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Eliminado"); load(); }
   };
 
   return (

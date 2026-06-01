@@ -28,7 +28,7 @@ function ChoferesPage() {
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
-    const { data } = await supabase.from("drivers").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("drivers").select("*").is("deleted_at", null).order("created_at", { ascending: false });
     setItems(data ?? []);
     const urls: Record<string, string> = {};
     for (const d of data ?? []) {
@@ -64,7 +64,7 @@ function ChoferesPage() {
 
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar este chofer?")) return;
-    const { error } = await supabase.from("drivers").delete().eq("id", id);
+    const { error } = await supabase.from("drivers").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Eliminado"); load(); }
   };

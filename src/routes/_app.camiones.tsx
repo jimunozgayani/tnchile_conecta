@@ -25,7 +25,7 @@ function CamionesPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("trucks").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("trucks").select("*").is("deleted_at", null).order("created_at", { ascending: false });
     setItems(data ?? []);
     setLoading(false);
   };
@@ -54,7 +54,7 @@ function CamionesPage() {
 
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar este camión?")) return;
-    const { error } = await supabase.from("trucks").delete().eq("id", id);
+    const { error } = await supabase.from("trucks").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Eliminado"); load(); }
   };

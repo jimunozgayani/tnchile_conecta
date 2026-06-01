@@ -1,11 +1,38 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send } from "lucide-react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
 import { inviteSupplier } from "@/lib/invitations.functions";
+
+type AuditEntry = {
+  id: string; tabla_nombre: string; registro_id: string | null;
+  accion: "INSERT" | "UPDATE" | "DELETE";
+  datos_anteriores: any; datos_nuevos: any;
+  usuario_email: string | null; created_at: string;
+};
+
+const TABLE_LABEL: Record<string, string> = {
+  trucks: "Camión", drivers: "Chofer", documents: "Documento",
+  rates: "Tarifa", profiles: "Proveedor",
+};
+
+function recordName(e: AuditEntry): string {
+  const row = e.datos_nuevos ?? e.datos_anteriores ?? {};
+  return row.patente || row.nombre_completo || row.nombre || row.razon_social ||
+    (row.origen && row.destino ? `${row.origen} → ${row.destino}` : null) ||
+    (e.registro_id ? e.registro_id.slice(0, 8) : "—");
+}
+
+function timeAgo(iso: string): string {
+  const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `hace ${s}s`;
+  const m = Math.floor(s / 60); if (m < 60) return `hace ${m}m`;
+  const h = Math.floor(m / 60); if (h < 24) return `hace ${h}h`;
+  return `hace ${Math.floor(h / 24)}d`;
+}
 
 export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
@@ -26,8 +53,8 @@ type Profile = {
   telefono: string | null; direccion: string | null; cargo: string | null;
   poliza_seguro_vencimiento: string | null;
 };
-type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null };
-type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null };
+type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null; deleted_at: string | null };
+type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null; deleted_at: string | null };
 
 const PROFILE_FIELDS: (keyof Profile)[] = [
   "razon_social", "rut_empresa", "nombre_contacto", "cargo",
@@ -58,24 +85,39 @@ function AdminPage() {
       const admin = (roles ?? []).some((r: any) => r.role === "admin");
       setIsAdmin(admin);
       setChecking(false);
-      if (admin) loadAll();
+      // loadAll is triggered by the showDeleted/isAdmin effect once isAdmin flips true
     })();
   }, [navigate]);
 
 
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+
   const loadAll = async () => {
-    const [{ data: p }, { data: t }, { data: d }, { data: inv }] = await Promise.all([
-      supabase.from("profiles").select("*"),
-      supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento"),
-      supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento"),
+    const profilesQ = supabase.from("profiles").select("*");
+    const trucksQ = supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento,deleted_at");
+    const driversQ = supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento,deleted_at");
+    if (!showDeleted) {
+      profilesQ.is("deleted_at", null);
+      trucksQ.is("deleted_at", null);
+      driversQ.is("deleted_at", null);
+    }
+    const [{ data: p }, { data: t }, { data: d }, { data: inv }, { data: a }] = await Promise.all([
+      profilesQ,
+      trucksQ,
+      driversQ,
       supabase.from("supplier_invitations").select("*").order("invited_at", { ascending: false }),
+      supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(20),
     ]);
     setProfiles((p ?? []) as Profile[]);
     setTrucks((t ?? []) as Truck[]);
     setDrivers((d ?? []) as Driver[]);
     setInvitations((inv ?? []) as Invitation[]);
+    setAudit((a ?? []) as AuditEntry[]);
     setLoading(false);
   };
+
+  useEffect(() => { if (isAdmin) loadAll(); }, [showDeleted, isAdmin]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,14 +184,14 @@ function AdminPage() {
       const hasData = tc.length > 0 || dc.length > 0;
       const status: SupplierStatus = hasData ? "activo" : "nuevo";
       if (p.correo) linkedEmails.add(p.correo.toLowerCase());
-      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status };
+      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status, deleted: !!(p as any).deleted_at };
     });
 
     const pendingRows = invitations
       .filter((i) => i.status === "invited" && !linkedEmails.has(i.email.toLowerCase()))
       .map((i) => ({
         key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
-        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus,
+        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus, deleted: false,
       }));
 
     return [...pendingRows, ...rows];
@@ -202,9 +244,15 @@ function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Panel de Administración</h1>
-        <p className="text-muted-foreground">Vista global de todos los proveedores TN Chile.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold">Panel de Administración</h1>
+          <p className="text-muted-foreground">Vista global de todos los proveedores TN Chile.</p>
+        </div>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm">
+          <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} className="h-4 w-4 accent-primary" />
+          Mostrar eliminados
+        </label>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -289,9 +337,12 @@ function AdminPage() {
             </thead>
             <tbody>
               {filasProveedores.map((r) => (
-                <tr key={r.key} className="border-t">
+                <tr key={r.key} className={`border-t ${r.deleted ? "bg-destructive/5 text-muted-foreground line-through" : ""}`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium">{r.name}</p>
+                    <p className="font-medium">
+                      {r.name}
+                      {r.deleted && <span className="ml-2 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive no-underline">Eliminado</span>}
+                    </p>
                     <p className="text-xs text-muted-foreground">{r.email}</p>
                   </td>
                   <td className="px-4 py-3 text-sm">{r.rut || "—"}</td>
@@ -315,8 +366,42 @@ function AdminPage() {
         </div>
       </div>
 
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+          <Activity className="h-5 w-5 text-primary" /> Actividad reciente
+        </h2>
+        {audit.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin actividad registrada todavía.</p>
+        ) : (
+          <ul className="divide-y">
+            {audit.map((e) => (
+              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex items-center gap-3 min-w-0">
+                  <ActionBadge action={e.accion} />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">
+                      {TABLE_LABEL[e.tabla_nombre] ?? e.tabla_nombre} · {recordName(e)}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{e.usuario_email || "sistema"}</p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(e.created_at)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
+}
+
+function ActionBadge({ action }: { action: "INSERT" | "UPDATE" | "DELETE" }) {
+  const cfg = {
+    INSERT: { label: "Creado", cls: "bg-success/15 text-success" },
+    UPDATE: { label: "Editado", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
+    DELETE: { label: "Eliminado", cls: "bg-destructive/15 text-destructive" },
+  }[action];
+  return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
 }
 
 function StatusBadge({ status }: { status: SupplierStatus }) {
