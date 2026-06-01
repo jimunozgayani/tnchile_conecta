@@ -18,8 +18,8 @@ function Dashboard() {
   useEffect(() => {
     (async () => {
       const [{ data: trucks }, { data: drivers }] = await Promise.all([
-        supabase.from("trucks").select("*"),
-        supabase.from("drivers").select("*"),
+        supabase.from("trucks").select("*").is("deleted_at", null),
+        supabase.from("drivers").select("*").is("deleted_at", null),
       ]);
 
       const items: Alerta[] = [];
