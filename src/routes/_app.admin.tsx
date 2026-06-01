@@ -1,11 +1,38 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send } from "lucide-react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
 import { inviteSupplier } from "@/lib/invitations.functions";
+
+type AuditEntry = {
+  id: string; tabla_nombre: string; registro_id: string | null;
+  accion: "INSERT" | "UPDATE" | "DELETE";
+  datos_anteriores: any; datos_nuevos: any;
+  usuario_email: string | null; created_at: string;
+};
+
+const TABLE_LABEL: Record<string, string> = {
+  trucks: "Camión", drivers: "Chofer", documents: "Documento",
+  rates: "Tarifa", profiles: "Proveedor",
+};
+
+function recordName(e: AuditEntry): string {
+  const row = e.datos_nuevos ?? e.datos_anteriores ?? {};
+  return row.patente || row.nombre_completo || row.nombre || row.razon_social ||
+    (row.origen && row.destino ? `${row.origen} → ${row.destino}` : null) ||
+    (e.registro_id ? e.registro_id.slice(0, 8) : "—");
+}
+
+function timeAgo(iso: string): string {
+  const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `hace ${s}s`;
+  const m = Math.floor(s / 60); if (m < 60) return `hace ${m}m`;
+  const h = Math.floor(m / 60); if (h < 24) return `hace ${h}h`;
+  return `hace ${Math.floor(h / 24)}d`;
+}
 
 export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
@@ -63,19 +90,34 @@ function AdminPage() {
   }, [navigate]);
 
 
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+
   const loadAll = async () => {
-    const [{ data: p }, { data: t }, { data: d }, { data: inv }] = await Promise.all([
-      supabase.from("profiles").select("*"),
-      supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento"),
-      supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento"),
+    const profilesQ = supabase.from("profiles").select("*");
+    const trucksQ = supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento,deleted_at");
+    const driversQ = supabase.from("drivers").select("id,user_id,nombre_completo,licencia_vencimiento,carnet_vencimiento,deleted_at");
+    if (!showDeleted) {
+      profilesQ.is("deleted_at", null);
+      trucksQ.is("deleted_at", null);
+      driversQ.is("deleted_at", null);
+    }
+    const [{ data: p }, { data: t }, { data: d }, { data: inv }, { data: a }] = await Promise.all([
+      profilesQ,
+      trucksQ,
+      driversQ,
       supabase.from("supplier_invitations").select("*").order("invited_at", { ascending: false }),
+      supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(20),
     ]);
     setProfiles((p ?? []) as Profile[]);
     setTrucks((t ?? []) as Truck[]);
     setDrivers((d ?? []) as Driver[]);
     setInvitations((inv ?? []) as Invitation[]);
+    setAudit((a ?? []) as AuditEntry[]);
     setLoading(false);
   };
+
+  useEffect(() => { if (isAdmin) loadAll(); }, [showDeleted, isAdmin]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
