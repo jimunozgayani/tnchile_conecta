@@ -363,8 +363,42 @@ function AdminPage() {
         </div>
       </div>
 
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+          <Activity className="h-5 w-5 text-primary" /> Actividad reciente
+        </h2>
+        {audit.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin actividad registrada todavía.</p>
+        ) : (
+          <ul className="divide-y">
+            {audit.map((e) => (
+              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex items-center gap-3 min-w-0">
+                  <ActionBadge action={e.accion} />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">
+                      {TABLE_LABEL[e.tabla_nombre] ?? e.tabla_nombre} · {recordName(e)}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{e.usuario_email || "sistema"}</p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(e.created_at)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
+}
+
+function ActionBadge({ action }: { action: "INSERT" | "UPDATE" | "DELETE" }) {
+  const cfg = {
+    INSERT: { label: "Creado", cls: "bg-success/15 text-success" },
+    UPDATE: { label: "Editado", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
+    DELETE: { label: "Eliminado", cls: "bg-destructive/15 text-destructive" },
+  }[action];
+  return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
 }
 
 function StatusBadge({ status }: { status: SupplierStatus }) {
