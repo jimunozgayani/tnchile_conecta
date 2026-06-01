@@ -85,7 +85,7 @@ function AdminPage() {
       const admin = (roles ?? []).some((r: any) => r.role === "admin");
       setIsAdmin(admin);
       setChecking(false);
-      if (admin) loadAll();
+      // loadAll is triggered by the showDeleted/isAdmin effect once isAdmin flips true
     })();
   }, [navigate]);
 
