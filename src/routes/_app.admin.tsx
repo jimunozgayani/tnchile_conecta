@@ -337,9 +337,12 @@ function AdminPage() {
             </thead>
             <tbody>
               {filasProveedores.map((r) => (
-                <tr key={r.key} className="border-t">
+                <tr key={r.key} className={`border-t ${r.deleted ? "bg-destructive/5 text-muted-foreground line-through" : ""}`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium">{r.name}</p>
+                    <p className="font-medium">
+                      {r.name}
+                      {r.deleted && <span className="ml-2 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive no-underline">Eliminado</span>}
+                    </p>
                     <p className="text-xs text-muted-foreground">{r.email}</p>
                   </td>
                   <td className="px-4 py-3 text-sm">{r.rut || "—"}</td>
