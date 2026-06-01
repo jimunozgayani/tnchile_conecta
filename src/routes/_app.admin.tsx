@@ -184,14 +184,14 @@ function AdminPage() {
       const hasData = tc.length > 0 || dc.length > 0;
       const status: SupplierStatus = hasData ? "activo" : "nuevo";
       if (p.correo) linkedEmails.add(p.correo.toLowerCase());
-      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status };
+      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status, deleted: !!(p as any).deleted_at };
     });
 
     const pendingRows = invitations
       .filter((i) => i.status === "invited" && !linkedEmails.has(i.email.toLowerCase()))
       .map((i) => ({
         key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
-        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus,
+        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus, deleted: false,
       }));
 
     return [...pendingRows, ...rows];
