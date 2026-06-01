@@ -96,22 +96,30 @@ function PerfilPage() {
         <h2 className="mb-4 font-semibold">Documentos</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Póliza de seguro (PDF)</label>
-            <input type="file" accept="application/pdf"
+            <label className="block text-sm font-medium">Póliza de seguro (PDF / imagen)</label>
+            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT}
               onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "poliza_seguro_url")}
               className="mt-1 block text-sm" />
-            {form.poliza_seguro_url && <p className="mt-1 text-xs text-success">✓ Cargado</p>}
+            {form.poliza_seguro_url && (
+              <p className="mt-1 text-xs text-success">
+                ✓ Cargado · <button type="button" onClick={() => viewFile(form.poliza_seguro_url)} className="underline">Ver</button>
+              </p>
+            )}
             <label className="mt-2 block text-sm font-medium">Vencimiento póliza</label>
             <input type="date" value={form.poliza_seguro_vencimiento ?? ""}
               onChange={(e) => update("poliza_seguro_vencimiento", e.target.value)}
               className="mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium">Certificado SII (PDF)</label>
-            <input type="file" accept="application/pdf"
+            <label className="block text-sm font-medium">Certificado SII (PDF / imagen)</label>
+            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT}
               onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "certificado_sii_url")}
               className="mt-1 block text-sm" />
-            {form.certificado_sii_url && <p className="mt-1 text-xs text-success">✓ Cargado</p>}
+            {form.certificado_sii_url && (
+              <p className="mt-1 text-xs text-success">
+                ✓ Cargado · <button type="button" onClick={() => viewFile(form.certificado_sii_url)} className="underline">Ver</button>
+              </p>
+            )}
           </div>
         </div>
       </div>
