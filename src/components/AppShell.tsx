@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
 import markUrl from "@/assets/tn-chile-mark.png";
+import { SessionExpiryWarning } from "./SessionExpiryWarning";
 
 const NAV = [
   { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
@@ -91,6 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
+      <SessionExpiryWarning />
     </div>
   );
 }

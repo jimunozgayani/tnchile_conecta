@@ -24,10 +24,28 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Check lockout BEFORE attempting sign-in
+    const { data: locked } = await supabase.rpc("is_email_locked", { _email: email });
+    if (locked === true) {
+      setLoading(false);
+      toast.error("Cuenta bloqueada temporalmente. Intenta en 15 minutos.");
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Record the attempt (fire-and-forget)
+    supabase.from("login_attempts").insert({ user_email: email, success: !error }).then(() => {});
+
     setLoading(false);
-    if (error) toast.error(error.message);
-    else {
+    if (error) {
+      // Re-check lockout after this failure to surface the lockout message immediately
+      const { data: nowLocked } = await supabase.rpc("is_email_locked", { _email: email });
+      if (nowLocked === true) toast.error("Cuenta bloqueada temporalmente. Intenta en 15 minutos.");
+      else toast.error(error.message);
+    } else {
+      localStorage.setItem("tn_last_activity", String(Date.now()));
       toast.success("Sesión iniciada");
       navigate({ to: "/dashboard" });
     }

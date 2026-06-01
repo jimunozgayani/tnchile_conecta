@@ -4,6 +4,7 @@ import { FileText, Trash2, Upload, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ALLOWED_UPLOAD_ACCEPT, validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/documentos")({
   component: DocumentosPage,
@@ -40,6 +41,8 @@ function DocumentosPage() {
   const upload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return toast.error("Selecciona un archivo");
+    const v = validateUpload(file);
+    if (!v.ok) return toast.error(v.error);
     setUploading(true);
     const path = `${userId}/${Date.now()}-${file.name}`;
     const { error: upErr } = await supabase.storage.from("documents").upload(path, file);
@@ -58,7 +61,7 @@ function DocumentosPage() {
   };
 
   const view = async (path: string) => {
-    const { data } = await supabase.storage.from("documents").createSignedUrl(path, 60);
+    const { data } = await supabase.storage.from("documents").createSignedUrl(path, 3600);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
@@ -98,7 +101,14 @@ function DocumentosPage() {
           </div>
           <div>
             <label className="block text-sm font-medium">Archivo</label>
-            <input type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT} onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                if (f) {
+                  const v = validateUpload(f);
+                  if (!v.ok) { toast.error(v.error); e.target.value = ""; setFile(null); return; }
+                }
+                setFile(f);
+              }}
               className="mt-1 block w-full text-sm" />
           </div>
         </div>

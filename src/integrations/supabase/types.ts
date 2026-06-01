@@ -89,6 +89,27 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          success: boolean
+          user_email: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          success?: boolean
+          user_email: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          success?: boolean
+          user_email?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cargo: string | null
@@ -302,6 +323,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_email_locked: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "supplier"

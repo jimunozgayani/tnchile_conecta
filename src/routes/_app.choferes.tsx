@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CLASES_LICENCIA } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
+import { validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/choferes")({
   component: ChoferesPage,
@@ -42,6 +43,8 @@ function ChoferesPage() {
   useEffect(() => { load(); }, []);
 
   const uploadPhoto = async (file: File) => {
+    const v = validateUpload(file);
+    if (!v.ok) return toast.error(v.error);
     const path = `${userId}/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("driver-photos").upload(path, file);
     if (error) return toast.error(error.message);
@@ -136,7 +139,7 @@ function ChoferesPage() {
               <Field label="Vencimiento carnet identidad" type="date" value={form.carnet_vencimiento} onChange={(v) => setForm({ ...form, carnet_vencimiento: v })} />
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium">Foto (opcional)</label>
-                <input type="file" accept="image/*"
+                <input type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                   onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])}
                   className="mt-1 block text-sm" />
                 {form.foto_url && <p className="mt-1 text-xs text-success">✓ Foto cargada</p>}
