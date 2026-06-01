@@ -101,7 +101,14 @@ function DocumentosPage() {
           </div>
           <div>
             <label className="block text-sm font-medium">Archivo</label>
-            <input type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT} onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                if (f) {
+                  const v = validateUpload(f);
+                  if (!v.ok) { toast.error(v.error); e.target.value = ""; setFile(null); return; }
+                }
+                setFile(f);
+              }}
               className="mt-1 block w-full text-sm" />
           </div>
         </div>
