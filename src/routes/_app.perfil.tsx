@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ALLOWED_UPLOAD_ACCEPT, validateUpload } from "@/lib/upload-validation";
 import { REGIONES_CHILE } from "@/lib/regions";
 
 export const Route = createFileRoute("/_app/perfil")({
@@ -28,11 +29,19 @@ function PerfilPage() {
   const update = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
 
   const uploadFile = async (file: File, field: string) => {
+    const v = validateUpload(file);
+    if (!v.ok) return toast.error(v.error);
     const path = `${userId}/${field}-${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("documents").upload(path, file);
     if (error) return toast.error(error.message);
     update(field, path);
     toast.success("Archivo subido");
+  };
+
+  const viewFile = async (path: string) => {
+    const { data } = await supabase.storage.from("documents").createSignedUrl(path, 3600);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    else toast.error("No se pudo abrir el archivo");
   };
 
   const save = async () => {
