@@ -32,7 +32,7 @@ function DocumentosPage() {
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
-    const { data } = await supabase.from("documents").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("documents").select("*").is("deleted_at", null).order("created_at", { ascending: false });
     setItems(data ?? []);
     setLoading(false);
   };
