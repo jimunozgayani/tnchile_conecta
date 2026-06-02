@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Truck, Users, AlertTriangle, Clock } from "lucide-react";
+import { Truck, Users, AlertTriangle, Clock, CheckCircle2, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta } from "@/lib/regions";
+import { calcCompleteness, completionTone, type CompletenessResult } from "@/lib/completeness";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
