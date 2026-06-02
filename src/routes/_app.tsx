@@ -24,5 +24,5 @@ function AppLayout() {
     );
   }
 
-  return <AppShell><Outlet /></AppShell>;
+  return <SuspensionGate><AppShell><Outlet /></AppShell></SuspensionGate>;
 }
