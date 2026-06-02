@@ -14,13 +14,16 @@ type Alerta = { tipo: string; entidad: string; vencimiento: string; dias: number
 function Dashboard() {
   const [stats, setStats] = useState({ camiones: 0, choferes: 0, porVencer: 0, vencidos: 0 });
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [completeness, setCompleteness] = useState<CompletenessResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const [{ data: trucks }, { data: drivers }] = await Promise.all([
+      const { data: { user } } = await supabase.auth.getUser();
+      const [{ data: trucks }, { data: drivers }, { data: profile }] = await Promise.all([
         supabase.from("trucks").select("*").is("deleted_at", null),
         supabase.from("drivers").select("*").is("deleted_at", null),
+        user ? supabase.from("profiles").select("*").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
 
       const items: Alerta[] = [];
