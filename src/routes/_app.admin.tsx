@@ -40,10 +40,10 @@ export const Route = createFileRoute("/_app/admin")({
 
 type Invitation = {
   id: string; email: string; company_name: string | null; rut: string | null;
-  status: "invited" | "active"; invited_at: string; activated_at: string | null;
-  user_id: string | null;
+  status: "invited" | "active" | "suspended"; invited_at: string; activated_at: string | null;
+  user_id: string | null; notes: string | null;
 };
-type SupplierStatus = "invitado" | "nuevo" | "activo";
+type SupplierStatus = "invitado" | "nuevo" | "activo" | "suspendido";
 
 
 
