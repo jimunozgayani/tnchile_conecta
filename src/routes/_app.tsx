@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AppShell } from "@/components/AppShell";
+import { SuspensionGate } from "@/components/SuspensionGate";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
