@@ -57,6 +57,11 @@ function Dashboard() {
         porVencer: items.filter((i) => i.dias >= 0 && i.dias <= 30).length,
         vencidos: items.filter((i) => i.dias < 0).length,
       });
+      setCompleteness(calcCompleteness({
+        profile: profile as any,
+        trucks: (trucks ?? []) as any,
+        drivers: (drivers ?? []) as any,
+      }));
       setLoading(false);
     })();
   }, []);
