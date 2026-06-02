@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Truck, Users, AlertTriangle, Clock } from "lucide-react";
+import { Truck, Users, AlertTriangle, Clock, CheckCircle2, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta } from "@/lib/regions";
+import { calcCompleteness, completionTone, type CompletenessResult } from "@/lib/completeness";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
@@ -13,13 +14,16 @@ type Alerta = { tipo: string; entidad: string; vencimiento: string; dias: number
 function Dashboard() {
   const [stats, setStats] = useState({ camiones: 0, choferes: 0, porVencer: 0, vencidos: 0 });
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [completeness, setCompleteness] = useState<CompletenessResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const [{ data: trucks }, { data: drivers }] = await Promise.all([
+      const { data: { user } } = await supabase.auth.getUser();
+      const [{ data: trucks }, { data: drivers }, { data: profile }] = await Promise.all([
         supabase.from("trucks").select("*").is("deleted_at", null),
         supabase.from("drivers").select("*").is("deleted_at", null),
+        user ? supabase.from("profiles").select("*").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
 
       const items: Alerta[] = [];
@@ -53,6 +57,11 @@ function Dashboard() {
         porVencer: items.filter((i) => i.dias >= 0 && i.dias <= 30).length,
         vencidos: items.filter((i) => i.dias < 0).length,
       });
+      setCompleteness(calcCompleteness({
+        profile: profile as any,
+        trucks: (trucks ?? []) as any,
+        drivers: (drivers ?? []) as any,
+      }));
       setLoading(false);
     })();
   }, []);
@@ -82,6 +91,40 @@ function Dashboard() {
           </div>
         ))}
       </div>
+
+      {completeness && (
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Completitud del perfil</h2>
+              <p className="text-sm text-muted-foreground">Mantén tu información al día para mejorar tu clasificación.</p>
+            </div>
+            <span className={`text-2xl font-bold ${
+              completionTone(completeness.score) === "good" ? "text-success" :
+              completionTone(completeness.score) === "warn" ? "text-warning-foreground" : "text-destructive"
+            }`}>{completeness.score}%</span>
+          </div>
+          <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full transition-all ${
+                completionTone(completeness.score) === "good" ? "bg-success" :
+                completionTone(completeness.score) === "warn" ? "bg-warning" : "bg-destructive"
+              }`}
+              style={{ width: `${completeness.score}%` }}
+            />
+          </div>
+          <ul className="mt-4 grid gap-2 md:grid-cols-2">
+            {completeness.items.map((it) => (
+              <li key={it.label} className="flex items-start gap-2 text-sm">
+                {it.done
+                  ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                  : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                <span className={it.done ? "text-muted-foreground line-through" : ""}>{it.label} <span className="text-xs text-muted-foreground">({it.weight}%)</span></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-5 py-4">

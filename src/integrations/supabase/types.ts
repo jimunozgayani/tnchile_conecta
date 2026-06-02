@@ -56,35 +56,52 @@ export type Database = {
           deleted_at: string | null
           file_url: string
           id: string
+          is_current: boolean
           nombre: string | null
+          previous_version_id: string | null
           related_id: string | null
           tipo: string
           user_id: string
           vencimiento: string | null
+          version_number: number
         }
         Insert: {
           created_at?: string
           deleted_at?: string | null
           file_url: string
           id?: string
+          is_current?: boolean
           nombre?: string | null
+          previous_version_id?: string | null
           related_id?: string | null
           tipo: string
           user_id: string
           vencimiento?: string | null
+          version_number?: number
         }
         Update: {
           created_at?: string
           deleted_at?: string | null
           file_url?: string
           id?: string
+          is_current?: boolean
           nombre?: string | null
+          previous_version_id?: string | null
           related_id?: string | null
           tipo?: string
           user_id?: string
           vencimiento?: string | null
+          version_number?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drivers: {
         Row: {
