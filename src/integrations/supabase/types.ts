@@ -110,6 +110,7 @@ export type Database = {
           clase_licencia: string | null
           created_at: string
           deleted_at: string | null
+          estado_doc: string | null
           foto_url: string | null
           id: string
           licencia_vencimiento: string | null
@@ -124,6 +125,7 @@ export type Database = {
           clase_licencia?: string | null
           created_at?: string
           deleted_at?: string | null
+          estado_doc?: string | null
           foto_url?: string | null
           id?: string
           licencia_vencimiento?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           clase_licencia?: string | null
           created_at?: string
           deleted_at?: string | null
+          estado_doc?: string | null
           foto_url?: string | null
           id?: string
           licencia_vencimiento?: string | null
@@ -169,6 +172,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notificaciones: {
+        Row: {
+          created_at: string
+          dias_restantes: number
+          doc_tipo: string
+          entity_id: string
+          entity_name: string | null
+          entity_tipo: string
+          fecha_vencimiento: string
+          id: string
+          leida: boolean
+          severidad: string
+          umbral: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dias_restantes: number
+          doc_tipo: string
+          entity_id: string
+          entity_name?: string | null
+          entity_tipo: string
+          fecha_vencimiento: string
+          id?: string
+          leida?: boolean
+          severidad: string
+          umbral: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dias_restantes?: number
+          doc_tipo?: string
+          entity_id?: string
+          entity_name?: string | null
+          entity_tipo?: string
+          fecha_vencimiento?: string
+          id?: string
+          leida?: boolean
+          severidad?: string
+          umbral?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cargo: string | null
@@ -177,6 +225,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           direccion: string | null
+          estado_doc: string | null
           id: string
           nombre_contacto: string | null
           poliza_seguro_url: string | null
@@ -194,6 +243,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           direccion?: string | null
+          estado_doc?: string | null
           id: string
           nombre_contacto?: string | null
           poliza_seguro_url?: string | null
@@ -211,6 +261,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           direccion?: string | null
+          estado_doc?: string | null
           id?: string
           nombre_contacto?: string | null
           poliza_seguro_url?: string | null
@@ -313,6 +364,7 @@ export type Database = {
           capacidad_toneladas: number | null
           created_at: string
           deleted_at: string | null
+          estado_doc: string | null
           id: string
           marca: string | null
           modelo: string | null
@@ -330,6 +382,7 @@ export type Database = {
           capacidad_toneladas?: number | null
           created_at?: string
           deleted_at?: string | null
+          estado_doc?: string | null
           id?: string
           marca?: string | null
           modelo?: string | null
@@ -347,6 +400,7 @@ export type Database = {
           capacidad_toneladas?: number | null
           created_at?: string
           deleted_at?: string | null
+          estado_doc?: string | null
           id?: string
           marca?: string | null
           modelo?: string | null
@@ -395,6 +449,7 @@ export type Database = {
         Returns: boolean
       }
       is_email_locked: { Args: { _email: string }; Returns: boolean }
+      process_document_expiries: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "supplier"
