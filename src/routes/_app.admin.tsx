@@ -189,6 +189,7 @@ function AdminPage() {
   const filasProveedores = useMemo(() => {
     const invByEmail = new Map(invitations.map((i) => [i.email.toLowerCase(), i]));
     const linkedEmails = new Set<string>();
+    const now = Date.now();
 
     const rows = profiles.map((p) => {
       const tc = trucks.filter((t) => t.user_id === p.id);
@@ -207,17 +208,30 @@ function AdminPage() {
       const filled = PROFILE_FIELDS.filter((k) => !!p[k]).length;
       const completion = Math.round((filled / PROFILE_FIELDS.length) * 100);
       const hasData = tc.length > 0 || dc.length > 0;
-      const status: SupplierStatus = hasData ? "activo" : "nuevo";
+      const inv = p.correo ? invByEmail.get(p.correo.toLowerCase()) : undefined;
+      let status: SupplierStatus = hasData ? "activo" : "nuevo";
+      if (inv?.status === "suspended") status = "suspendido";
       if (p.correo) linkedEmails.add(p.correo.toLowerCase());
-      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status, deleted: !!(p as any).deleted_at };
+      return {
+        key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa,
+        region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status,
+        deleted: !!(p as any).deleted_at, invitationId: inv?.id ?? null, hoursLeft: null as number | null,
+        canResend: false,
+      };
     });
 
     const pendingRows = invitations
-      .filter((i) => i.status === "invited" && !linkedEmails.has(i.email.toLowerCase()))
-      .map((i) => ({
-        key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
-        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus, deleted: false,
-      }));
+      .filter((i) => (i.status === "invited" || i.status === "suspended") && !linkedEmails.has(i.email.toLowerCase()))
+      .map((i) => {
+        const ageHours = Math.floor((now - new Date(i.invited_at).getTime()) / 3_600_000);
+        const hoursLeft = Math.max(0, 24 - ageHours);
+        return {
+          key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
+          trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0,
+          status: (i.status === "suspended" ? "suspendido" : "invitado") as SupplierStatus,
+          deleted: false, invitationId: i.id, hoursLeft, canResend: ageHours >= 24 && i.status === "invited",
+        };
+      });
 
     return [...pendingRows, ...rows];
   }, [profiles, trucks, drivers, invitations]);
