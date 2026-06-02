@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
 import markUrl from "@/assets/tn-chile-mark.png";
 import { SessionExpiryWarning } from "./SessionExpiryWarning";
+import { NotificationBell } from "./NotificationBell";
 
 const NAV = [
   { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
