@@ -374,6 +374,7 @@ function AdminPage() {
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Documentos</th>
                 <th className="px-4 py-3">Perfil</th>
+                <th className="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
