@@ -64,6 +64,8 @@ const PROFILE_FIELDS: (keyof Profile)[] = [
 function AdminPage() {
   const navigate = useNavigate();
   const invite = useServerFn(inviteSupplier);
+  const resend = useServerFn(resendInvitation);
+  const toggleSuspend = useServerFn(setSupplierSuspension);
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -75,6 +77,7 @@ function AdminPage() {
   const [invEmail, setInvEmail] = useState("");
   const [invCompany, setInvCompany] = useState("");
   const [invRut, setInvRut] = useState("");
+  const [invNotes, setInvNotes] = useState("");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
