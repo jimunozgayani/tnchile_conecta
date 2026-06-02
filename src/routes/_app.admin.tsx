@@ -391,14 +391,32 @@ function AdminPage() {
                   <td className="px-4 py-3">{r.region || "—"}</td>
                   <td className="px-4 py-3 text-center">{r.trucks}</td>
                   <td className="px-4 py-3 text-center">{r.drivers}</td>
-                  <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
-                  <td className="px-4 py-3">{r.status === "invitado" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
+                  <td className="px-4 py-3"><StatusBadge status={r.status} hoursLeft={r.status === "invitado" ? r.hoursLeft : null} /></td>
+                  <td className="px-4 py-3">{r.status === "invitado" || r.status === "suspendido" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
                         <div className="h-full bg-primary" style={{ width: `${r.completion}%` }} />
                       </div>
                       <span className="text-xs text-muted-foreground">{r.completion}%</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {r.canResend && r.invitationId && r.email && (
+                        <button onClick={() => handleResend(r.invitationId!, r.email!)}
+                          className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <Send className="h-3 w-3" /> Reenviar
+                        </button>
+                      )}
+                      {r.email && r.status !== "invitado" && (
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs">
+                          <input type="checkbox" className="h-4 w-4 accent-primary"
+                            checked={r.status !== "suspendido"}
+                            onChange={(e) => handleToggleSuspension(r.email!, !e.target.checked)} />
+                          {r.status === "suspendido" ? "Suspendida" : "Activa"}
+                        </label>
+                      )}
                     </div>
                   </td>
                 </tr>
