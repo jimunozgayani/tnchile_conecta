@@ -5,7 +5,7 @@ import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activit
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
-import { inviteSupplier } from "@/lib/invitations.functions";
+import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
 
 type AuditEntry = {
   id: string; tabla_nombre: string; registro_id: string | null;
