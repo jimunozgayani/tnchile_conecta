@@ -400,7 +400,10 @@ function AdminPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${r.completion}%` }} />
+                        <div className={`h-full ${
+                          completionTone(r.completion) === "good" ? "bg-success" :
+                          completionTone(r.completion) === "warn" ? "bg-warning" : "bg-destructive"
+                        }`} style={{ width: `${r.completion}%` }} />
                       </div>
                       <span className="text-xs text-muted-foreground">{r.completion}%</span>
                     </div>
