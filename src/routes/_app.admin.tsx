@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
 import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
+import { calcCompleteness, completionTone } from "@/lib/completeness";
 
 type AuditEntry = {
   id: string; tabla_nombre: string; registro_id: string | null;
