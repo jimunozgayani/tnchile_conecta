@@ -206,8 +206,11 @@ function AdminPage() {
         if (e === "danger") { docStatus = "expired"; break; }
         if (e === "warn" || e === "soon") docStatus = "warning";
       }
-      const filled = PROFILE_FIELDS.filter((k) => !!p[k]).length;
-      const completion = Math.round((filled / PROFILE_FIELDS.length) * 100);
+      const completion = calcCompleteness({
+        profile: p as any,
+        trucks: tc as any,
+        drivers: dc as any,
+      }).score;
       const hasData = tc.length > 0 || dc.length > 0;
       const inv = p.correo ? invByEmail.get(p.correo.toLowerCase()) : undefined;
       let status: SupplierStatus = hasData ? "activo" : "nuevo";
