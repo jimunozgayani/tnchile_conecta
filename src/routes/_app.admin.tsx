@@ -5,7 +5,7 @@ import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activit
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
-import { inviteSupplier } from "@/lib/invitations.functions";
+import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
 
 type AuditEntry = {
   id: string; tabla_nombre: string; registro_id: string | null;
@@ -40,10 +40,10 @@ export const Route = createFileRoute("/_app/admin")({
 
 type Invitation = {
   id: string; email: string; company_name: string | null; rut: string | null;
-  status: "invited" | "active"; invited_at: string; activated_at: string | null;
-  user_id: string | null;
+  status: "invited" | "active" | "suspended"; invited_at: string; activated_at: string | null;
+  user_id: string | null; notes: string | null;
 };
-type SupplierStatus = "invitado" | "nuevo" | "activo";
+type SupplierStatus = "invitado" | "nuevo" | "activo" | "suspendido";
 
 
 
@@ -64,6 +64,8 @@ const PROFILE_FIELDS: (keyof Profile)[] = [
 function AdminPage() {
   const navigate = useNavigate();
   const invite = useServerFn(inviteSupplier);
+  const resend = useServerFn(resendInvitation);
+  const toggleSuspend = useServerFn(setSupplierSuspension);
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -75,6 +77,7 @@ function AdminPage() {
   const [invEmail, setInvEmail] = useState("");
   const [invCompany, setInvCompany] = useState("");
   const [invRut, setInvRut] = useState("");
+  const [invNotes, setInvNotes] = useState("");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -124,14 +127,36 @@ function AdminPage() {
     if (!invEmail.trim()) return;
     setSending(true);
     try {
-      await invite({ data: { email: invEmail.trim(), company_name: invCompany || null, rut: invRut || null } });
+      await invite({ data: { email: invEmail.trim(), company_name: invCompany || null, rut: invRut || null, notes: invNotes || null } });
       toast.success(`Invitación enviada a ${invEmail}`);
-      setInvEmail(""); setInvCompany(""); setInvRut("");
+      setInvEmail(""); setInvCompany(""); setInvRut(""); setInvNotes("");
       loadAll();
     } catch (err: any) {
       toast.error(err?.message ?? "No se pudo enviar la invitación");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleResend = async (id: string, email: string) => {
+    try {
+      await resend({ data: { id } });
+      toast.success(`Invitación reenviada a ${email}`);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo reenviar");
+    }
+  };
+
+  const handleToggleSuspension = async (email: string, suspended: boolean) => {
+    const verb = suspended ? "suspender" : "reactivar";
+    if (!window.confirm(`¿Confirmas ${verb} la cuenta de ${email}?`)) return;
+    try {
+      await toggleSuspend({ data: { email, suspended } });
+      toast.success(suspended ? "Cuenta suspendida" : "Cuenta reactivada");
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo actualizar");
     }
   };
 
@@ -164,6 +189,7 @@ function AdminPage() {
   const filasProveedores = useMemo(() => {
     const invByEmail = new Map(invitations.map((i) => [i.email.toLowerCase(), i]));
     const linkedEmails = new Set<string>();
+    const now = Date.now();
 
     const rows = profiles.map((p) => {
       const tc = trucks.filter((t) => t.user_id === p.id);
@@ -182,17 +208,30 @@ function AdminPage() {
       const filled = PROFILE_FIELDS.filter((k) => !!p[k]).length;
       const completion = Math.round((filled / PROFILE_FIELDS.length) * 100);
       const hasData = tc.length > 0 || dc.length > 0;
-      const status: SupplierStatus = hasData ? "activo" : "nuevo";
+      const inv = p.correo ? invByEmail.get(p.correo.toLowerCase()) : undefined;
+      let status: SupplierStatus = hasData ? "activo" : "nuevo";
+      if (inv?.status === "suspended") status = "suspendido";
       if (p.correo) linkedEmails.add(p.correo.toLowerCase());
-      return { key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa, region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status, deleted: !!(p as any).deleted_at };
+      return {
+        key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa,
+        region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status,
+        deleted: !!(p as any).deleted_at, invitationId: inv?.id ?? null, hoursLeft: null as number | null,
+        canResend: false,
+      };
     });
 
     const pendingRows = invitations
-      .filter((i) => i.status === "invited" && !linkedEmails.has(i.email.toLowerCase()))
-      .map((i) => ({
-        key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
-        trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0, status: "invitado" as SupplierStatus, deleted: false,
-      }));
+      .filter((i) => (i.status === "invited" || i.status === "suspended") && !linkedEmails.has(i.email.toLowerCase()))
+      .map((i) => {
+        const ageHours = Math.floor((now - new Date(i.invited_at).getTime()) / 3_600_000);
+        const hoursLeft = Math.max(0, 24 - ageHours);
+        return {
+          key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
+          trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0,
+          status: (i.status === "suspended" ? "suspendido" : "invitado") as SupplierStatus,
+          deleted: false, invitationId: i.id, hoursLeft, canResend: ageHours >= 24 && i.status === "invited",
+        };
+      });
 
     return [...pendingRows, ...rows];
   }, [profiles, trucks, drivers, invitations]);
@@ -303,15 +342,17 @@ function AdminPage() {
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Mail className="h-5 w-5 text-primary" /> Invitar proveedor</h2>
         <p className="mb-4 text-sm text-muted-foreground">Envía una invitación por correo. El proveedor recibirá un enlace para activar su cuenta.</p>
-        <form onSubmit={handleInvite} className="grid gap-3 md:grid-cols-[2fr_2fr_1fr_auto]">
+        <form onSubmit={handleInvite} className="grid gap-3 md:grid-cols-3">
           <input required type="email" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="correo@empresa.cl"
             className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           <input value={invCompany} onChange={(e) => setInvCompany(e.target.value)} placeholder="Razón social (opcional)"
             className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           <input value={invRut} onChange={(e) => setInvRut(e.target.value)} placeholder="RUT (opcional)"
             className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <textarea value={invNotes} onChange={(e) => setInvNotes(e.target.value)} placeholder="Notas internas (opcional)" rows={2}
+            className="md:col-span-3 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           <button disabled={sending} type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60">
+            className="md:col-span-3 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60">
             <Send className="h-4 w-4" /> {sending ? "Enviando..." : "Enviar invitación"}
           </button>
         </form>
@@ -333,6 +374,7 @@ function AdminPage() {
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Documentos</th>
                 <th className="px-4 py-3">Perfil</th>
+                <th className="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -349,14 +391,32 @@ function AdminPage() {
                   <td className="px-4 py-3">{r.region || "—"}</td>
                   <td className="px-4 py-3 text-center">{r.trucks}</td>
                   <td className="px-4 py-3 text-center">{r.drivers}</td>
-                  <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
-                  <td className="px-4 py-3">{r.status === "invitado" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
+                  <td className="px-4 py-3"><StatusBadge status={r.status} hoursLeft={r.status === "invitado" ? r.hoursLeft : null} /></td>
+                  <td className="px-4 py-3">{r.status === "invitado" || r.status === "suspendido" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
                         <div className="h-full bg-primary" style={{ width: `${r.completion}%` }} />
                       </div>
                       <span className="text-xs text-muted-foreground">{r.completion}%</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {r.canResend && r.invitationId && r.email && (
+                        <button onClick={() => handleResend(r.invitationId!, r.email!)}
+                          className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <Send className="h-3 w-3" /> Reenviar
+                        </button>
+                      )}
+                      {r.email && r.status !== "invitado" && (
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs">
+                          <input type="checkbox" className="h-4 w-4 accent-primary"
+                            checked={r.status !== "suspendido"}
+                            onChange={(e) => handleToggleSuspension(r.email!, !e.target.checked)} />
+                          {r.status === "suspendido" ? "Suspendida" : "Activa"}
+                        </label>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -404,13 +464,15 @@ function ActionBadge({ action }: { action: "INSERT" | "UPDATE" | "DELETE" }) {
   return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
 }
 
-function StatusBadge({ status }: { status: SupplierStatus }) {
+function StatusBadge({ status, hoursLeft }: { status: SupplierStatus; hoursLeft?: number | null }) {
   const cfg = {
     invitado: { label: "Invitado", cls: "bg-warning/30 text-warning-foreground" },
     nuevo: { label: "Nuevo", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
     activo: { label: "Activo", cls: "bg-success/15 text-success" },
+    suspendido: { label: "Suspendido", cls: "bg-destructive/15 text-destructive" },
   }[status];
-  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
+  const extra = status === "invitado" && hoursLeft != null && hoursLeft > 0 ? ` · ${hoursLeft}h` : "";
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}{extra}</span>;
 }
 
 
