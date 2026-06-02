@@ -254,6 +254,7 @@ export type Database = {
           id: string
           invited_at: string
           invited_by: string | null
+          notes: string | null
           rut: string | null
           status: Database["public"]["Enums"]["invitation_status"]
           updated_at: string
@@ -267,6 +268,7 @@ export type Database = {
           id?: string
           invited_at?: string
           invited_by?: string | null
+          notes?: string | null
           rut?: string | null
           status?: Database["public"]["Enums"]["invitation_status"]
           updated_at?: string
@@ -280,6 +282,7 @@ export type Database = {
           id?: string
           invited_at?: string
           invited_by?: string | null
+          notes?: string | null
           rut?: string | null
           status?: Database["public"]["Enums"]["invitation_status"]
           updated_at?: string
@@ -378,7 +381,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "supplier"
-      invitation_status: "invited" | "active"
+      invitation_status: "invited" | "active" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -507,7 +510,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "supplier"],
-      invitation_status: ["invited", "active"],
+      invitation_status: ["invited", "active", "suspended"],
     },
   },
 } as const
