@@ -127,14 +127,36 @@ function AdminPage() {
     if (!invEmail.trim()) return;
     setSending(true);
     try {
-      await invite({ data: { email: invEmail.trim(), company_name: invCompany || null, rut: invRut || null } });
+      await invite({ data: { email: invEmail.trim(), company_name: invCompany || null, rut: invRut || null, notes: invNotes || null } });
       toast.success(`Invitación enviada a ${invEmail}`);
-      setInvEmail(""); setInvCompany(""); setInvRut("");
+      setInvEmail(""); setInvCompany(""); setInvRut(""); setInvNotes("");
       loadAll();
     } catch (err: any) {
       toast.error(err?.message ?? "No se pudo enviar la invitación");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleResend = async (id: string, email: string) => {
+    try {
+      await resend({ data: { id } });
+      toast.success(`Invitación reenviada a ${email}`);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo reenviar");
+    }
+  };
+
+  const handleToggleSuspension = async (email: string, suspended: boolean) => {
+    const verb = suspended ? "suspender" : "reactivar";
+    if (!window.confirm(`¿Confirmas ${verb} la cuenta de ${email}?`)) return;
+    try {
+      await toggleSuspend({ data: { email, suspended } });
+      toast.success(suspended ? "Cuenta suspendida" : "Cuenta reactivada");
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo actualizar");
     }
   };
 
