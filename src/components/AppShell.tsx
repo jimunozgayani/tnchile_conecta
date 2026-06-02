@@ -89,7 +89,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>
-          <div className="hidden text-xs italic opacity-90 md:block">La logística la hacemos juntos.</div>
+          <div className="flex items-center gap-3">
+            <div className="hidden text-xs italic opacity-90 md:block">La logística la hacemos juntos.</div>
+            <NotificationBell />
+          </div>
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
