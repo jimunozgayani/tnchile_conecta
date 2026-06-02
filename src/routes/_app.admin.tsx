@@ -342,15 +342,17 @@ function AdminPage() {
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Mail className="h-5 w-5 text-primary" /> Invitar proveedor</h2>
         <p className="mb-4 text-sm text-muted-foreground">Envía una invitación por correo. El proveedor recibirá un enlace para activar su cuenta.</p>
-        <form onSubmit={handleInvite} className="grid gap-3 md:grid-cols-[2fr_2fr_1fr_auto]">
+        <form onSubmit={handleInvite} className="grid gap-3 md:grid-cols-3">
           <input required type="email" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="correo@empresa.cl"
             className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           <input value={invCompany} onChange={(e) => setInvCompany(e.target.value)} placeholder="Razón social (opcional)"
             className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           <input value={invRut} onChange={(e) => setInvRut(e.target.value)} placeholder="RUT (opcional)"
             className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          <textarea value={invNotes} onChange={(e) => setInvNotes(e.target.value)} placeholder="Notas internas (opcional)" rows={2}
+            className="md:col-span-3 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           <button disabled={sending} type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60">
+            className="md:col-span-3 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60">
             <Send className="h-4 w-4" /> {sending ? "Enviando..." : "Enviar invitación"}
           </button>
         </form>
