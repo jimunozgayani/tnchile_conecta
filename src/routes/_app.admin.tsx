@@ -169,6 +169,36 @@ function AdminPage() {
     }
   };
 
+  const openSend = (id: string, name: string) => {
+    setMsgTarget({ id, name });
+    setMsgAsunto("");
+    setMsgContenido("");
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msgTarget || !msgAsunto.trim() || !msgContenido.trim()) return;
+    setMsgSending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+      const { error } = await (supabase as any).from("mensajes").insert({
+        de_usuario_id: user.id,
+        para_proveedor_id: msgTarget.id,
+        asunto: msgAsunto.trim(),
+        contenido: msgContenido.trim(),
+      });
+      if (error) throw error;
+      toast.success("Mensaje enviado correctamente.");
+      setMsgTarget(null);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo enviar el mensaje");
+    } finally {
+      setMsgSending(false);
+    }
+  };
+
 
   const stats = useMemo(() => {
     const allDates: { fecha: string | null }[] = [
