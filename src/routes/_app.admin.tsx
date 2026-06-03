@@ -603,17 +603,20 @@ function AdminPage() {
               {filteredRows.map((r) => (
                 <tr key={r.key} className={`border-t ${r.deleted ? "bg-destructive/5 text-muted-foreground line-through" : ""}`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium">
-                      {r.name}
-                      {r.deleted && <span className="ml-2 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive no-underline">Eliminado</span>}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{r.name}</p>
+                      <StatusBadge status={r.status} hoursLeft={r.status === "invitado" ? r.hoursLeft : null} />
+                      {r.deleted && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive no-underline">Eliminado</span>}
+                    </div>
                     <p className="text-xs text-muted-foreground">{r.email}</p>
                   </td>
                   <td className="px-4 py-3 text-sm">{r.rut || "—"}</td>
                   <td className="px-4 py-3">{r.region || "—"}</td>
                   <td className="px-4 py-3 text-center">{r.trucks}</td>
                   <td className="px-4 py-3 text-center">{r.drivers}</td>
-                  <td className="px-4 py-3"><StatusBadge status={r.status} hoursLeft={r.status === "invitado" ? r.hoursLeft : null} /></td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {r.activatedAt ? new Date(r.activatedAt).toLocaleDateString("es-CL") : "—"}
+                  </td>
                   <td className="px-4 py-3">{r.status === "invitado" || r.status === "suspendido" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
