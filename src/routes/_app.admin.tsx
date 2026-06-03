@@ -53,7 +53,7 @@ type Profile = {
   id: string; razon_social: string | null; nombre_contacto: string | null;
   correo: string | null; region: string | null; rut_empresa: string | null;
   telefono: string | null; direccion: string | null; cargo: string | null;
-  poliza_seguro_vencimiento: string | null;
+  poliza_seguro_vencimiento: string | null; created_at?: string | null;
 };
 type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null; deleted_at: string | null };
 type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null; deleted_at: string | null };
