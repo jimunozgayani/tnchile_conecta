@@ -96,6 +96,11 @@ function AdminPage() {
 
   const [showDeleted, setShowDeleted] = useState(false);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [sentMessages, setSentMessages] = useState<SentMessage[]>([]);
+  const [msgTarget, setMsgTarget] = useState<{ id: string; name: string } | null>(null);
+  const [msgAsunto, setMsgAsunto] = useState("");
+  const [msgContenido, setMsgContenido] = useState("");
+  const [msgSending, setMsgSending] = useState(false);
 
   const loadAll = async () => {
     const profilesQ = supabase.from("profiles").select("*");
