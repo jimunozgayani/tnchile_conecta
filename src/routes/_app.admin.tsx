@@ -752,6 +752,16 @@ function AdminPage() {
   );
 }
 
+function SortHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: "asc" | "desc"; onClick: () => void }) {
+  const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button type="button" onClick={onClick}
+      className={`inline-flex items-center gap-1 font-semibold uppercase tracking-wide ${active ? "text-primary" : "text-primary-dark"} hover:text-primary`}>
+      {label} <Icon className="h-3 w-3" />
+    </button>
+  );
+}
+
 function ActionBadge({ action }: { action: "INSERT" | "UPDATE" | "DELETE" }) {
   const cfg = {
     INSERT: { label: "Creado", cls: "bg-success/15 text-success" },
