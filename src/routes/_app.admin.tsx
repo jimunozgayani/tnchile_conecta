@@ -103,6 +103,24 @@ function AdminPage() {
   const [msgContenido, setMsgContenido] = useState("");
   const [msgSending, setMsgSending] = useState(false);
 
+  // Search / filters / sort
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todos" | SupplierStatus>("todos");
+  const [regionFilter, setRegionFilter] = useState<string>("todos");
+  const [complianceFilter, setComplianceFilter] = useState<"todos" | "alto" | "medio" | "critico">("todos");
+  type SortKey = "name" | "completion" | "activated";
+  const [sortKey, setSortKey] = useState<SortKey>("activated");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [exportOpen, setExportOpen] = useState(false);
+
+  const resetFilters = () => {
+    setSearchTerm(""); setStatusFilter("todos"); setRegionFilter("todos"); setComplianceFilter("todos");
+  };
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir(key === "name" ? "asc" : "desc"); }
+  };
+
   const loadAll = async () => {
     const profilesQ = supabase.from("profiles").select("*");
     const trucksQ = supabase.from("trucks").select("id,user_id,tipo,patente,soap_vencimiento,permiso_circulacion_vencimiento,revision_tecnica_vencimiento,deleted_at");
