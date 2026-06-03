@@ -112,18 +112,20 @@ function AdminPage() {
       trucksQ.is("deleted_at", null);
       driversQ.is("deleted_at", null);
     }
-    const [{ data: p }, { data: t }, { data: d }, { data: inv }, { data: a }] = await Promise.all([
+    const [{ data: p }, { data: t }, { data: d }, { data: inv }, { data: a }, { data: msgs }] = await Promise.all([
       profilesQ,
       trucksQ,
       driversQ,
       supabase.from("supplier_invitations").select("*").order("invited_at", { ascending: false }),
       supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(20),
+      (supabase as any).from("mensajes").select("*").order("created_at", { ascending: false }).limit(10),
     ]);
     setProfiles((p ?? []) as Profile[]);
     setTrucks((t ?? []) as Truck[]);
     setDrivers((d ?? []) as Driver[]);
     setInvitations((inv ?? []) as Invitation[]);
     setAudit((a ?? []) as AuditEntry[]);
+    setSentMessages((msgs ?? []) as SentMessage[]);
     setLoading(false);
   };
 
