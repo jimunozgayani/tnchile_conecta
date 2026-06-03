@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X } from "lucide-react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X, Search, ArrowUpDown, ArrowUp, ArrowDown, Download, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { diasHasta, estadoVencimiento } from "@/lib/regions";
+import { diasHasta, estadoVencimiento, REGIONES_CHILE } from "@/lib/regions";
 import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
 import { calcCompleteness, completionTone } from "@/lib/completeness";
 
