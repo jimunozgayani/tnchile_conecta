@@ -462,6 +462,12 @@ function AdminPage() {
                           {r.status === "suspendido" ? "Suspendida" : "Activa"}
                         </label>
                       )}
+                      {!r.key.startsWith("inv-") && r.status !== "invitado" && (
+                        <button onClick={() => openSend(r.key, r.name)}
+                          className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <MessageSquare className="h-3 w-3" /> Mensaje
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
