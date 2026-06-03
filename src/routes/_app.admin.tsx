@@ -502,6 +502,69 @@ function AdminPage() {
           </ul>
         )}
       </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+          <MessageSquare className="h-5 w-5 text-primary" /> Mensajes enviados
+        </h2>
+        {sentMessages.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aún no se han enviado mensajes.</p>
+        ) : (
+          <ul className="divide-y">
+            {sentMessages.map((m) => {
+              const target = profiles.find((p) => p.id === m.para_proveedor_id);
+              const name = target?.razon_social || target?.correo || "—";
+              return (
+                <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{m.asunto}</p>
+                    <p className="truncate text-xs text-muted-foreground">Para: {name}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${m.leido ? "bg-success/15 text-success" : "bg-warning/30 text-warning-foreground"}`}>
+                      {m.leido ? "Leído" : "No leído"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{timeAgo(m.created_at)}</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {msgTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !msgSending && setMsgTarget(null)}>
+          <form onSubmit={handleSendMessage} onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                  <MessageSquare className="h-5 w-5 text-primary" /> Enviar mensaje
+                </h3>
+                <p className="text-sm text-muted-foreground">Destinatario: <span className="font-medium text-foreground">{msgTarget.name}</span></p>
+              </div>
+              <button type="button" onClick={() => setMsgTarget(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <input required value={msgAsunto} onChange={(e) => setMsgAsunto(e.target.value)} placeholder="Asunto"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+              <textarea required value={msgContenido} onChange={(e) => setMsgContenido(e.target.value)} placeholder="Escribe tu mensaje..." rows={6}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button type="button" onClick={() => setMsgTarget(null)} disabled={msgSending}
+                className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted">Cancelar</button>
+              <button type="submit" disabled={msgSending || !msgAsunto.trim() || !msgContenido.trim()}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+                <Send className="h-4 w-4" /> {msgSending ? "Enviando..." : `Enviar a ${msgTarget.name}`}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
