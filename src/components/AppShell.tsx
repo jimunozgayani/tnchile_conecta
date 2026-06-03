@@ -64,13 +64,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="space-y-1 p-3">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
+            const showBadge = to === "/mensajes" && unreadMsgs > 0;
             return (
               <Link key={to} to={to} onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
                 }`}>
-                <Icon className="h-4 w-4" />
-                {label}
+                <span className="flex items-center gap-3">
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </span>
+                {showBadge && (
+                  <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-semibold text-destructive-foreground">
+                    {unreadMsgs}
+                  </span>
+                )}
               </Link>
             );
           })}
