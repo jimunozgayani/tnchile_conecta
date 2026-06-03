@@ -274,9 +274,11 @@ function AdminPage() {
       if (p.correo) linkedEmails.add(p.correo.toLowerCase());
       return {
         key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa,
-        region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status,
+        region: p.region, telefono: (p as any).telefono ?? null,
+        trucks: tc.length, drivers: dc.length, docStatus, completion, status,
         deleted: !!(p as any).deleted_at, invitationId: inv?.id ?? null, hoursLeft: null as number | null,
         canResend: false,
+        activatedAt: inv?.activated_at ?? (p as any).created_at ?? null,
       };
     });
 
@@ -287,14 +289,104 @@ function AdminPage() {
         const hoursLeft = Math.max(0, 24 - ageHours);
         return {
           key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
+          telefono: null as string | null,
           trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0,
           status: (i.status === "suspended" ? "suspendido" : "invitado") as SupplierStatus,
           deleted: false, invitationId: i.id, hoursLeft, canResend: ageHours >= 24 && i.status === "invited",
+          activatedAt: i.invited_at,
         };
       });
 
     return [...pendingRows, ...rows];
   }, [profiles, trucks, drivers, invitations]);
+
+  const filteredRows = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    const filtered = filasProveedores.filter((r) => {
+      if (q) {
+        const hit = (r.name?.toLowerCase().includes(q)) || (r.rut?.toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      if (statusFilter !== "todos" && r.status !== statusFilter) return false;
+      if (regionFilter !== "todos" && (r.region || "") !== regionFilter) return false;
+      if (complianceFilter !== "todos") {
+        if (complianceFilter === "alto" && r.completion <= 80) return false;
+        if (complianceFilter === "medio" && (r.completion < 50 || r.completion > 80)) return false;
+        if (complianceFilter === "critico" && r.completion >= 50) return false;
+      }
+      return true;
+    });
+    const dir = sortDir === "asc" ? 1 : -1;
+    filtered.sort((a, b) => {
+      if (sortKey === "name") return a.name.localeCompare(b.name, "es") * dir;
+      if (sortKey === "completion") return (a.completion - b.completion) * dir;
+      const aT = a.activatedAt ? new Date(a.activatedAt).getTime() : 0;
+      const bT = b.activatedAt ? new Date(b.activatedAt).getTime() : 0;
+      return (aT - bT) * dir;
+    });
+    return filtered;
+  }, [filasProveedores, searchTerm, statusFilter, regionFilter, complianceFilter, sortKey, sortDir]);
+
+  const hasActiveFilters = searchTerm !== "" || statusFilter !== "todos" || regionFilter !== "todos" || complianceFilter !== "todos";
+
+  const exportCSV = (filename: string, rows: (string | number | null | undefined)[][]) => {
+    const esc = (v: any) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = "\uFEFF" + rows.map((r) => r.map(esc).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+
+  const handleExportProveedores = () => {
+    const header = ["Razón social", "RUT", "Email", "Teléfono", "Región", "Estado", "% Cumplimiento", "Camiones", "Choferes", "Fecha activación"];
+    const rows = filteredRows.map((r) => [
+      r.name, r.rut ?? "", r.email ?? "", r.telefono ?? "", r.region ?? "",
+      r.status, r.completion, r.trucks, r.drivers,
+      r.activatedAt ? new Date(r.activatedAt).toISOString().slice(0, 10) : "",
+    ]);
+    exportCSV(`tnchile_proveedores_${todayStr()}.csv`, [header, ...rows]);
+    setExportOpen(false);
+  };
+
+  const handleExportVencimientos = () => {
+    const allowedIds = new Set(filteredRows.map((r) => r.key));
+    const pName = new Map(profiles.map((p) => [p.id, p.razon_social || p.correo || "—"]));
+    type Row = { proveedor: string; tipo: string; entidad: string; fecha: string; dias: number };
+    const rows: Row[] = [];
+    const push = (uid: string, entidad: string, tipo: string, fecha: string | null) => {
+      if (!fecha) return;
+      if (!allowedIds.has(uid)) return;
+      const d = diasHasta(fecha);
+      if (d === null || d > 30) return;
+      rows.push({ proveedor: pName.get(uid) || "—", tipo, entidad, fecha, dias: d });
+    };
+    for (const t of trucks) {
+      push(t.user_id, `Camión ${t.patente}`, "SOAP", t.soap_vencimiento);
+      push(t.user_id, `Camión ${t.patente}`, "Permiso circulación", t.permiso_circulacion_vencimiento);
+      push(t.user_id, `Camión ${t.patente}`, "Revisión técnica", t.revision_tecnica_vencimiento);
+    }
+    for (const d of drivers) {
+      push(d.user_id, `Chofer ${d.nombre_completo}`, "Licencia", d.licencia_vencimiento);
+      push(d.user_id, `Chofer ${d.nombre_completo}`, "Carnet", d.carnet_vencimiento);
+    }
+    for (const p of profiles) {
+      push(p.id, "Empresa", "Póliza seguro", p.poliza_seguro_vencimiento);
+    }
+    rows.sort((a, b) => a.dias - b.dias);
+    const header = ["Proveedor", "Tipo documento", "Entidad", "Fecha vencimiento", "Días restantes"];
+    const out = rows.map((r) => [r.proveedor, r.tipo, r.entidad, r.fecha, r.dias]);
+    exportCSV(`tnchile_vencimientos_${todayStr()}.csv`, [header, ...out]);
+    setExportOpen(false);
+  };
+
+
 
 
   const alertas = useMemo(() => {
