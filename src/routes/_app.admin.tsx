@@ -45,6 +45,7 @@ type Invitation = {
   user_id: string | null; notes: string | null;
 };
 type SupplierStatus = "invitado" | "nuevo" | "activo" | "suspendido";
+type SentMessage = { id: string; para_proveedor_id: string; asunto: string; contenido: string; leido: boolean; created_at: string };
 
 
 
