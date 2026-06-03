@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X } from "lucide-react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X, Search, ArrowUpDown, ArrowUp, ArrowDown, Download, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { diasHasta, estadoVencimiento } from "@/lib/regions";
+import { diasHasta, estadoVencimiento, REGIONES_CHILE } from "@/lib/regions";
 import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
 import { calcCompleteness, completionTone } from "@/lib/completeness";
 
@@ -53,7 +53,7 @@ type Profile = {
   id: string; razon_social: string | null; nombre_contacto: string | null;
   correo: string | null; region: string | null; rut_empresa: string | null;
   telefono: string | null; direccion: string | null; cargo: string | null;
-  poliza_seguro_vencimiento: string | null;
+  poliza_seguro_vencimiento: string | null; created_at?: string | null;
 };
 type Truck = { id: string; user_id: string; tipo: string | null; patente: string; soap_vencimiento: string | null; permiso_circulacion_vencimiento: string | null; revision_tecnica_vencimiento: string | null; deleted_at: string | null };
 type Driver = { id: string; user_id: string; nombre_completo: string; licencia_vencimiento: string | null; carnet_vencimiento: string | null; deleted_at: string | null };
@@ -102,6 +102,24 @@ function AdminPage() {
   const [msgAsunto, setMsgAsunto] = useState("");
   const [msgContenido, setMsgContenido] = useState("");
   const [msgSending, setMsgSending] = useState(false);
+
+  // Search / filters / sort
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todos" | SupplierStatus>("todos");
+  const [regionFilter, setRegionFilter] = useState<string>("todos");
+  const [complianceFilter, setComplianceFilter] = useState<"todos" | "alto" | "medio" | "critico">("todos");
+  type SortKey = "name" | "completion" | "activated";
+  const [sortKey, setSortKey] = useState<SortKey>("activated");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [exportOpen, setExportOpen] = useState(false);
+
+  const resetFilters = () => {
+    setSearchTerm(""); setStatusFilter("todos"); setRegionFilter("todos"); setComplianceFilter("todos");
+  };
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir(key === "name" ? "asc" : "desc"); }
+  };
 
   const loadAll = async () => {
     const profilesQ = supabase.from("profiles").select("*");
@@ -256,9 +274,11 @@ function AdminPage() {
       if (p.correo) linkedEmails.add(p.correo.toLowerCase());
       return {
         key: p.id, name: p.razon_social || "—", email: p.correo, rut: p.rut_empresa,
-        region: p.region, trucks: tc.length, drivers: dc.length, docStatus, completion, status,
+        region: p.region, telefono: (p as any).telefono ?? null,
+        trucks: tc.length, drivers: dc.length, docStatus, completion, status,
         deleted: !!(p as any).deleted_at, invitationId: inv?.id ?? null, hoursLeft: null as number | null,
         canResend: false,
+        activatedAt: inv?.activated_at ?? (p as any).created_at ?? null,
       };
     });
 
@@ -269,14 +289,104 @@ function AdminPage() {
         const hoursLeft = Math.max(0, 24 - ageHours);
         return {
           key: `inv-${i.id}`, name: i.company_name || "—", email: i.email, rut: i.rut, region: null as string | null,
+          telefono: null as string | null,
           trucks: 0, drivers: 0, docStatus: "ok" as const, completion: 0,
           status: (i.status === "suspended" ? "suspendido" : "invitado") as SupplierStatus,
           deleted: false, invitationId: i.id, hoursLeft, canResend: ageHours >= 24 && i.status === "invited",
+          activatedAt: i.invited_at,
         };
       });
 
     return [...pendingRows, ...rows];
   }, [profiles, trucks, drivers, invitations]);
+
+  const filteredRows = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    const filtered = filasProveedores.filter((r) => {
+      if (q) {
+        const hit = (r.name?.toLowerCase().includes(q)) || (r.rut?.toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      if (statusFilter !== "todos" && r.status !== statusFilter) return false;
+      if (regionFilter !== "todos" && (r.region || "") !== regionFilter) return false;
+      if (complianceFilter !== "todos") {
+        if (complianceFilter === "alto" && r.completion <= 80) return false;
+        if (complianceFilter === "medio" && (r.completion < 50 || r.completion > 80)) return false;
+        if (complianceFilter === "critico" && r.completion >= 50) return false;
+      }
+      return true;
+    });
+    const dir = sortDir === "asc" ? 1 : -1;
+    filtered.sort((a, b) => {
+      if (sortKey === "name") return a.name.localeCompare(b.name, "es") * dir;
+      if (sortKey === "completion") return (a.completion - b.completion) * dir;
+      const aT = a.activatedAt ? new Date(a.activatedAt).getTime() : 0;
+      const bT = b.activatedAt ? new Date(b.activatedAt).getTime() : 0;
+      return (aT - bT) * dir;
+    });
+    return filtered;
+  }, [filasProveedores, searchTerm, statusFilter, regionFilter, complianceFilter, sortKey, sortDir]);
+
+  const hasActiveFilters = searchTerm !== "" || statusFilter !== "todos" || regionFilter !== "todos" || complianceFilter !== "todos";
+
+  const exportCSV = (filename: string, rows: (string | number | null | undefined)[][]) => {
+    const esc = (v: any) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = "\uFEFF" + rows.map((r) => r.map(esc).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+
+  const handleExportProveedores = () => {
+    const header = ["Razón social", "RUT", "Email", "Teléfono", "Región", "Estado", "% Cumplimiento", "Camiones", "Choferes", "Fecha activación"];
+    const rows = filteredRows.map((r) => [
+      r.name, r.rut ?? "", r.email ?? "", r.telefono ?? "", r.region ?? "",
+      r.status, r.completion, r.trucks, r.drivers,
+      r.activatedAt ? new Date(r.activatedAt).toISOString().slice(0, 10) : "",
+    ]);
+    exportCSV(`tnchile_proveedores_${todayStr()}.csv`, [header, ...rows]);
+    setExportOpen(false);
+  };
+
+  const handleExportVencimientos = () => {
+    const allowedIds = new Set(filteredRows.map((r) => r.key));
+    const pName = new Map(profiles.map((p) => [p.id, p.razon_social || p.correo || "—"]));
+    type Row = { proveedor: string; tipo: string; entidad: string; fecha: string; dias: number };
+    const rows: Row[] = [];
+    const push = (uid: string, entidad: string, tipo: string, fecha: string | null) => {
+      if (!fecha) return;
+      if (!allowedIds.has(uid)) return;
+      const d = diasHasta(fecha);
+      if (d === null || d > 30) return;
+      rows.push({ proveedor: pName.get(uid) || "—", tipo, entidad, fecha, dias: d });
+    };
+    for (const t of trucks) {
+      push(t.user_id, `Camión ${t.patente}`, "SOAP", t.soap_vencimiento);
+      push(t.user_id, `Camión ${t.patente}`, "Permiso circulación", t.permiso_circulacion_vencimiento);
+      push(t.user_id, `Camión ${t.patente}`, "Revisión técnica", t.revision_tecnica_vencimiento);
+    }
+    for (const d of drivers) {
+      push(d.user_id, `Chofer ${d.nombre_completo}`, "Licencia", d.licencia_vencimiento);
+      push(d.user_id, `Chofer ${d.nombre_completo}`, "Carnet", d.carnet_vencimiento);
+    }
+    for (const p of profiles) {
+      push(p.id, "Empresa", "Póliza seguro", p.poliza_seguro_vencimiento);
+    }
+    rows.sort((a, b) => a.dias - b.dias);
+    const header = ["Proveedor", "Tipo documento", "Entidad", "Fecha vencimiento", "Días restantes"];
+    const out = rows.map((r) => [r.proveedor, r.tipo, r.entidad, r.fecha, r.dias]);
+    exportCSV(`tnchile_vencimientos_${todayStr()}.csv`, [header, ...out]);
+    setExportOpen(false);
+  };
+
+
 
 
   const alertas = useMemo(() => {
@@ -401,39 +511,112 @@ function AdminPage() {
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm">
-        <div className="border-b px-6 py-4">
-          <h2 className="text-lg font-semibold">Proveedores</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b px-6 py-4">
+          <div>
+            <h2 className="text-lg font-semibold">Proveedores</h2>
+            <p className="text-xs text-muted-foreground">
+              Mostrando {filteredRows.length} de {filasProveedores.length} proveedores
+            </p>
+          </div>
+          <div className="relative">
+            <button onClick={() => setExportOpen((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-md border border-primary/40 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10">
+              <Download className="h-4 w-4" /> Exportar <ChevronDown className="h-3 w-3" />
+            </button>
+            {exportOpen && (
+              <>
+                <button className="fixed inset-0 z-30 cursor-default" onClick={() => setExportOpen(false)} aria-hidden />
+                <div className="absolute right-0 z-40 mt-1 w-64 overflow-hidden rounded-md border bg-popover shadow-lg">
+                  <button onClick={handleExportProveedores}
+                    className="block w-full px-4 py-2 text-left text-sm hover:bg-muted">
+                    Exportar proveedores
+                  </button>
+                  <button onClick={handleExportVencimientos}
+                    className="block w-full border-t px-4 py-2 text-left text-sm hover:bg-muted">
+                    Exportar vencimientos próximos
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-3 border-b bg-muted/30 px-6 py-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por razón social o RUT..."
+              className="w-full rounded-md border bg-background py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="todos">Todos los estados</option>
+            <option value="activo">Activo</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="invitado">Invitado</option>
+            <option value="suspendido">Suspendido</option>
+          </select>
+          <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="todos">Todas las regiones</option>
+            {REGIONES_CHILE.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <div className="flex items-center gap-2">
+            <select value={complianceFilter} onChange={(e) => setComplianceFilter(e.target.value as any)}
+              className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+              <option value="todos">Cumplimiento: Todos</option>
+              <option value="alto">Alto (&gt;80%)</option>
+              <option value="medio">Medio (50–80%)</option>
+              <option value="critico">Crítico (&lt;50%)</option>
+            </select>
+            {hasActiveFilters && (
+              <button onClick={resetFilters} className="shrink-0 text-xs font-medium text-primary hover:underline">
+                Limpiar filtros
+              </button>
+            )}
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-primary-soft text-left text-xs uppercase tracking-wide text-primary-dark">
               <tr>
-                <th className="px-4 py-3">Proveedor</th>
+                <th className="px-4 py-3">
+                  <SortHeader label="Razón social" active={sortKey === "name"} dir={sortDir} onClick={() => toggleSort("name")} />
+                </th>
                 <th className="px-4 py-3">RUT</th>
                 <th className="px-4 py-3">Región</th>
                 <th className="px-4 py-3 text-center">Camiones</th>
                 <th className="px-4 py-3 text-center">Choferes</th>
-                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">
+                  <SortHeader label="Activación" active={sortKey === "activated"} dir={sortDir} onClick={() => toggleSort("activated")} />
+                </th>
                 <th className="px-4 py-3">Documentos</th>
-                <th className="px-4 py-3">Perfil</th>
+                <th className="px-4 py-3">
+                  <SortHeader label="Cumplimiento" active={sortKey === "completion"} dir={sortDir} onClick={() => toggleSort("completion")} />
+                </th>
                 <th className="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filasProveedores.map((r) => (
+              {filteredRows.length === 0 && (
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Sin proveedores que coincidan con los filtros.</td></tr>
+              )}
+              {filteredRows.map((r) => (
                 <tr key={r.key} className={`border-t ${r.deleted ? "bg-destructive/5 text-muted-foreground line-through" : ""}`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium">
-                      {r.name}
-                      {r.deleted && <span className="ml-2 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive no-underline">Eliminado</span>}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{r.name}</p>
+                      <StatusBadge status={r.status} hoursLeft={r.status === "invitado" ? r.hoursLeft : null} />
+                      {r.deleted && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive no-underline">Eliminado</span>}
+                    </div>
                     <p className="text-xs text-muted-foreground">{r.email}</p>
                   </td>
                   <td className="px-4 py-3 text-sm">{r.rut || "—"}</td>
                   <td className="px-4 py-3">{r.region || "—"}</td>
                   <td className="px-4 py-3 text-center">{r.trucks}</td>
                   <td className="px-4 py-3 text-center">{r.drivers}</td>
-                  <td className="px-4 py-3"><StatusBadge status={r.status} hoursLeft={r.status === "invitado" ? r.hoursLeft : null} /></td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {r.activatedAt ? new Date(r.activatedAt).toLocaleDateString("es-CL") : "—"}
+                  </td>
                   <td className="px-4 py-3">{r.status === "invitado" || r.status === "suspendido" ? <span className="text-xs text-muted-foreground">—</span> : <DocBadge status={r.docStatus} />}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -566,6 +749,16 @@ function AdminPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function SortHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: "asc" | "desc"; onClick: () => void }) {
+  const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button type="button" onClick={onClick}
+      className={`inline-flex items-center gap-1 font-semibold uppercase tracking-wide ${active ? "text-primary" : "text-primary-dark"} hover:text-primary`}>
+      {label} <Icon className="h-3 w-3" />
+    </button>
   );
 }
 
