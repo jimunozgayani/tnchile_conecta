@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity } from "lucide-react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento } from "@/lib/regions";
@@ -45,6 +45,7 @@ type Invitation = {
   user_id: string | null; notes: string | null;
 };
 type SupplierStatus = "invitado" | "nuevo" | "activo" | "suspendido";
+type SentMessage = { id: string; para_proveedor_id: string; asunto: string; contenido: string; leido: boolean; created_at: string };
 
 
 
@@ -96,6 +97,11 @@ function AdminPage() {
 
   const [showDeleted, setShowDeleted] = useState(false);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [sentMessages, setSentMessages] = useState<SentMessage[]>([]);
+  const [msgTarget, setMsgTarget] = useState<{ id: string; name: string } | null>(null);
+  const [msgAsunto, setMsgAsunto] = useState("");
+  const [msgContenido, setMsgContenido] = useState("");
+  const [msgSending, setMsgSending] = useState(false);
 
   const loadAll = async () => {
     const profilesQ = supabase.from("profiles").select("*");
@@ -106,18 +112,20 @@ function AdminPage() {
       trucksQ.is("deleted_at", null);
       driversQ.is("deleted_at", null);
     }
-    const [{ data: p }, { data: t }, { data: d }, { data: inv }, { data: a }] = await Promise.all([
+    const [{ data: p }, { data: t }, { data: d }, { data: inv }, { data: a }, { data: msgs }] = await Promise.all([
       profilesQ,
       trucksQ,
       driversQ,
       supabase.from("supplier_invitations").select("*").order("invited_at", { ascending: false }),
       supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(20),
+      (supabase as any).from("mensajes").select("*").order("created_at", { ascending: false }).limit(10),
     ]);
     setProfiles((p ?? []) as Profile[]);
     setTrucks((t ?? []) as Truck[]);
     setDrivers((d ?? []) as Driver[]);
     setInvitations((inv ?? []) as Invitation[]);
     setAudit((a ?? []) as AuditEntry[]);
+    setSentMessages((msgs ?? []) as SentMessage[]);
     setLoading(false);
   };
 
@@ -158,6 +166,36 @@ function AdminPage() {
       loadAll();
     } catch (err: any) {
       toast.error(err?.message ?? "No se pudo actualizar");
+    }
+  };
+
+  const openSend = (id: string, name: string) => {
+    setMsgTarget({ id, name });
+    setMsgAsunto("");
+    setMsgContenido("");
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msgTarget || !msgAsunto.trim() || !msgContenido.trim()) return;
+    setMsgSending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+      const { error } = await (supabase as any).from("mensajes").insert({
+        de_usuario_id: user.id,
+        para_proveedor_id: msgTarget.id,
+        asunto: msgAsunto.trim(),
+        contenido: msgContenido.trim(),
+      });
+      if (error) throw error;
+      toast.success("Mensaje enviado correctamente.");
+      setMsgTarget(null);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo enviar el mensaje");
+    } finally {
+      setMsgSending(false);
     }
   };
 
@@ -424,6 +462,12 @@ function AdminPage() {
                           {r.status === "suspendido" ? "Suspendida" : "Activa"}
                         </label>
                       )}
+                      {!r.key.startsWith("inv-") && r.status !== "invitado" && (
+                        <button onClick={() => openSend(r.key, r.name)}
+                          className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <MessageSquare className="h-3 w-3" /> Mensaje
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -458,6 +502,69 @@ function AdminPage() {
           </ul>
         )}
       </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+          <MessageSquare className="h-5 w-5 text-primary" /> Mensajes enviados
+        </h2>
+        {sentMessages.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aún no se han enviado mensajes.</p>
+        ) : (
+          <ul className="divide-y">
+            {sentMessages.map((m) => {
+              const target = profiles.find((p) => p.id === m.para_proveedor_id);
+              const name = target?.razon_social || target?.correo || "—";
+              return (
+                <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{m.asunto}</p>
+                    <p className="truncate text-xs text-muted-foreground">Para: {name}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${m.leido ? "bg-success/15 text-success" : "bg-warning/30 text-warning-foreground"}`}>
+                      {m.leido ? "Leído" : "No leído"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{timeAgo(m.created_at)}</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {msgTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !msgSending && setMsgTarget(null)}>
+          <form onSubmit={handleSendMessage} onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                  <MessageSquare className="h-5 w-5 text-primary" /> Enviar mensaje
+                </h3>
+                <p className="text-sm text-muted-foreground">Destinatario: <span className="font-medium text-foreground">{msgTarget.name}</span></p>
+              </div>
+              <button type="button" onClick={() => setMsgTarget(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <input required value={msgAsunto} onChange={(e) => setMsgAsunto(e.target.value)} placeholder="Asunto"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+              <textarea required value={msgContenido} onChange={(e) => setMsgContenido(e.target.value)} placeholder="Escribe tu mensaje..." rows={6}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button type="button" onClick={() => setMsgTarget(null)} disabled={msgSending}
+                className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted">Cancelar</button>
+              <button type="submit" disabled={msgSending || !msgAsunto.trim() || !msgContenido.trim()}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+                <Send className="h-4 w-4" /> {msgSending ? "Enviando..." : `Enviar a ${msgTarget.name}`}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
@@ -62,6 +63,11 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMensajesRoute = AppMensajesRouteImport.update({
+  id: '/mensajes',
+  path: '/mensajes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDocumentosRoute = AppDocumentosRouteImport.update({
   id: '/documentos',
   path: '/documentos',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/choferes': typeof AppChoferesRoute
   '/dashboard': typeof AppDashboardRoute
   '/documentos': typeof AppDocumentosRoute
+  '/mensajes': typeof AppMensajesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/choferes': typeof AppChoferesRoute
   '/dashboard': typeof AppDashboardRoute
   '/documentos': typeof AppDocumentosRoute
+  '/mensajes': typeof AppMensajesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_app/choferes': typeof AppChoferesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/documentos': typeof AppDocumentosRoute
+  '/_app/mensajes': typeof AppMensajesRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
 }
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/choferes'
     | '/dashboard'
     | '/documentos'
+    | '/mensajes'
     | '/perfil'
     | '/tarifas'
   fileRoutesByTo: FileRoutesByTo
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/choferes'
     | '/dashboard'
     | '/documentos'
+    | '/mensajes'
     | '/perfil'
     | '/tarifas'
   id:
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_app/choferes'
     | '/_app/dashboard'
     | '/_app/documentos'
+    | '/_app/mensajes'
     | '/_app/perfil'
     | '/_app/tarifas'
   fileRoutesById: FileRoutesById
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPerfilRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mensajes': {
+      id: '/_app/mensajes'
+      path: '/mensajes'
+      fullPath: '/mensajes'
+      preLoaderRoute: typeof AppMensajesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/documentos': {
       id: '/_app/documentos'
       path: '/documentos'
@@ -289,6 +308,7 @@ interface AppRouteChildren {
   AppChoferesRoute: typeof AppChoferesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
+  AppMensajesRoute: typeof AppMensajesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppTarifasRoute: typeof AppTarifasRoute
 }
@@ -299,6 +319,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChoferesRoute: AppChoferesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDocumentosRoute: AppDocumentosRoute,
+  AppMensajesRoute: AppMensajesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppTarifasRoute: AppTarifasRoute,
 }

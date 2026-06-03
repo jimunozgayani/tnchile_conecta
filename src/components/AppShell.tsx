@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
@@ -14,6 +14,7 @@ const NAV = [
   { to: "/choferes", label: "Choferes", icon: Users },
   { to: "/tarifas", label: "Tarifas", icon: DollarSign },
   { to: "/documentos", label: "Documentos", icon: FileText },
+  { to: "/mensajes", label: "Mensajes", icon: MessageSquare },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -30,6 +32,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setIsAdmin((data ?? []).some((r: any) => r.role === "admin"));
     })();
   }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      const { count } = await (supabase as any)
+        .from("mensajes").select("id", { count: "exact", head: true }).eq("leido", false);
+      setUnreadMsgs(count ?? 0);
+    };
+    load();
+    const ch = (supabase as any)
+      .channel("mensajes-shell")
+      .on("postgres_changes", { event: "*", schema: "public", table: "mensajes" }, load)
+      .subscribe();
+    return () => { (supabase as any).removeChannel(ch); };
+  }, [location.pathname]);
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -48,13 +64,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="space-y-1 p-3">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
+            const showBadge = to === "/mensajes" && unreadMsgs > 0;
             return (
               <Link key={to} to={to} onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
                 }`}>
-                <Icon className="h-4 w-4" />
-                {label}
+                <span className="flex items-center gap-3">
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </span>
+                {showBadge && (
+                  <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-semibold text-destructive-foreground">
+                    {unreadMsgs}
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -172,6 +172,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mensajes: {
+        Row: {
+          asunto: string
+          contenido: string
+          created_at: string
+          de_usuario_id: string
+          id: string
+          leido: boolean
+          para_proveedor_id: string
+        }
+        Insert: {
+          asunto: string
+          contenido: string
+          created_at?: string
+          de_usuario_id: string
+          id?: string
+          leido?: boolean
+          para_proveedor_id: string
+        }
+        Update: {
+          asunto?: string
+          contenido?: string
+          created_at?: string
+          de_usuario_id?: string
+          id?: string
+          leido?: boolean
+          para_proveedor_id?: string
+        }
+        Relationships: []
+      }
       notificaciones: {
         Row: {
           created_at: string
