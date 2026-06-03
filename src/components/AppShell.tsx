@@ -22,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -31,6 +32,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setIsAdmin((data ?? []).some((r: any) => r.role === "admin"));
     })();
   }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      const { count } = await (supabase as any)
+        .from("mensajes").select("id", { count: "exact", head: true }).eq("leido", false);
+      setUnreadMsgs(count ?? 0);
+    };
+    load();
+    const ch = (supabase as any)
+      .channel("mensajes-shell")
+      .on("postgres_changes", { event: "*", schema: "public", table: "mensajes" }, load)
+      .subscribe();
+    return () => { (supabase as any).removeChannel(ch); };
+  }, [location.pathname]);
 
   const logout = async () => {
     await supabase.auth.signOut();
