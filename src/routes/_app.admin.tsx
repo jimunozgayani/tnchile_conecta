@@ -511,26 +511,96 @@ function AdminPage() {
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm">
-        <div className="border-b px-6 py-4">
-          <h2 className="text-lg font-semibold">Proveedores</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b px-6 py-4">
+          <div>
+            <h2 className="text-lg font-semibold">Proveedores</h2>
+            <p className="text-xs text-muted-foreground">
+              Mostrando {filteredRows.length} de {filasProveedores.length} proveedores
+            </p>
+          </div>
+          <div className="relative">
+            <button onClick={() => setExportOpen((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-md border border-primary/40 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10">
+              <Download className="h-4 w-4" /> Exportar <ChevronDown className="h-3 w-3" />
+            </button>
+            {exportOpen && (
+              <>
+                <button className="fixed inset-0 z-30 cursor-default" onClick={() => setExportOpen(false)} aria-hidden />
+                <div className="absolute right-0 z-40 mt-1 w-64 overflow-hidden rounded-md border bg-popover shadow-lg">
+                  <button onClick={handleExportProveedores}
+                    className="block w-full px-4 py-2 text-left text-sm hover:bg-muted">
+                    Exportar proveedores
+                  </button>
+                  <button onClick={handleExportVencimientos}
+                    className="block w-full border-t px-4 py-2 text-left text-sm hover:bg-muted">
+                    Exportar vencimientos próximos
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-3 border-b bg-muted/30 px-6 py-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por razón social o RUT..."
+              className="w-full rounded-md border bg-background py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="todos">Todos los estados</option>
+            <option value="activo">Activo</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="invitado">Invitado</option>
+            <option value="suspendido">Suspendido</option>
+          </select>
+          <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}
+            className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="todos">Todas las regiones</option>
+            {REGIONES_CHILE.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <div className="flex items-center gap-2">
+            <select value={complianceFilter} onChange={(e) => setComplianceFilter(e.target.value as any)}
+              className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+              <option value="todos">Cumplimiento: Todos</option>
+              <option value="alto">Alto (&gt;80%)</option>
+              <option value="medio">Medio (50–80%)</option>
+              <option value="critico">Crítico (&lt;50%)</option>
+            </select>
+            {hasActiveFilters && (
+              <button onClick={resetFilters} className="shrink-0 text-xs font-medium text-primary hover:underline">
+                Limpiar filtros
+              </button>
+            )}
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-primary-soft text-left text-xs uppercase tracking-wide text-primary-dark">
               <tr>
-                <th className="px-4 py-3">Proveedor</th>
+                <th className="px-4 py-3">
+                  <SortHeader label="Razón social" active={sortKey === "name"} dir={sortDir} onClick={() => toggleSort("name")} />
+                </th>
                 <th className="px-4 py-3">RUT</th>
                 <th className="px-4 py-3">Región</th>
                 <th className="px-4 py-3 text-center">Camiones</th>
                 <th className="px-4 py-3 text-center">Choferes</th>
-                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">
+                  <SortHeader label="Activación" active={sortKey === "activated"} dir={sortDir} onClick={() => toggleSort("activated")} />
+                </th>
                 <th className="px-4 py-3">Documentos</th>
-                <th className="px-4 py-3">Perfil</th>
+                <th className="px-4 py-3">
+                  <SortHeader label="Cumplimiento" active={sortKey === "completion"} dir={sortDir} onClick={() => toggleSort("completion")} />
+                </th>
                 <th className="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filasProveedores.map((r) => (
+              {filteredRows.length === 0 && (
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Sin proveedores que coincidan con los filtros.</td></tr>
+              )}
+              {filteredRows.map((r) => (
                 <tr key={r.key} className={`border-t ${r.deleted ? "bg-destructive/5 text-muted-foreground line-through" : ""}`}>
                   <td className="px-4 py-3">
                     <p className="font-medium">
