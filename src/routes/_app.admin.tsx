@@ -462,6 +462,9 @@ function AdminPage() {
         <StatCard icon={AlertTriangle} label="Vencidos" value={stats.vencidos} tone="danger" />
       </div>
 
+      <FleetAvailabilityPanel profiles={profiles} />
+
+
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold">Cumplimiento documental</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
