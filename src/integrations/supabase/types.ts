@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      asignaciones: {
+        Row: {
+          activa: boolean
+          camion_id: string
+          chofer_id: string
+          created_at: string
+          fecha_desde: string
+          fecha_hasta: string | null
+          id: string
+          notas: string | null
+          proveedor_id: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          camion_id: string
+          chofer_id: string
+          created_at?: string
+          fecha_desde?: string
+          fecha_hasta?: string | null
+          id?: string
+          notas?: string | null
+          proveedor_id: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          camion_id?: string
+          chofer_id?: string
+          created_at?: string
+          fecha_desde?: string
+          fecha_hasta?: string | null
+          id?: string
+          notas?: string | null
+          proveedor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asignaciones_camion_id_fkey"
+            columns: ["camion_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_chofer_id_fkey"
+            columns: ["chofer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           accion: string
@@ -440,6 +494,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           estado_doc: string | null
+          estado_operativo: string
           id: string
           marca: string | null
           modelo: string | null
@@ -458,6 +513,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           estado_doc?: string | null
+          estado_operativo?: string
           id?: string
           marca?: string | null
           modelo?: string | null
@@ -476,6 +532,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           estado_doc?: string | null
+          estado_operativo?: string
           id?: string
           marca?: string | null
           modelo?: string | null
