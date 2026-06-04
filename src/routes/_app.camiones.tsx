@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Trash2, X, UserPlus, AlertTriangle, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { TIPOS_CAMION } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ESTADOS_OPERATIVOS, estadoMeta, licenseCovers, type EstadoOperativo } from "@/lib/fleet";
 
 export const Route = createFileRoute("/_app/camiones")({
   component: CamionesPage,
@@ -16,17 +17,33 @@ const EMPTY = {
   soap_vencimiento: "", permiso_circulacion_vencimiento: "", revision_tecnica_vencimiento: "",
 };
 
+type Driver = { id: string; nombre_completo: string; clase_licencia: string | null };
+type Asign = { id: string; camion_id: string; chofer_id: string; activa: boolean };
+
 function CamionesPage() {
+  const [userId, setUserId] = useState<string | null>(null);
   const [items, setItems] = useState<any[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [asigns, setAsigns] = useState<Asign[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(EMPTY);
   const [editing, setEditing] = useState<string | null>(null);
+  const [assignFor, setAssignFor] = useState<any | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("trucks").select("*").is("deleted_at", null).order("created_at", { ascending: false });
-    setItems(data ?? []);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+    setUserId(user.id);
+    const [{ data: ts }, { data: ds }, { data: as }] = await Promise.all([
+      supabase.from("trucks").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
+      supabase.from("drivers").select("id,nombre_completo,clase_licencia").is("deleted_at", null).order("nombre_completo"),
+      (supabase as any).from("asignaciones").select("*").eq("activa", true),
+    ]);
+    setItems(ts ?? []);
+    setDrivers(ds ?? []);
+    setAsigns(as ?? []);
     setLoading(false);
   };
 
@@ -36,9 +53,8 @@ function CamionesPage() {
   const openEdit = (t: any) => { setForm({ ...t }); setEditing(t.id); setOpen(true); };
 
   const save = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const payload: any = { ...form, user_id: user.id };
+    if (!userId) return;
+    const payload: any = { ...form, user_id: userId };
     ["anio", "capacidad_toneladas", "numero_ejes"].forEach((k) => {
       payload[k] = payload[k] === "" ? null : Number(payload[k]);
     });
@@ -55,8 +71,36 @@ function CamionesPage() {
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar este camión?")) return;
     const { error } = await supabase.from("trucks").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Eliminado"); load(); }
+    if (error) toast.error(error.message); else { toast.success("Eliminado"); load(); }
+  };
+
+  const setEstado = async (truck: any, estado: EstadoOperativo) => {
+    setItems((prev) => prev.map((t) => (t.id === truck.id ? { ...t, estado_operativo: estado } : t)));
+    const { error } = await supabase.from("trucks").update({ estado_operativo: estado } as any).eq("id", truck.id);
+    if (error) { toast.error(error.message); load(); }
+  };
+
+  const assignDriver = async (truck: any, chofer_id: string | null) => {
+    if (!userId) return;
+    // Deactivate any current assignment for this truck
+    await (supabase as any).from("asignaciones").update({ activa: false, fecha_hasta: new Date().toISOString().slice(0,10) }).eq("camion_id", truck.id).eq("activa", true);
+    if (chofer_id) {
+      const { error } = await (supabase as any).from("asignaciones").insert({
+        proveedor_id: userId, camion_id: truck.id, chofer_id, activa: true,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Chofer asignado");
+    } else {
+      toast.success("Asignación removida");
+    }
+    setAssignFor(null);
+    load();
+  };
+
+  const assignedDriverFor = (truckId: string) => {
+    const a = asigns.find((x) => x.camion_id === truckId && x.activa);
+    if (!a) return null;
+    return drivers.find((d) => d.id === a.chofer_id) ?? null;
   };
 
   return (
@@ -76,33 +120,78 @@ function CamionesPage() {
           <table className="w-full text-sm">
             <thead className="bg-primary-soft text-left">
               <tr>
-                {["Patente", "Marca/Modelo", "Tipo", "Capacidad", "SOAP", "Permiso", "Rev. Técnica", ""].map((h) => (
+                {["Patente", "Marca/Modelo", "Tipo", "Estado", "Chofer asignado", "SOAP", "Permiso", "Rev. Téc.", ""].map((h) => (
                   <th key={h} className="px-4 py-3 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y">
-              {loading ? <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Cargando...</td></tr>
-                : items.length === 0 ? <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Aún no hay camiones</td></tr>
-                : items.map((t) => (
-                  <tr key={t.id} className="hover:bg-muted/50">
+              {loading ? <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Cargando...</td></tr>
+                : items.length === 0 ? <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Aún no hay camiones</td></tr>
+                : items.map((t) => {
+                  const drv = assignedDriverFor(t.id);
+                  const meta = estadoMeta(t.estado_operativo);
+                  const warn = drv && !licenseCovers(drv.clase_licencia, t.tipo);
+                  return (
+                  <tr key={t.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-semibold">{t.patente}</td>
                     <td className="px-4 py-3">{t.marca} {t.modelo} {t.anio && `(${t.anio})`}</td>
                     <td className="px-4 py-3">{t.tipo}</td>
-                    <td className="px-4 py-3">{t.capacidad_toneladas ? `${t.capacidad_toneladas} t` : "—"}</td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={t.estado_operativo ?? "disponible"}
+                        onChange={(e) => setEstado(t, e.target.value as EstadoOperativo)}
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium border-0 ${meta.bg} ${meta.text}`}
+                      >
+                        {ESTADOS_OPERATIVOS.map((s) => (
+                          <option key={s.value} value={s.value}>● {s.label}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      {drv ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex w-fit items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium">
+                            <UserCheck className="h-3 w-3" /> {drv.nombre_completo}
+                            {drv.clase_licencia && <span className="text-muted-foreground">· {drv.clase_licencia}</span>}
+                          </span>
+                          {warn && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700">
+                              <AlertTriangle className="h-3 w-3" />
+                              La clase de licencia podría no cubrir este tipo de vehículo.
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Sin asignar</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3"><StatusBadge fecha={t.soap_vencimiento} /></td>
                     <td className="px-4 py-3"><StatusBadge fecha={t.permiso_circulacion_vencimiento} /></td>
                     <td className="px-4 py-3"><StatusBadge fecha={t.revision_tecnica_vencimiento} /></td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEdit(t)} className="text-sm text-primary hover:underline">Editar</button>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <button onClick={() => setAssignFor(t)} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                        <UserPlus className="h-3 w-3" /> Asignar chofer
+                      </button>
+                      <button onClick={() => openEdit(t)} className="ml-3 text-sm text-primary hover:underline">Editar</button>
                       <button onClick={() => remove(t.id)} className="ml-3 text-destructive hover:opacity-80"><Trash2 className="inline h-4 w-4" /></button>
                     </td>
                   </tr>
-                ))}
+                )})}
             </tbody>
           </table>
         </div>
       </div>
+
+      {assignFor && (
+        <AssignModal
+          truck={assignFor}
+          drivers={drivers}
+          current={assignedDriverFor(assignFor.id)?.id ?? null}
+          onClose={() => setAssignFor(null)}
+          onAssign={(id) => assignDriver(assignFor, id)}
+        />
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -136,6 +225,52 @@ function CamionesPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AssignModal({ truck, drivers, current, onClose, onAssign }: {
+  truck: any; drivers: Driver[]; current: string | null;
+  onClose: () => void; onAssign: (chofer_id: string | null) => void;
+}) {
+  const [sel, setSel] = useState<string>(current ?? "");
+  const previewDrv = useMemo(() => drivers.find((d) => d.id === sel) ?? null, [drivers, sel]);
+  const warn = previewDrv && !licenseCovers(previewDrv.clase_licencia, truck.tipo);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Asignar chofer</h2>
+          <button onClick={onClose}><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Camión <span className="font-semibold text-foreground">{truck.patente}</span> · Tipo {truck.tipo}
+        </p>
+        <label className="block text-sm font-medium">Chofer</label>
+        <select value={sel} onChange={(e) => setSel(e.target.value)}
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <option value="">— Sin asignar —</option>
+          {drivers.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.nombre_completo}{d.clase_licencia ? ` · Clase ${d.clase_licencia}` : ""}
+            </option>
+          ))}
+        </select>
+        {warn && (
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
+            <AlertTriangle className="mt-0.5 h-4 w-4" />
+            <span>⚠️ La clase de licencia podría no cubrir este tipo de vehículo.</span>
+          </div>
+        )}
+        <div className="mt-6 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
+          <button onClick={() => onAssign(sel || null)}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">
+            Guardar asignación
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
