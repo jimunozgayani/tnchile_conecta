@@ -87,10 +87,10 @@ function TarifasPage() {
 
   const setCell = (destino: string, tipo: string, patch: Partial<{ precio: string; iva: boolean; km: string }>) => {
     const key = cellKey(destino, tipo);
-    setCells((prev) => ({
-      ...prev,
-      [key]: { precio: "", iva: false, km: "", ...(prev[key] ?? {}), ...patch },
-    }));
+    setCells((prev) => {
+      const base = prev[key] ?? { precio: "", iva: false, km: "" };
+      return { ...prev, [key]: { ...base, ...patch } };
+    });
   };
 
   const saveAll = async () => {
