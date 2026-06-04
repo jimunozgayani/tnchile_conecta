@@ -868,3 +868,89 @@ function Donut({ data }: { data: { tipo: string; count: number }[] }) {
     </div>
   );
 }
+
+function FleetAvailabilityPanel({ profiles }: { profiles: Profile[] }) {
+  const [rows, setRows] = useState<{ user_id: string; estado_operativo: string | null }[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("trucks")
+        .select("user_id, estado_operativo")
+        .is("deleted_at", null);
+      setRows((data ?? []) as any);
+    };
+    load();
+    const ch = supabase
+      .channel("trucks-fleet")
+      .on("postgres_changes", { event: "*", schema: "public", table: "trucks" }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
+  const counts = { disponible: 0, en_ruta: 0, mantenimiento: 0, inactivo: 0 } as Record<string, number>;
+  rows.forEach((r) => { const k = r.estado_operativo ?? "disponible"; counts[k] = (counts[k] ?? 0) + 1; });
+
+  const perSupplier = new Map<string, Record<string, number>>();
+  rows.forEach((r) => {
+    const k = r.estado_operativo ?? "disponible";
+    const cur = perSupplier.get(r.user_id) ?? { disponible: 0, en_ruta: 0, mantenimiento: 0, inactivo: 0 };
+    cur[k] = (cur[k] ?? 0) + 1;
+    perSupplier.set(r.user_id, cur);
+  });
+
+  const supplierName = (id: string) =>
+    profiles.find((p) => p.id === id)?.razon_social || profiles.find((p) => p.id === id)?.correo || id.slice(0, 8);
+
+  const Pill = ({ tone, label, value }: { tone: string; label: string; value: number }) => (
+    <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ${tone}`}>
+      <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+      <span className="font-semibold">{value}</span>
+      <span className="opacity-80">{label}</span>
+    </div>
+  );
+
+  return (
+    <div className="rounded-xl border bg-card p-6 shadow-sm">
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+        <Truck className="h-5 w-5 text-primary" /> Disponibilidad de flota
+        <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">EN VIVO</span>
+      </h2>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Pill tone="bg-emerald-50 text-emerald-700"  label="disponibles"   value={counts.disponible} />
+        <Pill tone="bg-blue-50 text-blue-700"        label="en ruta"       value={counts.en_ruta} />
+        <Pill tone="bg-amber-50 text-amber-700"      label="mantenimiento" value={counts.mantenimiento} />
+        <Pill tone="bg-zinc-100 text-zinc-700"       label="inactivos"     value={counts.inactivo} />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-primary-soft text-left">
+            <tr>
+              {["Proveedor", "Disponibles", "En ruta", "Mantenimiento", "Inactivos", "Total"].map((h) => (
+                <th key={h} className="px-3 py-2 font-medium">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {perSupplier.size === 0 && (
+              <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">Sin camiones registrados.</td></tr>
+            )}
+            {Array.from(perSupplier.entries()).map(([uid, c]) => {
+              const total = c.disponible + c.en_ruta + c.mantenimiento + c.inactivo;
+              return (
+                <tr key={uid} className="hover:bg-muted/30">
+                  <td className="px-3 py-2 font-medium">{supplierName(uid)}</td>
+                  <td className="px-3 py-2"><span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">{c.disponible}</span></td>
+                  <td className="px-3 py-2"><span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">{c.en_ruta}</span></td>
+                  <td className="px-3 py-2"><span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">{c.mantenimiento}</span></td>
+                  <td className="px-3 py-2"><span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs text-zinc-700">{c.inactivo}</span></td>
+                  <td className="px-3 py-2 font-semibold">{total}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
