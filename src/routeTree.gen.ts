@@ -20,6 +20,7 @@ import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
@@ -78,6 +79,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppComparadorRoute = AppComparadorRouteImport.update({
+  id: '/comparador',
+  path: '/comparador',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChoferesRoute = AppChoferesRouteImport.update({
   id: '/choferes',
   path: '/choferes',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
   '/choferes': typeof AppChoferesRoute
+  '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
   '/choferes': typeof AppChoferesRoute
+  '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/camiones': typeof AppCamionesRoute
   '/_app/choferes': typeof AppChoferesRoute
+  '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/camiones'
     | '/choferes'
+    | '/comparador'
     | '/dashboard'
     | '/documentos'
     | '/mensajes'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/camiones'
     | '/choferes'
+    | '/comparador'
     | '/dashboard'
     | '/documentos'
     | '/mensajes'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/camiones'
     | '/_app/choferes'
+    | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/documentos'
     | '/_app/mensajes'
@@ -278,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/comparador': {
+      id: '/_app/comparador'
+      path: '/comparador'
+      fullPath: '/comparador'
+      preLoaderRoute: typeof AppComparadorRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/choferes': {
       id: '/_app/choferes'
       path: '/choferes'
@@ -306,6 +325,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppCamionesRoute: typeof AppCamionesRoute
   AppChoferesRoute: typeof AppChoferesRoute
+  AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
@@ -317,6 +337,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppCamionesRoute: AppCamionesRoute,
   AppChoferesRoute: AppChoferesRoute,
+  AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
@@ -337,3 +358,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
