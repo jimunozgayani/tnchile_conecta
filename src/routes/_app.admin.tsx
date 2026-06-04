@@ -440,10 +440,18 @@ function AdminPage() {
           <h1 className="text-3xl font-bold">Panel de Administración</h1>
           <p className="text-muted-foreground">Vista global de todos los proveedores TN Chile.</p>
         </div>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm">
-          <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} className="h-4 w-4 accent-primary" />
-          Mostrar eliminados
-        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => navigate({ to: "/comparador" })}
+            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark"
+          >
+            Comparador de tarifas
+          </button>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm">
+            <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} className="h-4 w-4 accent-primary" />
+            Mostrar eliminados
+          </label>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
