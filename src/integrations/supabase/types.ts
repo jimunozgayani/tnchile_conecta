@@ -388,6 +388,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tarifas: {
+        Row: {
+          created_at: string
+          id: string
+          incluye_iva: boolean
+          notas: string | null
+          precio_base_clp: number | null
+          precio_por_km_clp: number | null
+          proveedor_id: string
+          region_destino: string
+          region_origen: string
+          tipo_camion: string
+          updated_at: string
+          vigente_desde: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          incluye_iva?: boolean
+          notas?: string | null
+          precio_base_clp?: number | null
+          precio_por_km_clp?: number | null
+          proveedor_id: string
+          region_destino: string
+          region_origen: string
+          tipo_camion: string
+          updated_at?: string
+          vigente_desde?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          incluye_iva?: boolean
+          notas?: string | null
+          precio_base_clp?: number | null
+          precio_por_km_clp?: number | null
+          proveedor_id?: string
+          region_destino?: string
+          region_origen?: string
+          tipo_camion?: string
+          updated_at?: string
+          vigente_desde?: string
+        }
+        Relationships: []
+      }
       trucks: {
         Row: {
           anio: number | null
