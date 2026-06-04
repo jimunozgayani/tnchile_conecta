@@ -1,67 +1,182 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Save, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { REGIONES_CHILE, TIPOS_CAMION } from "@/lib/regions";
+import {
+  REGIONES_CAPITALES,
+  TIPOS_CAMION_TARIFA,
+  type TipoCamionTarifa,
+  fmtMiles,
+  parseMiles,
+} from "@/lib/regiones-capitales";
 
 export const Route = createFileRoute("/_app/tarifas")({
   component: TarifasPage,
 });
 
-const EMPTY = { origen: "Santiago", destino: "Valparaíso", tipo_camion: "Tracto", precio_base_clp: "", precio_km_adicional: "" };
+type Tarifa = {
+  id?: string;
+  proveedor_id?: string;
+  region_origen: string;
+  region_destino: string;
+  tipo_camion: TipoCamionTarifa;
+  precio_base_clp: number | null;
+  precio_por_km_clp: number | null;
+  incluye_iva: boolean;
+  vigente_desde: string;
+  notas: string | null;
+};
 
-const ORIGENES = ["Santiago", ...REGIONES_CHILE];
+type CellKey = string; // `${destino}|${tipo}`
+const cellKey = (destino: string, tipo: string) => `${destino}|${tipo}`;
 
 function TarifasPage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [origen, setOrigen] = useState<string>("Santiago RM");
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<any>(EMPTY);
-  const [editing, setEditing] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const load = async () => {
-    const { data } = await supabase.from("rates").select("*").is("deleted_at", null).order("origen").order("destino");
-    setItems(data ?? []);
+  // cells store the editable base price per (destino, tipo)
+  const [cells, setCells] = useState<Record<CellKey, { precio: string; id?: string; iva: boolean; km: string }>>({});
+
+  const destinos = useMemo(
+    () => REGIONES_CAPITALES.filter((r) => r.name !== origen),
+    [origen]
+  );
+
+  const load = async (uid: string, origenSel: string) => {
+    setLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("tarifas")
+      .select("*")
+      .eq("proveedor_id", uid)
+      .eq("region_origen", origenSel);
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    const next: typeof cells = {};
+    (data ?? []).forEach((r: Tarifa) => {
+      next[cellKey(r.region_destino, r.tipo_camion)] = {
+        precio: r.precio_base_clp != null ? fmtMiles(r.precio_base_clp) : "",
+        id: r.id,
+        iva: !!r.incluye_iva,
+        km: r.precio_por_km_clp != null ? fmtMiles(r.precio_por_km_clp) : "",
+      };
+    });
+    setCells(next);
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
 
-  const save = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const payload: any = {
-      ...form,
-      user_id: user.id,
-      precio_base_clp: form.precio_base_clp === "" ? null : Number(form.precio_base_clp),
-      precio_km_adicional: form.precio_km_adicional === "" ? null : Number(form.precio_km_adicional),
-    };
-    const res = editing
-      ? await supabase.from("rates").update(payload).eq("id", editing)
-      : await supabase.from("rates").insert(payload);
-    if (res.error) toast.error(res.error.message);
-    else { toast.success(editing ? "Tarifa actualizada" : "Tarifa creada"); setOpen(false); load(); }
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+      await load(user.id, origen);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (userId) load(userId, origen);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [origen]);
+
+  const setCell = (destino: string, tipo: string, patch: Partial<{ precio: string; iva: boolean; km: string }>) => {
+    const key = cellKey(destino, tipo);
+    setCells((prev) => ({
+      ...prev,
+      [key]: { precio: "", iva: false, km: "", ...(prev[key] ?? {}), ...patch },
+    }));
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("¿Eliminar tarifa?")) return;
-    const { error } = await supabase.from("rates").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Eliminada"); load(); }
-  };
+  const saveAll = async () => {
+    if (!userId) return;
+    setSaving(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const toUpsert: any[] = [];
+    const toDelete: string[] = [];
 
-  const fmt = (n: number) => n ? new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n) : "—";
+    for (const destino of destinos.map((d) => d.name)) {
+      for (const t of TIPOS_CAMION_TARIFA) {
+        const c = cells[cellKey(destino, t.value)];
+        const precio = c ? parseMiles(c.precio) : null;
+        const km = c ? parseMiles(c.km) : null;
+        if (precio == null && km == null) {
+          if (c?.id) toDelete.push(c.id);
+          continue;
+        }
+        toUpsert.push({
+          proveedor_id: userId,
+          region_origen: origen,
+          region_destino: destino,
+          tipo_camion: t.value,
+          precio_base_clp: precio,
+          precio_por_km_clp: km,
+          incluye_iva: !!c?.iva,
+          vigente_desde: today,
+        });
+      }
+    }
+
+    const { error: upErr } = toUpsert.length
+      ? await (supabase as any).from("tarifas").upsert(toUpsert, {
+          onConflict: "proveedor_id,region_origen,region_destino,tipo_camion",
+        })
+      : { error: null };
+
+    const { error: delErr } = toDelete.length
+      ? await (supabase as any).from("tarifas").delete().in("id", toDelete)
+      : { error: null };
+
+    setSaving(false);
+    if (upErr || delErr) {
+      toast.error((upErr || delErr)!.message);
+    } else {
+      toast.success(`Guardadas ${toUpsert.length} tarifas`);
+      await load(userId, origen);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">Tarifas</h1>
-          <p className="text-muted-foreground">Precios por ruta entre capitales regionales.</p>
+          <p className="text-muted-foreground">
+            Define precios por región destino y tipo de camión desde tu región de origen.
+          </p>
         </div>
-        <button onClick={() => { setForm(EMPTY); setEditing(null); setOpen(true); }}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">
-          <Plus className="h-4 w-4" /> Nueva tarifa
+        <button
+          onClick={saveAll}
+          disabled={saving || loading}
+          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark disabled:opacity-50"
+        >
+          <Save className="h-4 w-4" />
+          {saving ? "Guardando..." : "Guardar todas las tarifas"}
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+        <MapPin className="h-4 w-4 text-primary" />
+        <label className="text-sm font-medium">Región de origen:</label>
+        <select
+          value={origen}
+          onChange={(e) => setOrigen(e.target.value)}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          {REGIONES_CAPITALES.map((r) => (
+            <option key={r.name} value={r.name}>
+              {r.name} ({r.code})
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-muted-foreground">
+          Las celdas vacías quedan como "No disponible".
+        </span>
       </div>
 
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
@@ -69,79 +184,88 @@ function TarifasPage() {
           <table className="w-full text-sm">
             <thead className="bg-primary-soft text-left">
               <tr>
-                {["Origen", "Destino", "Tipo camión", "Precio base", "Precio/km adicional", ""].map((h) => (
-                  <th key={h} className="px-4 py-3 font-medium">{h}</th>
+                <th className="sticky left-0 z-10 bg-primary-soft px-4 py-3 font-medium">
+                  Destino
+                </th>
+                {TIPOS_CAMION_TARIFA.map((t) => (
+                  <th key={t.value} className="px-4 py-3 font-medium">
+                    {t.label}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y">
-              {loading ? <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Cargando...</td></tr>
-                : items.length === 0 ? <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Aún no hay tarifas</td></tr>
-                : items.map((r) => (
-                  <tr key={r.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3 font-medium">{r.origen}</td>
-                    <td className="px-4 py-3">→ {r.destino}</td>
-                    <td className="px-4 py-3">{r.tipo_camion}</td>
-                    <td className="px-4 py-3 font-mono">{fmt(r.precio_base_clp)}</td>
-                    <td className="px-4 py-3 font-mono">{fmt(r.precio_km_adicional)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => { setForm(r); setEditing(r.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
-                      <button onClick={() => remove(r.id)} className="ml-3 text-destructive"><Trash2 className="inline h-4 w-4" /></button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                    Cargando...
+                  </td>
+                </tr>
+              ) : (
+                destinos.map((dest) => (
+                  <tr key={dest.name} className="hover:bg-muted/30">
+                    <td className="sticky left-0 z-10 bg-card px-4 py-3 font-medium whitespace-nowrap">
+                      {dest.name}{" "}
+                      <span className="text-xs text-muted-foreground">({dest.code})</span>
                     </td>
+                    {TIPOS_CAMION_TARIFA.map((t) => {
+                      const c = cells[cellKey(dest.name, t.value)];
+                      const v = c?.precio ?? "";
+                      const empty = !v;
+                      return (
+                        <td key={t.value} className="px-2 py-2 align-top">
+                          <div className="space-y-1">
+                            <div className="relative">
+                              <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-muted-foreground">
+                                $
+                              </span>
+                              <input
+                                value={v}
+                                onChange={(e) =>
+                                  setCell(dest.name, t.value, {
+                                    precio: fmtMiles(parseMiles(e.target.value)),
+                                  })
+                                }
+                                placeholder="No disponible"
+                                className={`w-32 rounded-md border border-input bg-background pl-5 pr-2 py-1.5 text-sm font-mono ${
+                                  empty ? "text-muted-foreground placeholder:italic" : ""
+                                }`}
+                              />
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-muted-foreground">km</span>
+                              <input
+                                value={c?.km ?? ""}
+                                onChange={(e) =>
+                                  setCell(dest.name, t.value, {
+                                    km: fmtMiles(parseMiles(e.target.value)),
+                                  })
+                                }
+                                placeholder="—"
+                                className="w-20 rounded-md border border-input bg-background px-1.5 py-1 text-xs font-mono"
+                              />
+                              <label className="ml-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <input
+                                  type="checkbox"
+                                  checked={!!c?.iva}
+                                  onChange={(e) =>
+                                    setCell(dest.name, t.value, { iva: e.target.checked })
+                                  }
+                                />
+                                IVA
+                              </label>
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    })}
                   </tr>
-                ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-xl rounded-xl bg-card p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">{editing ? "Editar tarifa" : "Nueva tarifa"}</h2>
-              <button onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium">Origen</label>
-                <select value={form.origen} onChange={(e) => setForm({ ...form, origen: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {ORIGENES.map((r) => <option key={r}>{r}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Destino</label>
-                <select value={form.destino} onChange={(e) => setForm({ ...form, destino: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {REGIONES_CHILE.map((r) => <option key={r}>{r}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Tipo camión</label>
-                <select value={form.tipo_camion} onChange={(e) => setForm({ ...form, tipo_camion: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {TIPOS_CAMION.map((t) => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Precio base (CLP)</label>
-                <input type="number" value={form.precio_base_clp} onChange={(e) => setForm({ ...form, precio_base_clp: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium">Precio por km adicional (CLP)</label>
-                <input type="number" value={form.precio_km_adicional} onChange={(e) => setForm({ ...form, precio_km_adicional: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setOpen(false)} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
-              <button onClick={save} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">Guardar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
