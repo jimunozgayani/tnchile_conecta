@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X, Search, ArrowUpDown, ArrowUp, ArrowDown, Download, ChevronDown } from "lucide-react";
+import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X, Search, ArrowUpDown, ArrowUp, ArrowDown, Download, ChevronDown, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento, REGIONES_CHILE } from "@/lib/regions";
 import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
 import { calcCompleteness, completionTone } from "@/lib/completeness";
+import { exportFichaProveedorPDF } from "@/lib/ficha-pdf";
 
 type AuditEntry = {
   id: string; tabla_nombre: string; registro_id: string | null;
@@ -660,6 +661,20 @@ function AdminPage() {
                         <button onClick={() => openSend(r.key, r.name)}
                           className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
                           <MessageSquare className="h-3 w-3" /> Mensaje
+                        </button>
+                      )}
+                      {!r.key.startsWith("inv-") && r.status !== "invitado" && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await exportFichaProveedorPDF(r.key);
+                              toast.success("Ficha PDF generada");
+                            } catch (e: any) {
+                              toast.error(e?.message || "No se pudo generar la ficha");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <FileDown className="h-3 w-3" /> Exportar ficha PDF
                         </button>
                       )}
                     </div>
