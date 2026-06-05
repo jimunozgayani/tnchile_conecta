@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ALLOWED_UPLOAD_ACCEPT, validateUpload } from "@/lib/upload-validation";
+import { CameraOrFileInput } from "@/components/CameraOrFileInput";
+
 
 export const Route = createFileRoute("/_app/documentos")({
   component: DocumentosPage,
@@ -157,16 +159,19 @@ function DocumentosPage() {
           </div>
           <div>
             <label className="block text-sm font-medium">Archivo</label>
-            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT} onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                if (f) {
+            <div className="mt-1">
+              <CameraOrFileInput
+                accept={ALLOWED_UPLOAD_ACCEPT}
+                onFile={(f) => {
                   const v = validateUpload(f);
-                  if (!v.ok) { toast.error(v.error); e.target.value = ""; setFile(null); return; }
-                }
-                setFile(f);
-              }}
-              className="mt-1 block w-full text-sm" />
+                  if (!v.ok) { toast.error(v.error); return; }
+                  setFile(f);
+                }}
+              />
+              {file && <p className="mt-1 text-xs text-muted-foreground">{file.name}</p>}
+            </div>
           </div>
+
         </div>
         <button disabled={uploading} className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark disabled:opacity-60">
           <Upload className="h-4 w-4" /> {uploading ? "Subiendo..." : "Subir documento"}
