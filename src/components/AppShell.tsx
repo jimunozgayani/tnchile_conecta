@@ -6,6 +6,9 @@ import { Logo } from "./Logo";
 import markUrl from "@/assets/tn-chile-mark.png";
 import { SessionExpiryWarning } from "./SessionExpiryWarning";
 import { NotificationBell } from "./NotificationBell";
+import { MobileBottomNav } from "./MobileBottomNav";
+import { InstallPrompt } from "./InstallPrompt";
+
 
 const NAV = [
   { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
@@ -121,6 +124,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
       <SessionExpiryWarning />
+      <MobileBottomNav />
+      <InstallPrompt />
     </div>
   );
 }
+

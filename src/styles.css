@@ -97,3 +97,19 @@
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
 }
+
+/* Mobile touch targets — minimum 44px for inputs/buttons on small screens */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+  button:not(.btn-compact) {
+    min-height: 44px;
+  }
+  /* Bottom-nav safe space so content isn't hidden behind fixed nav */
+  main {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+  }
+}
