@@ -48,8 +48,8 @@ export async function exportFichaProveedorPDF(proveedorId: string): Promise<void
   const topTarifas = tarifas ?? [];
 
   const completion = calcCompleteness({
-    profile, trucks: camiones, drivers: choferes,
-  } as any);
+    profile: profile as any, trucks: camiones as any, drivers: choferes as any,
+  }).score;
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
