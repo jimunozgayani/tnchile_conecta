@@ -663,6 +663,20 @@ function AdminPage() {
                           <MessageSquare className="h-3 w-3" /> Mensaje
                         </button>
                       )}
+                      {!r.key.startsWith("inv-") && r.status !== "invitado" && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await exportFichaProveedorPDF(r.key);
+                              toast.success("Ficha PDF generada");
+                            } catch (e: any) {
+                              toast.error(e?.message || "No se pudo generar la ficha");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10">
+                          <FileDown className="h-3 w-3" /> Exportar ficha PDF
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
