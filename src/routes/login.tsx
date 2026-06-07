@@ -14,9 +14,17 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const goAfterLogin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
+    navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (s) navigate({ to: "/dashboard" });
+      if (s) void goAfterLogin();
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -47,7 +55,7 @@ function LoginPage() {
     } else {
       localStorage.setItem("tn_last_activity", String(Date.now()));
       toast.success("Sesión iniciada");
-      navigate({ to: "/dashboard" });
+      await goAfterLogin();
     }
   };
 
