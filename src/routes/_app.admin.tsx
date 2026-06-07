@@ -622,7 +622,10 @@ function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredRows.length === 0 && (
+              {loading && (
+                <tr><td colSpan={9} className="px-4 py-6"><SkeletonRows rows={5} cols={5} /></td></tr>
+              )}
+              {!loading && filteredRows.length === 0 && (
                 <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Sin proveedores que coincidan con los filtros.</td></tr>
               )}
               {filteredRows.map((r) => (
