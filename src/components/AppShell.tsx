@@ -111,9 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 items-center justify-between border-b border-primary-dark bg-primary px-4 text-primary-foreground md:px-8">
           <button className="md:hidden" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
-              <img src={markUrl} alt="TN Chile" className="h-9 w-9" />
-            </div>
+            <img src={markUrl} alt="TN Chile" className="h-10 w-10" />
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>
           <div className="flex items-center gap-3">
