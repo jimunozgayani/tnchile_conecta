@@ -43,10 +43,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TN Chile — Portal de Proveedores" },
+      { title: "Portal Proveedores · TN Chile" },
       { name: "description", content: "La logística la hacemos juntos." },
-      { property: "og:title", content: "TN Chile — Portal de Proveedores" },
-      { name: "twitter:title", content: "TN Chile — Portal de Proveedores" },
+      { property: "og:title", content: "Portal Proveedores · TN Chile" },
+      { name: "twitter:title", content: "Portal Proveedores · TN Chile" },
       { property: "og:description", content: "La logística la hacemos juntos." },
       { name: "twitter:description", content: "La logística la hacemos juntos." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/0qpycXw9qfNTHbWICiwFRnrLlm12/social-images/social-1779991980368-58bacf22-c163-4a22-b92e-6c94aa100411.webp" },
@@ -61,6 +61,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },

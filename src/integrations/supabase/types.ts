@@ -573,6 +573,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_dashboard_stats: {
+        Args: never
+        Returns: unknown
+        SetofOptions: {
+          from: "*"
+          to: "admin_dashboard_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

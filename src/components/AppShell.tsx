@@ -8,6 +8,7 @@ import { SessionExpiryWarning } from "./SessionExpiryWarning";
 import { NotificationBell } from "./NotificationBell";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { InstallPrompt } from "./InstallPrompt";
+import { Footer } from "./Footer";
 
 
 const NAV = [
@@ -120,6 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
+        <Footer />
       </div>
       <SessionExpiryWarning />
       <MobileBottomNav />

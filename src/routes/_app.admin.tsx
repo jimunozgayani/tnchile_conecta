@@ -8,6 +8,8 @@ import { diasHasta, estadoVencimiento, REGIONES_CHILE } from "@/lib/regions";
 import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
 import { calcCompleteness, completionTone } from "@/lib/completeness";
 import { exportFichaProveedorPDF } from "@/lib/ficha-pdf";
+import { fetchAdminDashboardStats, type AdminDashboardStats } from "@/lib/admin-stats";
+import { SkeletonCards, SkeletonRows } from "@/components/SkeletonBlocks";
 
 type AuditEntry = {
   id: string; tabla_nombre: string; registro_id: string | null;
@@ -148,7 +150,9 @@ function AdminPage() {
     setLoading(false);
   };
 
+  const [mvStats, setMvStats] = useState<AdminDashboardStats | null>(null);
   useEffect(() => { if (isAdmin) loadAll(); }, [showDeleted, isAdmin]);
+  useEffect(() => { if (isAdmin) fetchAdminDashboardStats().then(setMvStats).catch(() => {}); }, [isAdmin]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -455,13 +459,22 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <StatCard icon={Users} label="Proveedores" value={stats.proveedores} sub={`${stats.activos} activos`} />
-        <StatCard icon={Truck} label="Camiones" value={stats.camiones} />
-        <StatCard icon={Users} label="Choferes" value={drivers.length} />
-        <StatCard icon={FileText} label="Por vencer (≤30d)" value={stats.porVencer} tone="warn" />
-        <StatCard icon={AlertTriangle} label="Vencidos" value={stats.vencidos} tone="danger" />
-      </div>
+      {loading ? (
+        <SkeletonCards count={5} />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <StatCard icon={Users} label="Proveedores" value={mvStats?.total_proveedores_activos ?? stats.proveedores} sub={`${stats.activos} activos`} />
+          <StatCard icon={Truck} label="Camiones" value={mvStats?.total_camiones ?? stats.camiones} />
+          <StatCard icon={Users} label="Choferes" value={mvStats?.total_choferes ?? drivers.length} />
+          <StatCard icon={FileText} label="Por vencer (≤30d)" value={mvStats?.docs_por_vencer_30d ?? stats.porVencer} tone="warn" />
+          <StatCard icon={AlertTriangle} label="Vencidos" value={mvStats?.docs_vencidos ?? stats.vencidos} tone="danger" />
+        </div>
+      )}
+      {mvStats && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Métricas pre-calculadas · actualizadas {new Date(mvStats.refreshed_at).toLocaleString("es-CL")}
+        </p>
+      )}
 
       <FleetAvailabilityPanel profiles={profiles} />
 
@@ -609,7 +622,10 @@ function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredRows.length === 0 && (
+              {loading && (
+                <tr><td colSpan={9} className="px-4 py-6"><SkeletonRows rows={5} cols={5} /></td></tr>
+              )}
+              {!loading && filteredRows.length === 0 && (
                 <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Sin proveedores que coincidan con los filtros.</td></tr>
               )}
               {filteredRows.map((r) => (
