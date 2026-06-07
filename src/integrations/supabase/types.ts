@@ -570,22 +570,19 @@ export type Database = {
       }
     }
     Views: {
-      admin_dashboard_stats: {
-        Row: {
-          cumplimiento_promedio_porcentaje: number | null
-          docs_por_vencer_30d: number | null
-          docs_vencidos: number | null
-          proveedores_por_region: Json | null
-          refreshed_at: string | null
-          tipos_camion_conteo: Json | null
-          total_camiones: number | null
-          total_choferes: number | null
-          total_proveedores_activos: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_admin_dashboard_stats: {
+        Args: never
+        Returns: unknown
+        SetofOptions: {
+          from: "*"
+          to: "admin_dashboard_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -595,7 +592,6 @@ export type Database = {
       }
       is_email_locked: { Args: { _email: string }; Returns: boolean }
       process_document_expiries: { Args: never; Returns: undefined }
-      refresh_admin_dashboard_stats: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "supplier"
