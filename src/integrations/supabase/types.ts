@@ -591,6 +591,7 @@ export type Database = {
         Returns: boolean
       }
       is_email_locked: { Args: { _email: string }; Returns: boolean }
+      is_suspended: { Args: { _user_id: string }; Returns: boolean }
       process_document_expiries: { Args: never; Returns: undefined }
     }
     Enums: {
