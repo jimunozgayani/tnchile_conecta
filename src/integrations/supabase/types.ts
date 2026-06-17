@@ -301,6 +301,54 @@ export type Database = {
         }
         Relationships: []
       }
+      polizas: {
+        Row: {
+          activa: boolean
+          archivo_url: string | null
+          aseguradora: string | null
+          created_at: string
+          deleted_at: string | null
+          fecha_inicio: string | null
+          fecha_vencimiento: string | null
+          id: string
+          monto: number | null
+          numero_poliza: string | null
+          proveedor_id: string
+          tipo_cobertura: string | null
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          archivo_url?: string | null
+          aseguradora?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          fecha_inicio?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          monto?: number | null
+          numero_poliza?: string | null
+          proveedor_id: string
+          tipo_cobertura?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          archivo_url?: string | null
+          aseguradora?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          fecha_inicio?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          monto?: number | null
+          numero_poliza?: string | null
+          proveedor_id?: string
+          tipo_cobertura?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cargo: string | null

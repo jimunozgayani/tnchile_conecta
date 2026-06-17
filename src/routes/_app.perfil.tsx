@@ -1,19 +1,46 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ALLOWED_UPLOAD_ACCEPT, validateUpload } from "@/lib/upload-validation";
 import { REGIONES_CHILE } from "@/lib/regions";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export const Route = createFileRoute("/_app/perfil")({
   component: PerfilPage,
 });
+
+const EMPTY_POLIZA = {
+  numero_poliza: "",
+  aseguradora: "",
+  tipo_cobertura: "",
+  monto: "",
+  fecha_inicio: "",
+  fecha_vencimiento: "",
+  archivo_url: "",
+  activa: true,
+};
 
 function PerfilPage() {
   const [form, setForm] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string>("");
+  const [polizas, setPolizas] = useState<any[]>([]);
+  const [polizaOpen, setPolizaOpen] = useState(false);
+  const [polizaForm, setPolizaForm] = useState<any>(EMPTY_POLIZA);
+  const [polizaEditing, setPolizaEditing] = useState<string | null>(null);
+
+  const loadPolizas = async (uid: string) => {
+    const { data } = await (supabase as any)
+      .from("polizas")
+      .select("*")
+      .eq("proveedor_id", uid)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    setPolizas(data ?? []);
+  };
 
   useEffect(() => {
     (async () => {
@@ -22,19 +49,21 @@ function PerfilPage() {
       setUserId(user.id);
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
       if (data) setForm(data);
+      await loadPolizas(user.id);
       setLoading(false);
     })();
   }, []);
 
   const update = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
 
-  const uploadFile = async (file: File, field: string) => {
+  const uploadFile = async (file: File, field: string, target: "profile" | "poliza") => {
     const v = validateUpload(file);
     if (!v.ok) return toast.error(v.error);
     const path = `${userId}/${field}-${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("documents").upload(path, file);
     if (error) return toast.error(error.message);
-    update(field, path);
+    if (target === "profile") update(field, path);
+    else setPolizaForm((p: any) => ({ ...p, archivo_url: path }));
     toast.success("Archivo subido");
   };
 
@@ -50,6 +79,35 @@ function PerfilPage() {
     setSaving(false);
     if (error) toast.error(error.message);
     else toast.success("Perfil guardado");
+  };
+
+  const savePoliza = async () => {
+    const payload: any = {
+      ...polizaForm,
+      proveedor_id: userId,
+      monto: polizaForm.monto === "" || polizaForm.monto == null ? null : Number(polizaForm.monto),
+      fecha_inicio: polizaForm.fecha_inicio || null,
+      fecha_vencimiento: polizaForm.fecha_vencimiento || null,
+    };
+    const res = polizaEditing
+      ? await (supabase as any).from("polizas").update(payload).eq("id", polizaEditing)
+      : await (supabase as any).from("polizas").insert(payload);
+    if (res.error) return toast.error(res.error.message);
+    toast.success(polizaEditing ? "Póliza actualizada" : "Póliza agregada");
+    setPolizaOpen(false);
+    setPolizaForm(EMPTY_POLIZA);
+    setPolizaEditing(null);
+    await loadPolizas(userId);
+  };
+
+  const removePoliza = async (id: string) => {
+    if (!confirm("¿Eliminar esta póliza?")) return;
+    const { error } = await (supabase as any)
+      .from("polizas")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Eliminada"); loadPolizas(userId); }
   };
 
   if (loading) return <p className="text-muted-foreground">Cargando...</p>;
@@ -93,34 +151,71 @@ function PerfilPage() {
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
-        <h2 className="mb-4 font-semibold">Documentos</h2>
-        <div className="space-y-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <label className="block text-sm font-medium">Póliza de seguro (PDF / imagen)</label>
-            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT}
-              onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "poliza_seguro_url")}
-              className="mt-1 block text-sm" />
-            {form.poliza_seguro_url && (
-              <p className="mt-1 text-xs text-success">
-                ✓ Cargado · <button type="button" onClick={() => viewFile(form.poliza_seguro_url)} className="underline">Ver</button>
-              </p>
-            )}
-            <label className="mt-2 block text-sm font-medium">Vencimiento póliza</label>
-            <input type="date" value={form.poliza_seguro_vencimiento ?? ""}
-              onChange={(e) => update("poliza_seguro_vencimiento", e.target.value)}
-              className="mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <h2 className="font-semibold">Pólizas de seguro</h2>
+            <p className="text-sm text-muted-foreground">Gestiona una o más pólizas vigentes.</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium">Certificado SII (PDF / imagen)</label>
-            <input type="file" accept={ALLOWED_UPLOAD_ACCEPT}
-              onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "certificado_sii_url")}
-              className="mt-1 block text-sm" />
-            {form.certificado_sii_url && (
-              <p className="mt-1 text-xs text-success">
-                ✓ Cargado · <button type="button" onClick={() => viewFile(form.certificado_sii_url)} className="underline">Ver</button>
-              </p>
-            )}
-          </div>
+          <button
+            onClick={() => { setPolizaForm(EMPTY_POLIZA); setPolizaEditing(null); setPolizaOpen(true); }}
+            className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">
+            <Plus className="h-4 w-4" /> Nueva póliza
+          </button>
+        </div>
+        {polizas.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aún no hay pólizas registradas.</p>
+        ) : (
+          <ul className="divide-y">
+            {polizas.map((p) => (
+              <li key={p.id} className="flex items-start justify-between gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{p.numero_poliza || "(sin número)"}</p>
+                    {!p.activa && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Inactiva</span>
+                    )}
+                    <StatusBadge fecha={p.fecha_vencimiento} label="Vence" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {p.aseguradora || "—"}{p.tipo_cobertura ? ` · ${p.tipo_cobertura}` : ""}
+                    {p.monto != null ? ` · $${Number(p.monto).toLocaleString("es-CL")}` : ""}
+                  </p>
+                  {p.archivo_url && (
+                    <button onClick={() => viewFile(p.archivo_url)} className="mt-1 text-xs text-primary underline">
+                      Ver archivo
+                    </button>
+                  )}
+                </div>
+                <div className="flex shrink-0 gap-3 text-sm">
+                  <button
+                    onClick={() => {
+                      setPolizaForm({ ...EMPTY_POLIZA, ...p, monto: p.monto ?? "" });
+                      setPolizaEditing(p.id);
+                      setPolizaOpen(true);
+                    }}
+                    className="text-primary hover:underline">Editar</button>
+                  <button onClick={() => removePoliza(p.id)} className="text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-4 font-semibold">Otros documentos</h2>
+        <div>
+          <label className="block text-sm font-medium">Certificado SII (PDF / imagen)</label>
+          <input type="file" accept={ALLOWED_UPLOAD_ACCEPT}
+            onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "certificado_sii_url", "profile")}
+            className="mt-1 block text-sm" />
+          {form.certificado_sii_url && (
+            <p className="mt-1 text-xs text-success">
+              ✓ Cargado · <button type="button" onClick={() => viewFile(form.certificado_sii_url)} className="underline">Ver</button>
+            </p>
+          )}
         </div>
       </div>
 
@@ -128,6 +223,64 @@ function PerfilPage() {
         className="rounded-md bg-primary px-6 py-2 font-medium text-primary-foreground hover:bg-primary-dark disabled:opacity-60">
         {saving ? "Guardando..." : "Guardar cambios"}
       </button>
+
+      {polizaOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-xl rounded-xl bg-card p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold">{polizaEditing ? "Editar póliza" : "Nueva póliza"}</h2>
+              <button onClick={() => setPolizaOpen(false)}><X className="h-5 w-5" /></button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <PField label="Número de póliza" value={polizaForm.numero_poliza}
+                onChange={(v) => setPolizaForm({ ...polizaForm, numero_poliza: v })} />
+              <PField label="Aseguradora" value={polizaForm.aseguradora}
+                onChange={(v) => setPolizaForm({ ...polizaForm, aseguradora: v })} />
+              <PField label="Tipo de cobertura" value={polizaForm.tipo_cobertura}
+                onChange={(v) => setPolizaForm({ ...polizaForm, tipo_cobertura: v })} />
+              <PField label="Monto asegurado (CLP)" type="number" value={polizaForm.monto}
+                onChange={(v) => setPolizaForm({ ...polizaForm, monto: v })} />
+              <PField label="Fecha inicio" type="date" value={polizaForm.fecha_inicio}
+                onChange={(v) => setPolizaForm({ ...polizaForm, fecha_inicio: v })} />
+              <PField label="Fecha vencimiento" type="date" value={polizaForm.fecha_vencimiento}
+                onChange={(v) => setPolizaForm({ ...polizaForm, fecha_vencimiento: v })} />
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium">Archivo de póliza (PDF / imagen)</label>
+                <input type="file" accept={ALLOWED_UPLOAD_ACCEPT}
+                  onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "poliza", "poliza")}
+                  className="mt-1 block text-sm" />
+                {polizaForm.archivo_url && (
+                  <p className="mt-1 text-xs text-success">
+                    ✓ Cargado · <button type="button" onClick={() => viewFile(polizaForm.archivo_url)} className="underline">Ver</button>
+                  </p>
+                )}
+              </div>
+              <label className="flex items-center gap-2 text-sm md:col-span-2">
+                <input type="checkbox" checked={!!polizaForm.activa}
+                  onChange={(e) => setPolizaForm({ ...polizaForm, activa: e.target.checked })} />
+                Póliza activa
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button onClick={() => setPolizaOpen(false)} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
+              <button onClick={savePoliza}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PField({ label, value, onChange, type = "text" }: { label: string; value: any; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium">{label}</label>
+      <input type={type} value={value ?? ""} onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
     </div>
   );
 }
