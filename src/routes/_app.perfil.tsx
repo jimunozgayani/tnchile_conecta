@@ -82,12 +82,29 @@ function PerfilPage() {
   };
 
   const savePoliza = async () => {
+    const numero = (polizaForm.numero_poliza ?? "").trim();
+    if (!numero) return toast.error("El número de póliza es obligatorio");
+
+    const fi = polizaForm.fecha_inicio || null;
+    const fv = polizaForm.fecha_vencimiento || null;
+    if (fi && fv && new Date(fv) <= new Date(fi)) {
+      return toast.error("La fecha de vencimiento debe ser posterior a la fecha de inicio");
+    }
+
+    const duplicado = polizas.some(
+      (p) =>
+        p.id !== polizaEditing &&
+        (p.numero_poliza ?? "").trim().toLowerCase() === numero.toLowerCase(),
+    );
+    if (duplicado) return toast.error("Ya existe una póliza con ese número");
+
     const payload: any = {
       ...polizaForm,
+      numero_poliza: numero,
       proveedor_id: userId,
       monto: polizaForm.monto === "" || polizaForm.monto == null ? null : Number(polizaForm.monto),
-      fecha_inicio: polizaForm.fecha_inicio || null,
-      fecha_vencimiento: polizaForm.fecha_vencimiento || null,
+      fecha_inicio: fi,
+      fecha_vencimiento: fv,
     };
     const res = polizaEditing
       ? await (supabase as any).from("polizas").update(payload).eq("id", polizaEditing)
