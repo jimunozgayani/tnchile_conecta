@@ -20,10 +20,13 @@ function Dashboard() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const [{ data: trucks }, { data: drivers }, { data: profile }] = await Promise.all([
+      const [{ data: trucks }, { data: drivers }, { data: profile }, { data: polizas }] = await Promise.all([
         supabase.from("trucks").select("*").is("deleted_at", null),
         supabase.from("drivers").select("*").is("deleted_at", null),
         user ? supabase.from("profiles").select("*").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        user
+          ? (supabase as any).from("polizas").select("*").eq("proveedor_id", user.id).is("deleted_at", null)
+          : Promise.resolve({ data: [] } as any),
       ]);
 
       const items: Alerta[] = [];
@@ -48,6 +51,18 @@ function Dashboard() {
             items.push({ tipo: tipo as string, entidad: dr.nombre_completo, vencimiento: f as string, dias: d });
         });
       });
+      (polizas ?? []).forEach((po: any) => {
+        if ((po.activa ?? true) === false) return;
+        const d = diasHasta(po.fecha_vencimiento);
+        if (d !== null && d <= 30) {
+          items.push({
+            tipo: "Póliza de seguro",
+            entidad: po.numero_poliza || po.aseguradora || "Póliza",
+            vencimiento: po.fecha_vencimiento,
+            dias: d,
+          });
+        }
+      });
 
       items.sort((a, b) => a.dias - b.dias);
       setAlertas(items);
@@ -61,6 +76,7 @@ function Dashboard() {
         profile: profile as any,
         trucks: (trucks ?? []) as any,
         drivers: (drivers ?? []) as any,
+        polizas: (polizas ?? []) as any,
       }));
       setLoading(false);
     })();
