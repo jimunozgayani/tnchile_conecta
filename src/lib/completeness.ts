@@ -6,13 +6,16 @@ export type CompletenessInput = {
     rut_empresa?: string | null;
     nombre_contacto?: string | null;
     telefono?: string | null;
-    poliza_seguro_vencimiento?: string | null;
   } | null;
   trucks: Array<{
     soap_vencimiento?: string | null;
     permiso_circulacion_vencimiento?: string | null;
   }>;
   drivers: Array<unknown>;
+  polizas?: Array<{
+    fecha_vencimiento?: string | null;
+    activa?: boolean | null;
+  }>;
 };
 
 export type CompletenessItem = {
