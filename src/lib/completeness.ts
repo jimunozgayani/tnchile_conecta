@@ -43,7 +43,9 @@ export function calcCompleteness(input: CompletenessInput): CompletenessResult {
   const allSoap = hasTruck && input.trucks.every((t) => notExpired(t.soap_vencimiento));
   const allPermiso = hasTruck && input.trucks.every((t) => notExpired(t.permiso_circulacion_vencimiento));
   const hasDriver = input.drivers.length > 0;
-  const poliza = notExpired(p.poliza_seguro_vencimiento);
+  const poliza = (input.polizas ?? []).some(
+    (po) => (po.activa ?? true) && notExpired(po.fecha_vencimiento),
+  );
 
   const items: CompletenessItem[] = [
     { label: "Datos básicos del perfil (razón social, RUT, contacto, teléfono)", weight: 20, done: basics },
