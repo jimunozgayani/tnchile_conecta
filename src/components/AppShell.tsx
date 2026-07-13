@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare, CalendarCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
@@ -87,13 +87,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           {isAdmin && (
-            <Link to="/admin" onClick={() => setOpen(false)}
-              className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname.startsWith("/admin") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-              }`}>
-              <ShieldCheck className="h-4 w-4" />
-              Administración
-            </Link>
+            <>
+              <Link to="/disponibilidad" onClick={() => setOpen(false)}
+                className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/disponibilidad") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <CalendarCheck className="h-4 w-4" />
+                Disponibilidad
+              </Link>
+              <Link to="/admin" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/admin") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <ShieldCheck className="h-4 w-4" />
+                Administración
+              </Link>
+            </>
           )}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border p-3">
