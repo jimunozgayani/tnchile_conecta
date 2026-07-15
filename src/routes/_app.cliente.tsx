@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Building2, Plus, Trash2, Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { validateUploadFile } from "@/lib/upload-validation";
+import { validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/cliente")({
   beforeLoad: async () => {
