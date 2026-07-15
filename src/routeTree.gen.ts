@@ -21,6 +21,7 @@ import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
 import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
+import { Route as AppMisViajesRouteImport } from './routes/_app.mis-viajes'
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
@@ -91,6 +92,11 @@ const AppOperacionesCotizacionesRoute =
 const AppOperacionesRoute = AppOperacionesRouteImport.update({
   id: '/operaciones',
   path: '/operaciones',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMisViajesRoute = AppMisViajesRouteImport.update({
+  id: '/mis-viajes',
+  path: '/mis-viajes',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMiDisponibilidadRoute = AppMiDisponibilidadRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/perfil': typeof AppPerfilRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/perfil': typeof AppPerfilRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/_app/mis-viajes': typeof AppMisViajesRoute
   '/_app/operaciones': typeof AppOperacionesRoute
   '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/_app/perfil': typeof AppPerfilRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/mis-viajes'
     | '/operaciones'
     | '/operaciones-cotizaciones'
     | '/perfil'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/mis-viajes'
     | '/operaciones'
     | '/operaciones-cotizaciones'
     | '/perfil'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/_app/documentos'
     | '/_app/mensajes'
     | '/_app/mi-disponibilidad'
+    | '/_app/mis-viajes'
     | '/_app/operaciones'
     | '/_app/operaciones-cotizaciones'
     | '/_app/perfil'
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOperacionesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mis-viajes': {
+      id: '/_app/mis-viajes'
+      path: '/mis-viajes'
+      fullPath: '/mis-viajes'
+      preLoaderRoute: typeof AppMisViajesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mi-disponibilidad': {
       id: '/_app/mi-disponibilidad'
       path: '/mi-disponibilidad'
@@ -489,6 +508,7 @@ interface AppRouteChildren {
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
+  AppMisViajesRoute: typeof AppMisViajesRoute
   AppOperacionesRoute: typeof AppOperacionesRoute
   AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
   AppPerfilRoute: typeof AppPerfilRoute
@@ -507,6 +527,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
+  AppMisViajesRoute: AppMisViajesRoute,
   AppOperacionesRoute: AppOperacionesRoute,
   AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
   AppPerfilRoute: AppPerfilRoute,

@@ -19,7 +19,9 @@ export type Database = {
           activa: boolean
           camion_id: string
           chofer_id: string
+          cotizacion_id: string | null
           created_at: string
+          estado_viaje: string
           fecha_desde: string
           fecha_hasta: string | null
           id: string
@@ -31,7 +33,9 @@ export type Database = {
           activa?: boolean
           camion_id: string
           chofer_id: string
+          cotizacion_id?: string | null
           created_at?: string
+          estado_viaje?: string
           fecha_desde?: string
           fecha_hasta?: string | null
           id?: string
@@ -43,7 +47,9 @@ export type Database = {
           activa?: boolean
           camion_id?: string
           chofer_id?: string
+          cotizacion_id?: string | null
           created_at?: string
+          estado_viaje?: string
           fecha_desde?: string
           fecha_hasta?: string | null
           id?: string
@@ -64,6 +70,13 @@ export type Database = {
             columns: ["chofer_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
             referencedColumns: ["id"]
           },
         ]

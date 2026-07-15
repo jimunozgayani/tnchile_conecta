@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -325,9 +325,12 @@ function EstadoView({ userId, perfil, onUpdated }: { userId: string; perfil: any
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="mb-2 font-semibold text-primary-dark">Cargas asignadas</h2>
         {puedeVerCargas ? (
-          <p className="text-sm text-muted-foreground">
-            Aún no tienes cargas asignadas. Cuando Operaciones te asigne un viaje, aparecerá aquí.
-          </p>
+          <Link
+            to="/mis-viajes"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark"
+          >
+            <Truck className="h-4 w-4" /> Ver mis viajes
+          </Link>
         ) : (
           <div className="flex items-center gap-2 rounded-md bg-muted p-4 text-sm text-muted-foreground">
             <Lock className="h-4 w-4" />
@@ -335,6 +338,7 @@ function EstadoView({ userId, perfil, onUpdated }: { userId: string; perfil: any
           </div>
         )}
       </div>
+
     </div>
   );
 }
