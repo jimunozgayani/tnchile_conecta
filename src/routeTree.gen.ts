@@ -22,6 +22,7 @@ import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
 import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
 import { Route as AppMisViajesRouteImport } from './routes/_app.mis-viajes'
+import { Route as AppMiDisponibilidadChoferRouteImport } from './routes/_app.mi-disponibilidad-chofer'
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
@@ -99,6 +100,12 @@ const AppMisViajesRoute = AppMisViajesRouteImport.update({
   path: '/mis-viajes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMiDisponibilidadChoferRoute =
+  AppMiDisponibilidadChoferRouteImport.update({
+    id: '/mi-disponibilidad-chofer',
+    path: '/mi-disponibilidad-chofer',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppMiDisponibilidadRoute = AppMiDisponibilidadRouteImport.update({
   id: '/mi-disponibilidad',
   path: '/mi-disponibilidad',
@@ -175,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
@@ -200,6 +208,7 @@ export interface FileRoutesByTo {
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
@@ -227,6 +236,7 @@ export interface FileRoutesById {
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/_app/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/_app/mis-viajes': typeof AppMisViajesRoute
   '/_app/operaciones': typeof AppOperacionesRoute
   '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
     | '/operaciones'
     | '/operaciones-cotizaciones'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
     | '/operaciones'
     | '/operaciones-cotizaciones'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
     | '/_app/documentos'
     | '/_app/mensajes'
     | '/_app/mi-disponibilidad'
+    | '/_app/mi-disponibilidad-chofer'
     | '/_app/mis-viajes'
     | '/_app/operaciones'
     | '/_app/operaciones-cotizaciones'
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMisViajesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mi-disponibilidad-chofer': {
+      id: '/_app/mi-disponibilidad-chofer'
+      path: '/mi-disponibilidad-chofer'
+      fullPath: '/mi-disponibilidad-chofer'
+      preLoaderRoute: typeof AppMiDisponibilidadChoferRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mi-disponibilidad': {
       id: '/_app/mi-disponibilidad'
       path: '/mi-disponibilidad'
@@ -508,6 +528,7 @@ interface AppRouteChildren {
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
+  AppMiDisponibilidadChoferRoute: typeof AppMiDisponibilidadChoferRoute
   AppMisViajesRoute: typeof AppMisViajesRoute
   AppOperacionesRoute: typeof AppOperacionesRoute
   AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
@@ -527,6 +548,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
+  AppMiDisponibilidadChoferRoute: AppMiDisponibilidadChoferRoute,
   AppMisViajesRoute: AppMisViajesRoute,
   AppOperacionesRoute: AppOperacionesRoute,
   AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
