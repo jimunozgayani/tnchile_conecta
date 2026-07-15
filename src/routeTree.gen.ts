@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterClienteRouteImport } from './routes/register-cliente'
 import { Route as RegisterChoferRouteImport } from './routes/register-chofer'
@@ -38,6 +39,11 @@ import { Route as AppChoferRouteImport } from './routes/_app.chofer'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/register-chofer': typeof RegisterChoferRoute
   '/register-cliente': typeof RegisterClienteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/register-chofer': typeof RegisterChoferRoute
   '/register-cliente': typeof RegisterClienteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/register-chofer': typeof RegisterChoferRoute
   '/register-cliente': typeof RegisterClienteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/camiones': typeof AppCamionesRoute
   '/_app/chofer': typeof AppChoferRoute
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/register-chofer'
     | '/register-cliente'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin'
     | '/camiones'
     | '/chofer'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/register-chofer'
     | '/register-cliente'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin'
     | '/camiones'
     | '/chofer'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/register-chofer'
     | '/register-cliente'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/_app/admin'
     | '/_app/camiones'
     | '/_app/chofer'
@@ -373,10 +385,18 @@ export interface RootRouteChildren {
   RegisterChoferRoute: typeof RegisterChoferRoute
   RegisterClienteRoute: typeof RegisterClienteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -633,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterChoferRoute: RegisterChoferRoute,
   RegisterClienteRoute: RegisterClienteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
