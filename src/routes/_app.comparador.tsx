@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy, ArrowLeftRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ import {
 } from "@/lib/regiones-capitales";
 
 export const Route = createFileRoute("/_app/comparador")({
+  head: () => pageHead("/comparador", "Comparador de tarifas · Operaciones TN Chile", "Compara tarifas de proveedores por región, capital y tipo de camión para elegir la mejor opción de transporte en TN Chile."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

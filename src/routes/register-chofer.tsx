@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,6 +8,7 @@ import { assignSelfRole } from "@/lib/self-signup.functions";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/register-chofer")({
+  head: () => pageHead("/register-chofer", "Registro de choferes · Portal TN Chile", "Inscríbete como chofer en TN Chile: sube tu licencia y documentos, marca tu disponibilidad y recibe viajes asignados por operaciones."),
   component: RegisterChoferPage,
 });
 

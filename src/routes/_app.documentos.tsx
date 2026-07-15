@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { FileText, Trash2, Upload, ExternalLink, History, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { CameraOrFileInput } from "@/components/CameraOrFileInput";
 
 
 export const Route = createFileRoute("/_app/documentos")({
+  head: () => pageHead("/documentos", "Documentos · Portal Proveedores TN Chile", "Sube y controla los documentos de tu empresa, camiones y choferes en TN Chile con alertas automáticas de vencimiento."),
   component: DocumentosPage,
 });
 

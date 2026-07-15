@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { MessageSquare, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/mensajes")({
+  head: () => pageHead("/mensajes", "Mensajes · Portal TN Chile", "Bandeja de mensajes con el equipo de TN Chile: comunicación directa entre administración, operaciones, proveedores y choferes."),
   component: MensajesPage,
 });
 

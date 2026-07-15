@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import { CameraOrFileInput } from "@/components/CameraOrFileInput";
 import { validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/mis-viajes")({
+  head: () => pageHead("/mis-viajes", "Mis viajes · Portal Choferes TN Chile", "Viajes asignados al chofer: origen, destinos, tipo de camión, carga, fotos de guía, y avance por estado hasta la entrega."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

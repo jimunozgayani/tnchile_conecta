@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Truck, Users, FileText, AlertTriangle, ShieldAlert, Mail, Send, Activity, MessageSquare, X, Search, ArrowUpDown, ArrowUp, ArrowDown, Download, ChevronDown, FileDown } from "lucide-react";
@@ -39,6 +40,7 @@ function timeAgo(iso: string): string {
 }
 
 export const Route = createFileRoute("/_app/admin")({
+  head: () => pageHead("/admin", "Administración · Portal TN Chile", "Panel de administración TN Chile: proveedores activos, flota total, documentos por vencer, alertas críticas e invitaciones de usuarios."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

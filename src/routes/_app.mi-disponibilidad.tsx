@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarRange, Trash2, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/mi-disponibilidad")({
+  head: () => pageHead("/mi-disponibilidad", "Disponibilidad de mi flota · Proveedor TN Chile", "Gestiona la disponibilidad diaria de tus camiones por rango de fechas para que operaciones TN Chile pueda asignarlos a nuevas cargas."),
   component: MiDisponibilidadPage,
 });
 

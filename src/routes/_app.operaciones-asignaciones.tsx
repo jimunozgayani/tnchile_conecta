@@ -1,9 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Truck, User, MapPin, Calendar, Package, Loader2, X, RefreshCw, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones-asignaciones")({
+  head: () => pageHead("/operaciones-asignaciones", "Asignaciones · Operaciones TN Chile", "Asigna cargas pendientes a choferes disponibles con camión compatible, y gestiona reasignaciones y cancelaciones desde operaciones TN Chile."),
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/login" });

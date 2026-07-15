@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -6,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, MapPin, Filter, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-mapa")({
+  head: () => pageHead("/operaciones-disponibilidad-mapa", "Mapa de disponibilidad · Operaciones TN Chile", "Mapa de Chile con la ubicación de cada chofer disponible por día, filtrable por proveedor y modalidad de carga."),
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/login" });

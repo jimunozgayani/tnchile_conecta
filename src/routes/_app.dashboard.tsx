@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { Truck, Users, AlertTriangle, Clock, CheckCircle2, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { diasHasta } from "@/lib/regions";
 import { calcCompleteness, completionTone, type CompletenessResult } from "@/lib/completeness";
 
 export const Route = createFileRoute("/_app/dashboard")({
+  head: () => pageHead("/dashboard", "Panel del proveedor · Portal TN Chile", "Resumen de tu operación como proveedor TN Chile: flota, choferes, documentos por vencer, tarifas activas y asignaciones en curso."),
   component: Dashboard,
 });
 
