@@ -91,8 +91,8 @@ function AsignacionesPage() {
   // Compute suggested drivers for selected cotización
   const sugeridos = useMemo(() => {
     if (!selected) return [] as Array<{ driver: Driver; perfil: Perfil; disp: Disp | null; trucks: Truck[] }>;
-    const aprobadosRuts = new Set(perfiles.map((p) => `${p.proveedor_id}|${normRut(p.rut)}`));
-    const proveedorByKey = new Map(perfiles.map((p) => [`${p.proveedor_id}|${normRut(p.rut)}`, p] as const));
+    const aprobadosRuts = new Set<string>(perfiles.map((p) => `${p.proveedor_id}|${normRut(p.rut)}`));
+    const proveedorByKey = new Map<string, Perfil>(perfiles.map((p) => [`${p.proveedor_id}|${normRut(p.rut)}`, p]));
     return drivers
       .map((d) => {
         const key = `${d.user_id}|${normRut(d.rut)}`;
