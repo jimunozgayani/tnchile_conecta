@@ -30,7 +30,6 @@ import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-dispon
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
-import { Route as AppDisponibilidadCamionesRouteImport } from './routes/_app.disponibilidad-camiones'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
 import { Route as AppClienteRouteImport } from './routes/_app.cliente'
@@ -148,12 +147,6 @@ const AppDisponibilidadChoferesRoute =
     path: '/disponibilidad-choferes',
     getParentRoute: () => AppRoute,
   } as any)
-const AppDisponibilidadCamionesRoute =
-  AppDisponibilidadCamionesRouteImport.update({
-    id: '/disponibilidad-camiones',
-    path: '/disponibilidad-camiones',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -206,7 +199,6 @@ export interface FileRoutesByFullPath {
   '/cliente': typeof AppClienteRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
-  '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
@@ -236,7 +228,6 @@ export interface FileRoutesByTo {
   '/cliente': typeof AppClienteRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
-  '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
@@ -268,7 +259,6 @@ export interface FileRoutesById {
   '/_app/cliente': typeof AppClienteRoute
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
@@ -300,7 +290,6 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/comparador'
     | '/dashboard'
-    | '/disponibilidad-camiones'
     | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
@@ -330,7 +319,6 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/comparador'
     | '/dashboard'
-    | '/disponibilidad-camiones'
     | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
@@ -361,7 +349,6 @@ export interface FileRouteTypes {
     | '/_app/cliente'
     | '/_app/comparador'
     | '/_app/dashboard'
-    | '/_app/disponibilidad-camiones'
     | '/_app/disponibilidad-choferes'
     | '/_app/documentos'
     | '/_app/mensajes'
@@ -537,13 +524,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDisponibilidadChoferesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/disponibilidad-camiones': {
-      id: '/_app/disponibilidad-camiones'
-      path: '/disponibilidad-camiones'
-      fullPath: '/disponibilidad-camiones'
-      preLoaderRoute: typeof AppDisponibilidadCamionesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -604,7 +584,6 @@ interface AppRouteChildren {
   AppClienteRoute: typeof AppClienteRoute
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
-  AppDisponibilidadCamionesRoute: typeof AppDisponibilidadCamionesRoute
   AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
@@ -627,7 +606,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppClienteRoute: AppClienteRoute,
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
-  AppDisponibilidadCamionesRoute: AppDisponibilidadCamionesRoute,
   AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
