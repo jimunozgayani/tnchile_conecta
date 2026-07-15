@@ -130,6 +130,7 @@ function DriverCard({ driver, rows, proveedorUserId, showProveedor, onChanged }:
             <p className="text-xs text-muted-foreground">
               {driver.rut ?? "sin RUT"}
               {driver.clase_licencia ? ` · Lic. ${driver.clase_licencia}` : ""}
+              {showProveedor && driver.proveedor?.razon_social ? ` · ${driver.proveedor.razon_social}` : ""}
               {rows.length > 0 ? ` · ${rows.length} registro${rows.length === 1 ? "" : "s"}` : " · sin disponibilidad"}
             </p>
           </div>
