@@ -66,6 +66,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "TN Chile",
+          url: "https://tnchile-proveedores.lovable.app",
+          logo: "https://tnchile-proveedores.lovable.app/icon-512.png",
+          slogan: "La logística la hacemos juntos.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Portal Proveedores TN Chile",
+          url: "https://tnchile-proveedores.lovable.app",
+        }),
+      },
+    ],
   }),
 
   shellComponent: RootShell,
