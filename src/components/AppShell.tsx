@@ -27,13 +27,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
+  const [isCliente, setIsCliente] = useState(false);
+  const [isChofer, setIsChofer] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      setIsAdmin((data ?? []).some((r: any) => r.role === "admin"));
+      const rs = (data ?? []).map((r: any) => r.role);
+      setIsAdmin(rs.includes("admin"));
+      setIsCliente(rs.includes("cliente"));
+      setIsChofer(rs.includes("chofer"));
     })();
   }, []);
 
