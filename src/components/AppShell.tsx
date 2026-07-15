@@ -96,6 +96,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Briefcase className="h-4 w-4" />
                 Mis viajes
               </Link>
+              <Link to="/mi-disponibilidad-chofer" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/mi-disponibilidad-chofer") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Truck className="h-4 w-4" />
+                Mi disponibilidad
+              </Link>
             </>
           )}
 
@@ -120,13 +127,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           {!isAdmin && !isCliente && !isChofer && (
-            <Link to="/mi-disponibilidad" onClick={() => setOpen(false)}
-              className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname.startsWith("/mi-disponibilidad") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-              }`}>
-              <Truck className="h-4 w-4" />
-              Mi disponibilidad
-            </Link>
+            <>
+              <Link to="/mi-disponibilidad" onClick={() => setOpen(false)}
+                className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname === "/mi-disponibilidad" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Truck className="h-4 w-4" />
+                Mi disponibilidad
+              </Link>
+              <Link to="/disponibilidad-choferes" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/disponibilidad-choferes") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Users className="h-4 w-4" />
+                Disponibilidad choferes
+              </Link>
+            </>
           )}
           {isAdmin && (
             <>

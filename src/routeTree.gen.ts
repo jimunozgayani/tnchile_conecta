@@ -22,9 +22,11 @@ import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
 import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
 import { Route as AppMisViajesRouteImport } from './routes/_app.mis-viajes'
+import { Route as AppMiDisponibilidadChoferRouteImport } from './routes/_app.mi-disponibilidad-chofer'
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
+import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
 import { Route as AppDisponibilidadCamionesRouteImport } from './routes/_app.disponibilidad-camiones'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
@@ -99,6 +101,12 @@ const AppMisViajesRoute = AppMisViajesRouteImport.update({
   path: '/mis-viajes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMiDisponibilidadChoferRoute =
+  AppMiDisponibilidadChoferRouteImport.update({
+    id: '/mi-disponibilidad-chofer',
+    path: '/mi-disponibilidad-chofer',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppMiDisponibilidadRoute = AppMiDisponibilidadRouteImport.update({
   id: '/mi-disponibilidad',
   path: '/mi-disponibilidad',
@@ -114,6 +122,12 @@ const AppDocumentosRoute = AppDocumentosRouteImport.update({
   path: '/documentos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDisponibilidadChoferesRoute =
+  AppDisponibilidadChoferesRouteImport.update({
+    id: '/disponibilidad-choferes',
+    path: '/disponibilidad-choferes',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppDisponibilidadCamionesRoute =
   AppDisponibilidadCamionesRouteImport.update({
     id: '/disponibilidad-camiones',
@@ -172,9 +186,11 @@ export interface FileRoutesByFullPath {
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
+  '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
@@ -197,9 +213,11 @@ export interface FileRoutesByTo {
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
+  '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
@@ -224,9 +242,11 @@ export interface FileRoutesById {
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
+  '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/_app/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/_app/mis-viajes': typeof AppMisViajesRoute
   '/_app/operaciones': typeof AppOperacionesRoute
   '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
@@ -251,9 +271,11 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-camiones'
+    | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
     | '/operaciones'
     | '/operaciones-cotizaciones'
@@ -276,9 +298,11 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-camiones'
+    | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
     | '/operaciones'
     | '/operaciones-cotizaciones'
@@ -302,9 +326,11 @@ export interface FileRouteTypes {
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad-camiones'
+    | '/_app/disponibilidad-choferes'
     | '/_app/documentos'
     | '/_app/mensajes'
     | '/_app/mi-disponibilidad'
+    | '/_app/mi-disponibilidad-chofer'
     | '/_app/mis-viajes'
     | '/_app/operaciones'
     | '/_app/operaciones-cotizaciones'
@@ -416,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMisViajesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mi-disponibilidad-chofer': {
+      id: '/_app/mi-disponibilidad-chofer'
+      path: '/mi-disponibilidad-chofer'
+      fullPath: '/mi-disponibilidad-chofer'
+      preLoaderRoute: typeof AppMiDisponibilidadChoferRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mi-disponibilidad': {
       id: '/_app/mi-disponibilidad'
       path: '/mi-disponibilidad'
@@ -435,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/documentos'
       fullPath: '/documentos'
       preLoaderRoute: typeof AppDocumentosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/disponibilidad-choferes': {
+      id: '/_app/disponibilidad-choferes'
+      path: '/disponibilidad-choferes'
+      fullPath: '/disponibilidad-choferes'
+      preLoaderRoute: typeof AppDisponibilidadChoferesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/disponibilidad-camiones': {
@@ -505,9 +545,11 @@ interface AppRouteChildren {
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadCamionesRoute: typeof AppDisponibilidadCamionesRoute
+  AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
+  AppMiDisponibilidadChoferRoute: typeof AppMiDisponibilidadChoferRoute
   AppMisViajesRoute: typeof AppMisViajesRoute
   AppOperacionesRoute: typeof AppOperacionesRoute
   AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
@@ -524,9 +566,11 @@ const AppRouteChildren: AppRouteChildren = {
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadCamionesRoute: AppDisponibilidadCamionesRoute,
+  AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
+  AppMiDisponibilidadChoferRoute: AppMiDisponibilidadChoferRoute,
   AppMisViajesRoute: AppMisViajesRoute,
   AppOperacionesRoute: AppOperacionesRoute,
   AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
