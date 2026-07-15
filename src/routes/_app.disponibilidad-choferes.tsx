@@ -19,21 +19,29 @@ export const Route = createFileRoute("/_app/disponibilidad-choferes")({
 
 function DispChoferesPage() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id ?? null);
+      if (user) {
+        const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        setIsAdmin((data ?? []).some((r: any) => r.role === "admin"));
+      }
     })();
   }, []);
 
   const driversQuery = useQuery({
     enabled: !!userId,
-    queryKey: ["mis-choferes-disp", userId],
+    queryKey: ["mis-choferes-disp", userId, isAdmin],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers").select("id, nombre_completo, rut, celular, clase_licencia")
-        .eq("user_id", userId!).is("deleted_at", null).order("nombre_completo");
+      let q = supabase
+        .from("drivers")
+        .select("id, nombre_completo, rut, celular, clase_licencia, user_id, proveedor:user_id(razon_social)")
+        .is("deleted_at", null).order("nombre_completo");
+      if (!isAdmin) q = q.eq("user_id", userId!);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -41,7 +49,7 @@ function DispChoferesPage() {
 
   const dispQuery = useQuery({
     enabled: !!userId,
-    queryKey: ["disp-choferes-all", userId],
+    queryKey: ["disp-choferes-all", userId, isAdmin],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("disponibilidad_chofer")
@@ -66,24 +74,28 @@ function DispChoferesPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-4 pb-24">
       <div>
-        <h1 className="text-2xl font-bold text-primary-dark">Disponibilidad de mis choferes</h1>
+        <h1 className="text-2xl font-bold text-primary-dark">
+          {isAdmin ? "Disponibilidad de choferes" : "Disponibilidad de mis choferes"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Carga o edita la disponibilidad de cualquiera de tus choferes. Si el chofer también
-          tiene su propio login, verá los mismos datos.
+          {isAdmin
+            ? "Como administrador puedes cargar y editar la disponibilidad de cualquier chofer registrado."
+            : "Carga o edita la disponibilidad de cualquiera de tus choferes. Si el chofer también tiene su propio login, verá los mismos datos."}
         </p>
       </div>
 
       {driversQuery.isLoading && <div className="text-sm text-muted-foreground">Cargando…</div>}
       {!driversQuery.isLoading && drivers.length === 0 && (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Aún no tienes choferes registrados. Agrégalos primero en la sección "Choferes".
+          {isAdmin ? "No hay choferes registrados aún." : "Aún no tienes choferes registrados. Agrégalos primero en la sección \"Choferes\"."}
         </div>
       )}
 
       <div className="space-y-3">
         {drivers.map((d: any) => (
           <DriverCard key={d.id} driver={d} rows={byDriver.get(d.id) ?? []}
-            proveedorUserId={userId} onChanged={() => dispQuery.refetch()} />
+            proveedorUserId={d.user_id ?? userId} showProveedor={isAdmin}
+            onChanged={() => dispQuery.refetch()} />
         ))}
       </div>
     </div>
