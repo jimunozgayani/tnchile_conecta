@@ -1,0 +1,9 @@
+# Portal de Proveedores TN Chile
+
+> Plataforma corporativa de TN Chile para la gestión integral de proveedores de transporte: flota, choferes, documentos, tarifas, disponibilidad, cotizaciones y asignaciones de carga.
+
+Portal de Proveedores TN Chile centraliza la operación logística entre la empresa, sus proveedores de camiones, choferes y clientes. Ofrece espacios diferenciados para administración, operaciones, proveedores, clientes y choferes, con herramientas para administrar documentos, tarifas, disponibilidad de flota, cotizaciones, asignaciones de viajes y comunicación interna.
+
+## Pages
+
+- [/](/): Página de inicio del portal con acceso a los distintos espacios de la plataforma e información institucional de TN Chile.
