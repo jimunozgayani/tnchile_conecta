@@ -155,7 +155,7 @@ function CotizacionForm({ userId, onCreated }: { userId: string; onCreated: () =
     if (!files) return;
     const ok: File[] = [];
     for (const f of Array.from(files)) {
-      const v = validateUploadFile(f);
+      const v = validateUpload(f);
       if (!v.ok) { toast.error(`${f.name}: ${v.error}`); continue; }
       ok.push(f);
     }
