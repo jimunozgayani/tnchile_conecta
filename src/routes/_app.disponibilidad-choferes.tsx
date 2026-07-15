@@ -102,8 +102,8 @@ function DispChoferesPage() {
   );
 }
 
-function DriverCard({ driver, rows, proveedorUserId, onChanged }: {
-  driver: any; rows: any[]; proveedorUserId: string | null; onChanged: () => void;
+function DriverCard({ driver, rows, proveedorUserId, showProveedor, onChanged }: {
+  driver: any; rows: any[]; proveedorUserId: string | null; showProveedor?: boolean; onChanged: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
