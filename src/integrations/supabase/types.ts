@@ -104,6 +104,72 @@ export type Database = {
         }
         Relationships: []
       }
+      cotizaciones: {
+        Row: {
+          alto_cm: number | null
+          ancho_cm: number | null
+          cliente_id: string
+          contacto_email: string | null
+          contacto_nombre: string
+          contacto_telefono: string | null
+          created_at: string
+          destinos: Json
+          estado: string
+          fecha_despacho: string | null
+          fotos: Json
+          id: string
+          largo_cm: number | null
+          modalidad: string
+          notas_admin: string | null
+          origen: string
+          peso_kg: number | null
+          tipo_camion: string | null
+          updated_at: string
+        }
+        Insert: {
+          alto_cm?: number | null
+          ancho_cm?: number | null
+          cliente_id: string
+          contacto_email?: string | null
+          contacto_nombre: string
+          contacto_telefono?: string | null
+          created_at?: string
+          destinos?: Json
+          estado?: string
+          fecha_despacho?: string | null
+          fotos?: Json
+          id?: string
+          largo_cm?: number | null
+          modalidad?: string
+          notas_admin?: string | null
+          origen: string
+          peso_kg?: number | null
+          tipo_camion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alto_cm?: number | null
+          ancho_cm?: number | null
+          cliente_id?: string
+          contacto_email?: string | null
+          contacto_nombre?: string
+          contacto_telefono?: string | null
+          created_at?: string
+          destinos?: Json
+          estado?: string
+          fecha_despacho?: string | null
+          fotos?: Json
+          id?: string
+          largo_cm?: number | null
+          modalidad?: string
+          notas_admin?: string | null
+          origen?: string
+          peso_kg?: number | null
+          tipo_camion?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       disponibilidad_camion: {
         Row: {
           camion_id: string
