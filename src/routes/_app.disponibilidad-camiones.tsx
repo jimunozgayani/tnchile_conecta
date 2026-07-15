@@ -53,9 +53,9 @@ const isoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padS
 const fmtShort = (d: Date) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 const estadoBg: Record<Estado, string> = {
-  disponible: "bg-emerald-500/90 text-white hover:bg-emerald-500",
-  no_disponible: "bg-red-500/90 text-white hover:bg-red-500",
-  sin_confirmar: "bg-zinc-200 text-zinc-600 hover:bg-zinc-300",
+  disponible: "bg-emerald-600 text-white hover:bg-emerald-500 ring-1 ring-inset ring-emerald-400/40",
+  no_disponible: "bg-red-600 text-white hover:bg-red-500 ring-1 ring-inset ring-red-400/40",
+  sin_confirmar: "bg-zinc-800/70 text-zinc-300 hover:bg-zinc-700 ring-1 ring-inset ring-zinc-600/60",
 };
 
 function DisponibilidadCamionesPage() {
