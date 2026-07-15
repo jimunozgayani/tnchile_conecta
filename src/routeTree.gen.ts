@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
+import { Route as AppOperacionesAsignacionesRouteImport } from './routes/_app.operaciones-asignaciones'
 import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
 import { Route as AppMisViajesRouteImport } from './routes/_app.mis-viajes'
 import { Route as AppMiDisponibilidadChoferRouteImport } from './routes/_app.mi-disponibilidad-chofer'
@@ -89,6 +90,12 @@ const AppOperacionesCotizacionesRoute =
   AppOperacionesCotizacionesRouteImport.update({
     id: '/operaciones-cotizaciones',
     path: '/operaciones-cotizaciones',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOperacionesAsignacionesRoute =
+  AppOperacionesAsignacionesRouteImport.update({
+    id: '/operaciones-asignaciones',
+    path: '/operaciones-asignaciones',
     getParentRoute: () => AppRoute,
   } as any)
 const AppOperacionesRoute = AppOperacionesRouteImport.update({
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
+  '/operaciones-asignaciones': typeof AppOperacionesAsignacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
@@ -220,6 +228,7 @@ export interface FileRoutesByTo {
   '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
   '/operaciones': typeof AppOperacionesRoute
+  '/operaciones-asignaciones': typeof AppOperacionesAsignacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
@@ -249,6 +258,7 @@ export interface FileRoutesById {
   '/_app/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/_app/mis-viajes': typeof AppMisViajesRoute
   '/_app/operaciones': typeof AppOperacionesRoute
+  '/_app/operaciones-asignaciones': typeof AppOperacionesAsignacionesRoute
   '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
     | '/operaciones'
+    | '/operaciones-asignaciones'
     | '/operaciones-cotizaciones'
     | '/perfil'
     | '/tarifas'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
     | '/operaciones'
+    | '/operaciones-asignaciones'
     | '/operaciones-cotizaciones'
     | '/perfil'
     | '/tarifas'
@@ -333,6 +345,7 @@ export interface FileRouteTypes {
     | '/_app/mi-disponibilidad-chofer'
     | '/_app/mis-viajes'
     | '/_app/operaciones'
+    | '/_app/operaciones-asignaciones'
     | '/_app/operaciones-cotizaciones'
     | '/_app/perfil'
     | '/_app/tarifas'
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       path: '/operaciones-cotizaciones'
       fullPath: '/operaciones-cotizaciones'
       preLoaderRoute: typeof AppOperacionesCotizacionesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/operaciones-asignaciones': {
+      id: '/_app/operaciones-asignaciones'
+      path: '/operaciones-asignaciones'
+      fullPath: '/operaciones-asignaciones'
+      preLoaderRoute: typeof AppOperacionesAsignacionesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/operaciones': {
@@ -552,6 +572,7 @@ interface AppRouteChildren {
   AppMiDisponibilidadChoferRoute: typeof AppMiDisponibilidadChoferRoute
   AppMisViajesRoute: typeof AppMisViajesRoute
   AppOperacionesRoute: typeof AppOperacionesRoute
+  AppOperacionesAsignacionesRoute: typeof AppOperacionesAsignacionesRoute
   AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppTarifasRoute: typeof AppTarifasRoute
@@ -573,6 +594,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMiDisponibilidadChoferRoute: AppMiDisponibilidadChoferRoute,
   AppMisViajesRoute: AppMisViajesRoute,
   AppOperacionesRoute: AppOperacionesRoute,
+  AppOperacionesAsignacionesRoute: AppOperacionesAsignacionesRoute,
   AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppTarifasRoute: AppTarifasRoute,
