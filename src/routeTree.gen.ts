@@ -17,6 +17,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadCamionesRouteImport } from './routes/_app.disponibilidad-camiones'
@@ -64,6 +65,11 @@ const AppTarifasRoute = AppTarifasRouteImport.update({
 const AppPerfilRoute = AppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMiDisponibilidadRoute = AppMiDisponibilidadRouteImport.update({
+  id: '/mi-disponibilidad',
+  path: '/mi-disponibilidad',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMensajesRoute = AppMensajesRouteImport.update({
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
+  '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
+  '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_app/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
+  '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
 }
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/disponibilidad-camiones'
     | '/documentos'
     | '/mensajes'
+    | '/mi-disponibilidad'
     | '/perfil'
     | '/tarifas'
   fileRoutesByTo: FileRoutesByTo
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/disponibilidad-camiones'
     | '/documentos'
     | '/mensajes'
+    | '/mi-disponibilidad'
     | '/perfil'
     | '/tarifas'
   id:
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/_app/disponibilidad-camiones'
     | '/_app/documentos'
     | '/_app/mensajes'
+    | '/_app/mi-disponibilidad'
     | '/_app/perfil'
     | '/_app/tarifas'
   fileRoutesById: FileRoutesById
@@ -292,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mi-disponibilidad': {
+      id: '/_app/mi-disponibilidad'
+      path: '/mi-disponibilidad'
+      fullPath: '/mi-disponibilidad'
+      preLoaderRoute: typeof AppMiDisponibilidadRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mensajes': {
@@ -370,6 +389,7 @@ interface AppRouteChildren {
   AppDisponibilidadCamionesRoute: typeof AppDisponibilidadCamionesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
+  AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppTarifasRoute: typeof AppTarifasRoute
 }
@@ -384,6 +404,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDisponibilidadCamionesRoute: AppDisponibilidadCamionesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
+  AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppTarifasRoute: AppTarifasRoute,
 }
