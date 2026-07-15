@@ -63,7 +63,7 @@ function MiDisponibilidadPage() {
       if (!user) { navigate({ to: "/login" }); return; }
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
-      if (isAdmin) { navigate({ to: "/disponibilidad-camiones" }); return; }
+      if (isAdmin) { navigate({ to: "/operaciones-disponibilidad-mapa" }); return; }
       setReady(true);
     })();
   }, [navigate]);
