@@ -208,10 +208,10 @@ function DocumentosPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         {d.vencimiento && <StatusBadge fecha={d.vencimiento} />}
-                        <button onClick={() => view(d.file_url)} className="text-primary hover:underline" title="Ver">
+                        <button onClick={() => view(d.file_url)} aria-label="Ver documento" className="text-primary hover:underline" title="Ver">
                           <ExternalLink className="h-4 w-4" />
                         </button>
-                        <button onClick={() => remove(d.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => remove(d.id)} aria-label="Eliminar documento" className="text-destructive"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </div>
                     {prevs.length > 0 && (
@@ -233,7 +233,7 @@ function DocumentosPage() {
                                   Subido {new Date(h.created_at).toLocaleDateString("es-CL")}
                                   {h.vencimiento && <span className="ml-2">· vence {h.vencimiento}</span>}
                                 </span>
-                                <button onClick={() => view(h.file_url)} className="text-primary hover:underline">
+                                <button onClick={() => view(h.file_url)} aria-label="Ver versión anterior" className="text-primary hover:underline">
                                   <ExternalLink className="h-3 w-3" />
                                 </button>
                               </li>

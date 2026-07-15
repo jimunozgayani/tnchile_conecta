@@ -66,7 +66,8 @@ function Landing() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <h2 className="mt-14 text-center text-2xl font-semibold text-foreground">Portales de acceso</h2>
+        <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {PORTALS.map(({ icon: Icon, title, desc, cta, to, secondary }) => (
             <div key={title} className="flex flex-col rounded-xl border bg-card p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft">
