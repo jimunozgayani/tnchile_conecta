@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Truck, Users, FileText } from "lucide-react";
+import { Truck, Building2, HardHat, ShieldCheck } from "lucide-react";
 import logoFull from "@/assets/tn-chile-full.png";
 import { Logo } from "@/components/Logo";
 
@@ -7,50 +7,79 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+const PORTALS = [
+  {
+    icon: Truck,
+    title: "Proveedores",
+    desc: "Flota, choferes, tarifas y documentos.",
+    cta: "Acceder",
+    to: "/login" as const,
+    secondary: { label: "Solo por invitación", to: "/register" as const },
+  },
+  {
+    icon: Building2,
+    title: "Clientes",
+    desc: "Solicita cotizaciones y coordina tus envíos.",
+    cta: "Ingresar",
+    to: "/login" as const,
+    secondary: { label: "Crear cuenta", to: "/register-cliente" as const },
+  },
+  {
+    icon: HardHat,
+    title: "Choferes",
+    desc: "Consulta tus asignaciones y cargas del día.",
+    cta: "Ingresar",
+    to: "/login" as const,
+    secondary: { label: "Crear cuenta", to: "/register-chofer" as const },
+  },
+  {
+    icon: ShieldCheck,
+    title: "Equipo TN Chile",
+    desc: "Administración y operaciones internas.",
+    cta: "Ingresar",
+    to: "/login" as const,
+    secondary: null,
+  },
+];
+
 function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-soft via-background to-primary-soft">
       <header className="border-b bg-card/60 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Logo />
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium hover:text-primary">Ingresar</Link>
-            <Link to="/register" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">
-              Registrarse
-            </Link>
-          </div>
+          <Link to="/login" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark">
+            Iniciar sesión
+          </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-20">
+      <main className="mx-auto max-w-6xl px-6 py-16">
         <div className="text-center">
           <img src={logoFull} alt="TN Chile" className="mx-auto mb-6 h-24 w-auto" />
-          <h1 className="text-5xl font-bold tracking-tight text-foreground">Portal de Proveedores</h1>
-          <p className="mt-4 text-2xl font-medium text-primary">"La logística la hacemos juntos."</p>
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Gestiona tu flota, choferes, tarifas y documentación en un solo lugar.
-            Mantén tu información al día y trabaja con TN Chile de forma simple.
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">TN Chile</h1>
+          <p className="mt-4 text-xl md:text-2xl font-medium text-primary">"La logística la hacemos juntos."</p>
+          <p className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-muted-foreground">
+            Elige tu portal para continuar.
           </p>
-          <div className="mt-10 flex justify-center gap-4">
-            <Link to="/register" className="rounded-md bg-primary px-6 py-3 font-medium text-primary-foreground hover:bg-primary-dark shadow-md">
-              Crear cuenta de proveedor
-            </Link>
-            <Link to="/login" className="rounded-md border border-primary px-6 py-3 font-medium text-primary hover:bg-primary-soft">
-              Ya tengo cuenta
-            </Link>
-          </div>
         </div>
 
-        <div className="mt-24 grid gap-6 md:grid-cols-3">
-          {[
-            { icon: Truck, title: "Camiones", desc: "Patentes, SOAP, revisión técnica y permisos al día." },
-            { icon: Users, title: "Choferes", desc: "Licencias y carnets con alertas de vencimiento." },
-            { icon: FileText, title: "Tarifas", desc: "Rutas entre las 16 capitales regionales de Chile." },
-          ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-xl border bg-card p-6 shadow-sm">
-              <Icon className="h-8 w-8 text-primary" />
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {PORTALS.map(({ icon: Icon, title, desc, cta, to, secondary }) => (
+            <div key={title} className="flex flex-col rounded-xl border bg-card p-6 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft">
+                <Icon className="h-6 w-6 text-primary" />
+              </div>
               <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{desc}</p>
+              <p className="mt-2 flex-1 text-sm text-muted-foreground">{desc}</p>
+              <Link to={to} className="mt-4 rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary-dark">
+                {cta}
+              </Link>
+              {secondary && (
+                <Link to={secondary.to} className="mt-2 text-center text-xs text-primary hover:underline">
+                  {secondary.label}
+                </Link>
+              )}
             </div>
           ))}
         </div>
