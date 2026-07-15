@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterClienteRouteImport } from './routes/register-cliente'
+import { Route as RegisterChoferRouteImport } from './routes/register-chofer'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -17,19 +19,32 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadCamionesRouteImport } from './routes/_app.disponibilidad-camiones'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
+import { Route as AppClienteRouteImport } from './routes/_app.cliente'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
+import { Route as AppChoferRouteImport } from './routes/_app.chofer'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterClienteRoute = RegisterClienteRouteImport.update({
+  id: '/register-cliente',
+  path: '/register-cliente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterChoferRoute = RegisterChoferRouteImport.update({
+  id: '/register-chofer',
+  path: '/register-chofer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -66,6 +81,11 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOperacionesRoute = AppOperacionesRouteImport.update({
+  id: '/operaciones',
+  path: '/operaciones',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMiDisponibilidadRoute = AppMiDisponibilidadRouteImport.update({
   id: '/mi-disponibilidad',
   path: '/mi-disponibilidad',
@@ -97,9 +117,19 @@ const AppComparadorRoute = AppComparadorRouteImport.update({
   path: '/comparador',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClienteRoute = AppClienteRouteImport.update({
+  id: '/cliente',
+  path: '/cliente',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChoferesRoute = AppChoferesRouteImport.update({
   id: '/choferes',
   path: '/choferes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChoferRoute = AppChoferRouteImport.update({
+  id: '/chofer',
+  path: '/chofer',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCamionesRoute = AppCamionesRouteImport.update({
@@ -118,16 +148,21 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/register-chofer': typeof RegisterChoferRoute
+  '/register-cliente': typeof RegisterClienteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
+  '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
+  '/cliente': typeof AppClienteRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/operaciones': typeof AppOperacionesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -136,16 +171,21 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/register-chofer': typeof RegisterChoferRoute
+  '/register-cliente': typeof RegisterClienteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AppAdminRoute
   '/camiones': typeof AppCamionesRoute
+  '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
+  '/cliente': typeof AppClienteRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/operaciones': typeof AppOperacionesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -156,16 +196,21 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/register-chofer': typeof RegisterChoferRoute
+  '/register-cliente': typeof RegisterClienteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/camiones': typeof AppCamionesRoute
+  '/_app/chofer': typeof AppChoferRoute
   '/_app/choferes': typeof AppChoferesRoute
+  '/_app/cliente': typeof AppClienteRoute
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
+  '/_app/operaciones': typeof AppOperacionesRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
 }
@@ -176,16 +221,21 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/register-chofer'
+    | '/register-cliente'
     | '/reset-password'
     | '/admin'
     | '/camiones'
+    | '/chofer'
     | '/choferes'
+    | '/cliente'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-camiones'
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/operaciones'
     | '/perfil'
     | '/tarifas'
   fileRoutesByTo: FileRoutesByTo
@@ -194,16 +244,21 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/register-chofer'
+    | '/register-cliente'
     | '/reset-password'
     | '/admin'
     | '/camiones'
+    | '/chofer'
     | '/choferes'
+    | '/cliente'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-camiones'
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
+    | '/operaciones'
     | '/perfil'
     | '/tarifas'
   id:
@@ -213,16 +268,21 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/register-chofer'
+    | '/register-cliente'
     | '/reset-password'
     | '/_app/admin'
     | '/_app/camiones'
+    | '/_app/chofer'
     | '/_app/choferes'
+    | '/_app/cliente'
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad-camiones'
     | '/_app/documentos'
     | '/_app/mensajes'
     | '/_app/mi-disponibilidad'
+    | '/_app/operaciones'
     | '/_app/perfil'
     | '/_app/tarifas'
   fileRoutesById: FileRoutesById
@@ -233,6 +293,8 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  RegisterChoferRoute: typeof RegisterChoferRoute
+  RegisterClienteRoute: typeof RegisterClienteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
@@ -243,6 +305,20 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register-cliente': {
+      id: '/register-cliente'
+      path: '/register-cliente'
+      fullPath: '/register-cliente'
+      preLoaderRoute: typeof RegisterClienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register-chofer': {
+      id: '/register-chofer'
+      path: '/register-chofer'
+      fullPath: '/register-chofer'
+      preLoaderRoute: typeof RegisterChoferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -294,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPerfilRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/operaciones': {
+      id: '/_app/operaciones'
+      path: '/operaciones'
+      fullPath: '/operaciones'
+      preLoaderRoute: typeof AppOperacionesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mi-disponibilidad': {
       id: '/_app/mi-disponibilidad'
       path: '/mi-disponibilidad'
@@ -336,11 +419,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComparadorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/cliente': {
+      id: '/_app/cliente'
+      path: '/cliente'
+      fullPath: '/cliente'
+      preLoaderRoute: typeof AppClienteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/choferes': {
       id: '/_app/choferes'
       path: '/choferes'
       fullPath: '/choferes'
       preLoaderRoute: typeof AppChoferesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/chofer': {
+      id: '/_app/chofer'
+      path: '/chofer'
+      fullPath: '/chofer'
+      preLoaderRoute: typeof AppChoferRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/camiones': {
@@ -363,13 +460,16 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppCamionesRoute: typeof AppCamionesRoute
+  AppChoferRoute: typeof AppChoferRoute
   AppChoferesRoute: typeof AppChoferesRoute
+  AppClienteRoute: typeof AppClienteRoute
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadCamionesRoute: typeof AppDisponibilidadCamionesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
+  AppOperacionesRoute: typeof AppOperacionesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppTarifasRoute: typeof AppTarifasRoute
 }
@@ -377,13 +477,16 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppCamionesRoute: AppCamionesRoute,
+  AppChoferRoute: AppChoferRoute,
   AppChoferesRoute: AppChoferesRoute,
+  AppClienteRoute: AppClienteRoute,
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadCamionesRoute: AppDisponibilidadCamionesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
+  AppOperacionesRoute: AppOperacionesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppTarifasRoute: AppTarifasRoute,
 }
@@ -396,6 +499,8 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  RegisterChoferRoute: RegisterChoferRoute,
+  RegisterClienteRoute: RegisterClienteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport

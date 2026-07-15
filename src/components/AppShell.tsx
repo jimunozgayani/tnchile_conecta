@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare, Briefcase } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
@@ -27,13 +27,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
+  const [isCliente, setIsCliente] = useState(false);
+  const [isChofer, setIsChofer] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      setIsAdmin((data ?? []).some((r: any) => r.role === "admin"));
+      const rs = (data ?? []).map((r: any) => r.role);
+      setIsAdmin(rs.includes("admin"));
+      setIsCliente(rs.includes("cliente"));
+      setIsChofer(rs.includes("chofer"));
     })();
   }, []);
 
@@ -66,7 +71,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button className="md:hidden" onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="space-y-1 p-3">
-          {NAV.map(({ to, label, icon: Icon }) => {
+          {isCliente && !isAdmin && (
+            <Link to="/cliente" onClick={() => setOpen(false)}
+              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                location.pathname.startsWith("/cliente") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+              }`}>
+              <User className="h-4 w-4" />
+              Mi portal
+            </Link>
+          )}
+          {isChofer && !isAdmin && (
+            <Link to="/chofer" onClick={() => setOpen(false)}
+              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                location.pathname.startsWith("/chofer") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+              }`}>
+              <Truck className="h-4 w-4" />
+              Mi portal
+            </Link>
+          )}
+          {!isCliente && !isChofer && NAV.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
             const showBadge = to === "/mensajes" && unreadMsgs > 0;
             return (
@@ -86,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          {!isAdmin && (
+          {!isAdmin && !isCliente && !isChofer && (
             <Link to="/mi-disponibilidad" onClick={() => setOpen(false)}
               className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname.startsWith("/mi-disponibilidad") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
@@ -104,13 +127,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Truck className="h-4 w-4" />
                 Disponibilidad camiones
               </Link>
-              <Link to="/admin" onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
-                  location.pathname.startsWith("/admin") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-                }`}>
-                <ShieldCheck className="h-4 w-4" />
-                Administración
-              </Link>
+
+              <div className="mt-4 border-t border-sidebar-border pt-3">
+                <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+                  Equipo TN Chile
+                </p>
+                <Link to="/admin" onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname.startsWith("/admin") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Administración
+                </Link>
+                <Link to="/operaciones" onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname.startsWith("/operaciones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <Briefcase className="h-4 w-4" />
+                  Operaciones
+                </Link>
+              </div>
             </>
           )}
 

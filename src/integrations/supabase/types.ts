@@ -690,7 +690,7 @@ export type Database = {
       process_document_expiries: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "supplier"
+      app_role: "admin" | "supplier" | "cliente" | "chofer"
       disponibilidad_estado: "disponible" | "no_disponible" | "sin_confirmar"
       invitation_status: "invited" | "active" | "suspended"
     }
@@ -820,7 +820,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "supplier"],
+      app_role: ["admin", "supplier", "cliente", "chofer"],
       disponibilidad_estado: ["disponible", "no_disponible", "sin_confirmar"],
       invitation_status: ["invited", "active", "suspended"],
     },
