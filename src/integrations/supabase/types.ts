@@ -161,6 +161,30 @@ export type Database = {
           },
         ]
       }
+      ciudades_chile: {
+        Row: {
+          id: string
+          lat: number | null
+          lng: number | null
+          nombre: string
+          region: string
+        }
+        Insert: {
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          nombre: string
+          region: string
+        }
+        Update: {
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          nombre?: string
+          region?: string
+        }
+        Relationships: []
+      }
       cotizaciones: {
         Row: {
           alto_cm: number | null
@@ -265,6 +289,89 @@ export type Database = {
           {
             foreignKeyName: "disponibilidad_camion_camion_id_fkey"
             columns: ["camion_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disponibilidad_chofer: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          destino_ciudad_id: string | null
+          destino_texto: string | null
+          driver_id: string
+          estado: string
+          fecha_desde: string
+          fecha_hasta: string
+          id: string
+          lugar_ciudad_id: string | null
+          lugar_texto: string | null
+          modalidad: string | null
+          notas: string | null
+          truck_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          destino_ciudad_id?: string | null
+          destino_texto?: string | null
+          driver_id: string
+          estado: string
+          fecha_desde: string
+          fecha_hasta: string
+          id?: string
+          lugar_ciudad_id?: string | null
+          lugar_texto?: string | null
+          modalidad?: string | null
+          notas?: string | null
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          destino_ciudad_id?: string | null
+          destino_texto?: string | null
+          driver_id?: string
+          estado?: string
+          fecha_desde?: string
+          fecha_hasta?: string
+          id?: string
+          lugar_ciudad_id?: string | null
+          lugar_texto?: string | null
+          modalidad?: string | null
+          notas?: string | null
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disponibilidad_chofer_destino_ciudad_id_fkey"
+            columns: ["destino_ciudad_id"]
+            isOneToOne: false
+            referencedRelation: "ciudades_chile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidad_chofer_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidad_chofer_lugar_ciudad_id_fkey"
+            columns: ["lugar_ciudad_id"]
+            isOneToOne: false
+            referencedRelation: "ciudades_chile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidad_chofer_truck_id_fkey"
+            columns: ["truck_id"]
             isOneToOne: false
             referencedRelation: "trucks"
             referencedColumns: ["id"]
@@ -859,6 +966,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      chofer_driver_ids: { Args: { _uid: string }; Returns: string[] }
       get_admin_dashboard_stats: {
         Args: never
         Returns: unknown
