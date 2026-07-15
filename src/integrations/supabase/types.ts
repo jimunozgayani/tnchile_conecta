@@ -104,6 +104,50 @@ export type Database = {
         }
         Relationships: []
       }
+      disponibilidad_camion: {
+        Row: {
+          camion_id: string
+          created_at: string
+          destino: string | null
+          estado: Database["public"]["Enums"]["disponibilidad_estado"]
+          fecha: string
+          id: string
+          lugar: string | null
+          tipo_carga: string | null
+          updated_at: string
+        }
+        Insert: {
+          camion_id: string
+          created_at?: string
+          destino?: string | null
+          estado?: Database["public"]["Enums"]["disponibilidad_estado"]
+          fecha: string
+          id?: string
+          lugar?: string | null
+          tipo_carga?: string | null
+          updated_at?: string
+        }
+        Update: {
+          camion_id?: string
+          created_at?: string
+          destino?: string | null
+          estado?: Database["public"]["Enums"]["disponibilidad_estado"]
+          fecha?: string
+          id?: string
+          lugar?: string | null
+          tipo_carga?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disponibilidad_camion_camion_id_fkey"
+            columns: ["camion_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -680,6 +724,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "supplier"
+      disponibilidad_estado: "disponible" | "no_disponible" | "sin_confirmar"
       invitation_status: "invited" | "active" | "suspended"
     }
     CompositeTypes: {
@@ -809,6 +854,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "supplier"],
+      disponibilidad_estado: ["disponible", "no_disponible", "sin_confirmar"],
       invitation_status: ["invited", "active", "suspended"],
     },
   },
