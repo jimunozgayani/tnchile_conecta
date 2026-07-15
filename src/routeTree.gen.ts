@@ -19,6 +19,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppOperacionesDisponibilidadMapaRouteImport } from './routes/_app.operaciones-disponibilidad-mapa'
 import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
 import { Route as AppOperacionesAsignacionesRouteImport } from './routes/_app.operaciones-asignaciones'
 import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
@@ -86,6 +87,12 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOperacionesDisponibilidadMapaRoute =
+  AppOperacionesDisponibilidadMapaRouteImport.update({
+    id: '/operaciones-disponibilidad-mapa',
+    path: '/operaciones-disponibilidad-mapa',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppOperacionesCotizacionesRoute =
   AppOperacionesCotizacionesRouteImport.update({
     id: '/operaciones-cotizaciones',
@@ -202,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-asignaciones': typeof AppOperacionesAsignacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
+  '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -230,6 +238,7 @@ export interface FileRoutesByTo {
   '/operaciones': typeof AppOperacionesRoute
   '/operaciones-asignaciones': typeof AppOperacionesAsignacionesRoute
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
+  '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -260,6 +269,7 @@ export interface FileRoutesById {
   '/_app/operaciones': typeof AppOperacionesRoute
   '/_app/operaciones-asignaciones': typeof AppOperacionesAsignacionesRoute
   '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
+  '/_app/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
 }
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/operaciones'
     | '/operaciones-asignaciones'
     | '/operaciones-cotizaciones'
+    | '/operaciones-disponibilidad-mapa'
     | '/perfil'
     | '/tarifas'
   fileRoutesByTo: FileRoutesByTo
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/operaciones'
     | '/operaciones-asignaciones'
     | '/operaciones-cotizaciones'
+    | '/operaciones-disponibilidad-mapa'
     | '/perfil'
     | '/tarifas'
   id:
@@ -347,6 +359,7 @@ export interface FileRouteTypes {
     | '/_app/operaciones'
     | '/_app/operaciones-asignaciones'
     | '/_app/operaciones-cotizaciones'
+    | '/_app/operaciones-disponibilidad-mapa'
     | '/_app/perfil'
     | '/_app/tarifas'
   fileRoutesById: FileRoutesById
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/operaciones-disponibilidad-mapa': {
+      id: '/_app/operaciones-disponibilidad-mapa'
+      path: '/operaciones-disponibilidad-mapa'
+      fullPath: '/operaciones-disponibilidad-mapa'
+      preLoaderRoute: typeof AppOperacionesDisponibilidadMapaRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/operaciones-cotizaciones': {
@@ -574,6 +594,7 @@ interface AppRouteChildren {
   AppOperacionesRoute: typeof AppOperacionesRoute
   AppOperacionesAsignacionesRoute: typeof AppOperacionesAsignacionesRoute
   AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
+  AppOperacionesDisponibilidadMapaRoute: typeof AppOperacionesDisponibilidadMapaRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppTarifasRoute: typeof AppTarifasRoute
 }
@@ -596,6 +617,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOperacionesRoute: AppOperacionesRoute,
   AppOperacionesAsignacionesRoute: AppOperacionesAsignacionesRoute,
   AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
+  AppOperacionesDisponibilidadMapaRoute: AppOperacionesDisponibilidadMapaRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppTarifasRoute: AppTarifasRoute,
 }

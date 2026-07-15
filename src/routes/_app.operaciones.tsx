@@ -20,7 +20,7 @@ const SECTIONS = [
   { icon: Phone, title: "Contactos", desc: "Directorio operativo: clientes, proveedores, contrapartes." },
   { icon: Package, title: "Cargas", desc: "Registro y seguimiento de cargas en curso." },
   { icon: ArrowRightLeft, title: "Asignaciones", desc: "Asignación de camiones y choferes a cargas.", to: "/operaciones-asignaciones" },
-  { icon: CalendarClock, title: "Disponibilidad", desc: "Vista operativa de disponibilidad de flota." },
+  { icon: CalendarClock, title: "Disponibilidad", desc: "Mapa de choferes con disponibilidad por día.", to: "/operaciones-disponibilidad-mapa" },
 ];
 
 function OperacionesPage() {
