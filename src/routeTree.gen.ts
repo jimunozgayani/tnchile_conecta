@@ -19,6 +19,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
 import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
@@ -81,6 +82,12 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOperacionesCotizacionesRoute =
+  AppOperacionesCotizacionesRouteImport.update({
+    id: '/operaciones-cotizaciones',
+    path: '/operaciones-cotizaciones',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppOperacionesRoute = AppOperacionesRouteImport.update({
   id: '/operaciones',
   path: '/operaciones',
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/operaciones': typeof AppOperacionesRoute
+  '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/operaciones': typeof AppOperacionesRoute
+  '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
 }
@@ -211,6 +220,7 @@ export interface FileRoutesById {
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/_app/operaciones': typeof AppOperacionesRoute
+  '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
 }
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/mensajes'
     | '/mi-disponibilidad'
     | '/operaciones'
+    | '/operaciones-cotizaciones'
     | '/perfil'
     | '/tarifas'
   fileRoutesByTo: FileRoutesByTo
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/mensajes'
     | '/mi-disponibilidad'
     | '/operaciones'
+    | '/operaciones-cotizaciones'
     | '/perfil'
     | '/tarifas'
   id:
@@ -283,6 +295,7 @@ export interface FileRouteTypes {
     | '/_app/mensajes'
     | '/_app/mi-disponibilidad'
     | '/_app/operaciones'
+    | '/_app/operaciones-cotizaciones'
     | '/_app/perfil'
     | '/_app/tarifas'
   fileRoutesById: FileRoutesById
@@ -368,6 +381,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/operaciones-cotizaciones': {
+      id: '/_app/operaciones-cotizaciones'
+      path: '/operaciones-cotizaciones'
+      fullPath: '/operaciones-cotizaciones'
+      preLoaderRoute: typeof AppOperacionesCotizacionesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/operaciones': {
@@ -470,6 +490,7 @@ interface AppRouteChildren {
   AppMensajesRoute: typeof AppMensajesRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
   AppOperacionesRoute: typeof AppOperacionesRoute
+  AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppTarifasRoute: typeof AppTarifasRoute
 }
@@ -487,6 +508,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMensajesRoute: AppMensajesRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
   AppOperacionesRoute: AppOperacionesRoute,
+  AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppTarifasRoute: AppTarifasRoute,
 }
