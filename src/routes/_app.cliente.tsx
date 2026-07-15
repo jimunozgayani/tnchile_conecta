@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Building2, Plus, Trash2, Upload, X, Loader2 } from "lucide-react";
@@ -6,6 +7,7 @@ import { toast } from "sonner";
 import { validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/cliente")({
+  head: () => pageHead("/cliente", "Mis solicitudes · Cliente TN Chile", "Solicita cotizaciones de transporte a TN Chile, adjunta fotos de tu carga y haz seguimiento al estado de cada solicitud enviada."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

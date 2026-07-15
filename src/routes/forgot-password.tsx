@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/forgot-password")({
+  head: () => pageHead("/forgot-password", "Recuperar contraseña · Portal TN Chile", "Solicita un enlace para restablecer la contraseña de tu cuenta del Portal TN Chile de proveedores, clientes y choferes."),
   component: ForgotPage,
 });
 

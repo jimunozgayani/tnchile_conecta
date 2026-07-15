@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { Save, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/regiones-capitales";
 
 export const Route = createFileRoute("/_app/tarifas")({
+  head: () => pageHead("/tarifas", "Tarifas por región · Portal Proveedores TN Chile", "Publica y actualiza tus tarifas de transporte por región y tipo de camión para las 16 capitales regionales de Chile."),
   component: TarifasPage,
 });
 

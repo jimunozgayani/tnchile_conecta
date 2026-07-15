@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,6 +8,7 @@ import { assignSelfRole } from "@/lib/self-signup.functions";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/register-cliente")({
+  head: () => pageHead("/register-cliente", "Registro de clientes · Solicita transporte con TN Chile", "Crea tu cuenta de cliente en TN Chile para solicitar cotizaciones, contratar camiones y hacer seguimiento a tus cargas en todo Chile."),
   component: RegisterClientePage,
 });
 

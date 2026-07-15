@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/login")({
+  head: () => pageHead("/login", "Iniciar sesión · Portal TN Chile", "Ingresa a tu cuenta del Portal TN Chile para gestionar camiones, choferes, documentos, tarifas y asignaciones de carga."),
   component: LoginPage,
 });
 

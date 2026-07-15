@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/choferes")({
+  head: () => pageHead("/choferes", "Mis choferes · Portal Proveedores TN Chile", "Gestiona los choferes de tu empresa en TN Chile: licencias, documentos, vigencias y camiones asignados a cada conductor."),
   component: ChoferesPage,
 });
 

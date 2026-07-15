@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { REGIONES_CHILE } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const Route = createFileRoute("/_app/perfil")({
+  head: () => pageHead("/perfil", "Perfil de la empresa · Portal Proveedores TN Chile", "Actualiza los datos de tu empresa proveedora en TN Chile: razón social, RUT, contacto, pólizas de seguro y completitud del perfil."),
   component: PerfilPage,
 });
 

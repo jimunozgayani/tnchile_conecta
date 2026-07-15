@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ClipboardList, RefreshCw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/operaciones-cotizaciones")({
+  head: () => pageHead("/operaciones-cotizaciones", "Cotizaciones · Operaciones TN Chile", "Bandeja de cotizaciones enviadas por clientes: revisa carga, fotos, origen y destinos, y actualiza el estado de cada solicitud."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

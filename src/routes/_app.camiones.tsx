@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, X, UserPlus, AlertTriangle, UserCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ESTADOS_OPERATIVOS, estadoMeta, licenseCovers, type EstadoOperativo } from "@/lib/fleet";
 
 export const Route = createFileRoute("/_app/camiones")({
+  head: () => pageHead("/camiones", "Mis camiones · Portal Proveedores TN Chile", "Administra tu flota de camiones en TN Chile: patente, tipo, capacidad, documentos vigentes y estado operativo de cada vehículo."),
   component: CamionesPage,
 });
 

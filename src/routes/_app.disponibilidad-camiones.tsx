@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { BadgeCheck, ChevronLeft, ChevronRight, Plus, Trash2, Truck, UserCog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/disponibilidad-camiones")({
+  head: () => pageHead("/disponibilidad-camiones", "Disponibilidad de camiones · Operaciones TN Chile", "Calendario semanal de disponibilidad de camiones principales y secundarios para planificar asignaciones de carga en TN Chile."),
   component: DisponibilidadCamionesPage,
 });
 

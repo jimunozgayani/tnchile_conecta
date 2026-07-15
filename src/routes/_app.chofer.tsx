@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +10,7 @@ import { listSuppliersForChofer } from "@/lib/chofer.functions";
 import { validateUpload, ALLOWED_UPLOAD_ACCEPT } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/chofer")({
+  head: () => pageHead("/chofer", "Portal del chofer · TN Chile", "Consulta el estado de tu inscripción como chofer TN Chile, sube documentos y accede a tus viajes y disponibilidad."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

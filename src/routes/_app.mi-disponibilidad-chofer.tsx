@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { DisponibilidadChoferForm, type DispChoferRow } from "@/components/Dispo
 import { CalendarDays, Lock, Pencil, Trash2, Plus, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/_app/mi-disponibilidad-chofer")({
+  head: () => pageHead("/mi-disponibilidad-chofer", "Mi disponibilidad · Portal Choferes TN Chile", "Marca los días que estás disponible o no, tu lugar actual, destino, modalidad y camión para recibir asignaciones de TN Chile."),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();
