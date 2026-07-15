@@ -19,7 +19,7 @@ const SECTIONS = [
   { icon: ClipboardList, title: "Cotizaciones", desc: "Solicitudes de cotización enviadas por clientes.", to: "/operaciones-cotizaciones" },
   { icon: Phone, title: "Contactos", desc: "Directorio operativo: clientes, proveedores, contrapartes." },
   { icon: Package, title: "Cargas", desc: "Registro y seguimiento de cargas en curso." },
-  { icon: ArrowRightLeft, title: "Asignaciones", desc: "Asignación de camiones y choferes a cargas." },
+  { icon: ArrowRightLeft, title: "Asignaciones", desc: "Asignación de camiones y choferes a cargas.", to: "/operaciones-asignaciones" },
   { icon: CalendarClock, title: "Disponibilidad", desc: "Vista operativa de disponibilidad de flota." },
 ];
 
