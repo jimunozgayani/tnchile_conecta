@@ -104,13 +104,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Truck className="h-4 w-4" />
                 Disponibilidad camiones
               </Link>
-              <Link to="/disponibilidad-camiones" onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
-                  location.pathname.startsWith("/disponibilidad-camiones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-                }`}>
-                <Truck className="h-4 w-4" />
-                Disponibilidad camiones
-              </Link>
               <Link to="/admin" onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
                   location.pathname.startsWith("/admin") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
