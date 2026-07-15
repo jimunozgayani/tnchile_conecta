@@ -77,12 +77,33 @@ function DisponibilidadPage() {
     if (isAdmin) load();
   }, [isAdmin]);
 
-  // Realtime sync
+  const savingIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => { savingIdsRef.current = savingIds; }, [savingIds]);
+
+  // Realtime sync — merge per row; preserve rows with unsaved local edits
   useEffect(() => {
     if (!isAdmin) return;
+    const applyRow = (incoming: any) => {
+      const merged: Row = { ...incoming, availability: normalizeAvail(incoming.availability) };
+      setRows((rs) => {
+        const idx = rs.findIndex((r) => r.id === merged.id);
+        if (idx === -1) return [...rs, merged];
+        // Keep local row while user is typing or a save is in-flight.
+        if (pending.current.has(merged.id) || savingIdsRef.current.has(merged.id)) return rs;
+        const next = rs.slice();
+        next[idx] = merged;
+        return next;
+      });
+    };
     const ch = (supabase as any)
       .channel("driver_availability_rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "driver_availability" }, load)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "driver_availability" }, (p: any) => applyRow(p.new))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "driver_availability" }, (p: any) => applyRow(p.new))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "driver_availability" }, (p: any) => {
+        const id = p.old?.id;
+        if (!id || pending.current.has(id) || savingIdsRef.current.has(id)) return;
+        setRows((rs) => rs.filter((r) => r.id !== id));
+      })
       .subscribe();
     return () => { (supabase as any).removeChannel(ch); };
   }, [isAdmin]);
