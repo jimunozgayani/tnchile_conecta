@@ -399,6 +399,47 @@ export type Database = {
         }
         Relationships: []
       }
+      eventos_viaje: {
+        Row: {
+          asignacion_id: string
+          chofer_id: string
+          created_at: string
+          estado_viaje: string | null
+          id: string
+          nota: string | null
+          storage_path: string | null
+          tipo: Database["public"]["Enums"]["evento_viaje_tipo"]
+        }
+        Insert: {
+          asignacion_id: string
+          chofer_id: string
+          created_at?: string
+          estado_viaje?: string | null
+          id?: string
+          nota?: string | null
+          storage_path?: string | null
+          tipo: Database["public"]["Enums"]["evento_viaje_tipo"]
+        }
+        Update: {
+          asignacion_id?: string
+          chofer_id?: string
+          created_at?: string
+          estado_viaje?: string | null
+          id?: string
+          nota?: string | null
+          storage_path?: string | null
+          tipo?: Database["public"]["Enums"]["evento_viaje_tipo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_viaje_asignacion_id_fkey"
+            columns: ["asignacion_id"]
+            isOneToOne: false
+            referencedRelation: "asignaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempted_at: string
@@ -842,6 +883,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "supplier" | "cliente" | "chofer"
       disponibilidad_estado: "disponible" | "no_disponible" | "sin_confirmar"
+      evento_viaje_tipo:
+        | "cambio_estado"
+        | "foto_guia"
+        | "foto_carga"
+        | "foto_descarga"
+        | "nota"
       invitation_status: "invited" | "active" | "suspended"
     }
     CompositeTypes: {
@@ -972,6 +1019,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "supplier", "cliente", "chofer"],
       disponibilidad_estado: ["disponible", "no_disponible", "sin_confirmar"],
+      evento_viaje_tipo: [
+        "cambio_estado",
+        "foto_guia",
+        "foto_carga",
+        "foto_descarga",
+        "nota",
+      ],
       invitation_status: ["invited", "active", "suspended"],
     },
   },
