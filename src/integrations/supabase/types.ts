@@ -104,6 +104,50 @@ export type Database = {
         }
         Relationships: []
       }
+      chofer_perfiles: {
+        Row: {
+          created_at: string
+          estado_validacion: string
+          licencia_numero: string
+          motivo_rechazo: string | null
+          nombre: string
+          proveedor_id: string | null
+          rut: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estado_validacion?: string
+          licencia_numero: string
+          motivo_rechazo?: string | null
+          nombre: string
+          proveedor_id?: string | null
+          rut: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estado_validacion?: string
+          licencia_numero?: string
+          motivo_rechazo?: string | null
+          nombre?: string
+          proveedor_id?: string | null
+          rut?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chofer_perfiles_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           alto_cm: number | null
@@ -213,6 +257,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      documentos_chofer: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          id: string
+          storage_path: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          storage_path: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          storage_path?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       documents: {
         Row: {
