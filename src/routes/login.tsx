@@ -18,8 +18,11 @@ function LoginPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
-    navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+    const rs = (roles ?? []).map((r: any) => r.role);
+    if (rs.includes("admin")) navigate({ to: "/admin" });
+    else if (rs.includes("cliente")) navigate({ to: "/cliente" });
+    else if (rs.includes("chofer")) navigate({ to: "/chofer" });
+    else navigate({ to: "/dashboard" });
   };
 
   useEffect(() => {
