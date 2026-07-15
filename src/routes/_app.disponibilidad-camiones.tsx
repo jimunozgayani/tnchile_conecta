@@ -249,79 +249,83 @@ function DisponibilidadCamionesPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-primary">Disponibilidad de camiones</h1>
-          <p className="text-sm text-muted-foreground">
-            Semana del {fmtShort(days[0])} al {fmtShort(days[6])} · {days[0].getFullYear()}
-          </p>
+    <div className="space-y-3 sm:space-y-4">
+      <div className="rounded-xl bg-zinc-900 p-3 text-zinc-100 shadow-sm sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold text-amber-400 sm:text-2xl">Disponibilidad de camiones</h1>
+            <p className="text-xs text-zinc-400 sm:text-sm">
+              Semana del {fmtShort(days[0])} al {fmtShort(days[6])} · {days[0].getFullYear()}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={() => setWeekStart((w) => addDays(w, -7))}
+              aria-label="Semana anterior"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 sm:w-auto sm:gap-1 sm:px-3"
+            >
+              <ChevronLeft className="h-4 w-4" /><span className="hidden sm:inline text-sm">Anterior</span>
+            </button>
+            <button
+              onClick={() => setWeekStart(startOfWeek(new Date()))}
+              className="inline-flex h-9 shrink-0 items-center rounded-md bg-amber-500 px-3 text-sm font-semibold text-zinc-900 hover:bg-amber-400"
+            >
+              Hoy
+            </button>
+            <button
+              onClick={() => setWeekStart((w) => addDays(w, 7))}
+              aria-label="Semana siguiente"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 sm:w-auto sm:gap-1 sm:px-3"
+            >
+              <span className="hidden sm:inline text-sm">Siguiente</span><ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" /> Agregar proveedor secundario
-          </Button>
-          <button
-            onClick={() => setWeekStart((w) => addDays(w, -7))}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent"
-          >
-            <ChevronLeft className="h-4 w-4" /> Anterior
-          </button>
-          <button
-            onClick={() => setWeekStart(startOfWeek(new Date()))}
-            className="inline-flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm hover:bg-accent"
-          >
-            Hoy
-          </button>
-          <button
-            onClick={() => setWeekStart((w) => addDays(w, 7))}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent"
-          >
-            Siguiente <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Tipo</Label>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setAddOpen(true)} className="h-9 border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 hover:text-white">
+            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Agregar proveedor secundario</span><span className="sm:hidden">Secundario</span>
+          </Button>
           <Select value={filterTipo} onValueChange={setFilterTipo}>
-            <SelectTrigger className="h-9 w-44"><SelectValue placeholder="Todos" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-[130px] border-zinc-700 bg-zinc-800 text-zinc-100 sm:w-44"><SelectValue placeholder="Tipo" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">Todos los tipos</SelectItem>
               {tiposDisponibles.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Proveedor</Label>
           <Select value={filterProveedor} onValueChange={setFilterProveedor}>
-            <SelectTrigger className="h-9 w-56"><SelectValue placeholder="Todos" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-[150px] border-zinc-700 bg-zinc-800 text-zinc-100 sm:w-56"><SelectValue placeholder="Proveedor" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">Todos los proveedores</SelectItem>
               {proveedoresDisponibles.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        <div className="ml-auto flex flex-wrap items-center gap-3 text-xs">
-          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-emerald-500" /> Disponible</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-red-500" /> No disponible</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-zinc-300" /> Sin confirmar</span>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-400">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" /> Disponible</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-red-500" /> No disponible</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-zinc-600" /> Sin confirmar</span>
+          <span className="mx-1 hidden h-3 w-px bg-zinc-700 sm:inline-block" />
+          <span className="inline-flex items-center gap-1"><BadgeCheck className="h-3 w-3 text-emerald-400" /> Principal</span>
+          <span className="inline-flex items-center gap-1"><UserCog className="h-3 w-3 text-amber-400" /> Secundario</span>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
-        <table className="w-full min-w-[820px] border-collapse text-sm">
+      <div className="-mx-3 overflow-x-auto rounded-none border-y border-border bg-card sm:mx-0 sm:rounded-lg sm:border">
+        <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
-            <tr className="bg-muted/50">
-              <th className="sticky left-0 z-10 w-64 bg-muted/50 px-3 py-2 text-left font-semibold">Camión / Proveedor</th>
+            <tr className="bg-zinc-900 text-zinc-100">
+              <th className="sticky left-0 z-20 w-[160px] min-w-[160px] border-r border-zinc-800 bg-zinc-900 px-2 py-2 text-left text-xs font-semibold sm:w-64 sm:min-w-[220px] sm:px-3 sm:text-sm">
+                Camión / Proveedor
+              </th>
               {days.map((d) => {
                 const iso = isoDate(d);
                 const isToday = iso === todayIso;
                 return (
-                  <th key={iso} className={`px-2 py-2 text-center font-semibold ${isToday ? "bg-primary/15 text-primary" : ""}`}>
-                    <div className="text-xs uppercase tracking-wide">{DIAS[(d.getDay() + 6) % 7]}</div>
-                    <div className="text-sm">{fmtShort(d)}</div>
+                  <th key={iso} className={`px-1.5 py-2 text-center text-xs font-semibold sm:px-2 ${isToday ? "bg-amber-500/20 text-amber-300" : ""}`}>
+                    <div className="text-[10px] uppercase tracking-wide opacity-80">{DIAS[(d.getDay() + 6) % 7]}</div>
+                    <div className="text-xs sm:text-sm">{fmtShort(d)}</div>
                   </th>
                 );
               })}
@@ -334,16 +338,28 @@ function DisponibilidadCamionesPage() {
               <tr><td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">No hay camiones que coincidan.</td></tr>
             ) : (
               <TooltipProvider delayDuration={150}>
-                {trucksFiltered.map((t) => (
+                {trucksFiltered.map((t) => {
+                  const isPrincipal = !!t.user_id;
+                  return (
                   <tr key={t.id} className="border-t border-border">
-                    <td className="sticky left-0 z-10 w-64 bg-card px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <Truck className="h-4 w-4 text-primary" />
-                        <div className="min-w-0">
-                          <div className="truncate font-semibold">{t.patente}</div>
-                          <div className="truncate text-xs text-muted-foreground">
+                    <td className="sticky left-0 z-10 w-[160px] min-w-[160px] border-r border-border bg-card px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)] sm:w-64 sm:min-w-[220px] sm:px-3">
+                      <div className="flex items-start gap-2">
+                        <Truck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate text-sm font-semibold">{t.patente}</span>
+                            {isPrincipal ? (
+                              <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800" title="Proveedor con cuenta">
+                                <BadgeCheck className="h-2.5 w-2.5" /><span className="hidden sm:inline">Principal</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800" title="Cargado por administración">
+                                <UserCog className="h-2.5 w-2.5" /><span className="hidden sm:inline">Secundario</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="truncate text-[11px] text-muted-foreground">
                             {proveedorNombre(t)}{t.tipo ? ` · ${t.tipo}` : ""}
-                            {!t.user_id && <span className="ml-1 rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-800">Secundario</span>}
                           </div>
                         </div>
                       </div>
@@ -358,7 +374,7 @@ function DisponibilidadCamionesPage() {
                         <button
                           type="button"
                           onClick={() => openEdit(t, iso)}
-                          className={`mx-auto flex h-14 min-w-[80px] w-full max-w-[120px] cursor-pointer flex-col items-center justify-center rounded-md px-1.5 text-[11px] leading-tight transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${estadoBg[estado]}`}
+                          className={`mx-auto flex h-12 w-full min-w-[60px] max-w-[110px] cursor-pointer flex-col items-center justify-center rounded-md px-1 text-[10px] leading-tight transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/60 sm:h-14 sm:text-[11px] ${estadoBg[estado]}`}
                         >
                           {hasInfo ? (
                             <>
@@ -367,13 +383,13 @@ function DisponibilidadCamionesPage() {
                             </>
                           ) : (
                             <span className="opacity-80">
-                              {estado === "sin_confirmar" ? "—" : estado === "disponible" ? "Disponible" : "No disp."}
+                              {estado === "sin_confirmar" ? "—" : estado === "disponible" ? "OK" : "No"}
                             </span>
                           )}
                         </button>
                       );
                       return (
-                        <td key={iso} className={`px-1.5 py-2 align-middle ${isToday ? "bg-primary/5" : ""}`}>
+                        <td key={iso} className={`px-1 py-1.5 align-middle sm:px-1.5 sm:py-2 ${isToday ? "bg-amber-500/5" : ""}`}>
                           {hasInfo ? (
                             <Tooltip>
                               <TooltipTrigger asChild>{cell}</TooltipTrigger>
@@ -391,14 +407,16 @@ function DisponibilidadCamionesPage() {
                       );
                     })}
                   </tr>
-                ))}
+                  );
+                })}
               </TooltipProvider>
             )}
           </tbody>
         </table>
       </div>
 
-      <p className="text-xs text-muted-foreground">Toca una celda para editar la disponibilidad de ese día o un rango.</p>
+      <p className="px-1 text-xs text-muted-foreground">Toca una celda para editar la disponibilidad de ese día o un rango.</p>
+
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
