@@ -81,14 +81,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           )}
           {isChofer && !isAdmin && (
-            <Link to="/chofer" onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname.startsWith("/chofer") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-              }`}>
-              <Truck className="h-4 w-4" />
-              Mi portal
-            </Link>
+            <>
+              <Link to="/chofer" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname === "/chofer" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Truck className="h-4 w-4" />
+                Mi portal
+              </Link>
+              <Link to="/mis-viajes" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/mis-viajes") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Briefcase className="h-4 w-4" />
+                Mis viajes
+              </Link>
+            </>
           )}
+
           {!isCliente && !isChofer && NAV.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
             const showBadge = to === "/mensajes" && unreadMsgs > 0;
