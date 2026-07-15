@@ -933,14 +933,17 @@ function FleetAvailabilityPanel({ profiles }: { profiles: Profile[] }) {
 
   const perSupplier = new Map<string, Record<string, number>>();
   rows.forEach((r) => {
+    if (!r.user_id) return;
     const k = r.estado_operativo ?? "disponible";
     const cur = perSupplier.get(r.user_id) ?? { disponible: 0, en_ruta: 0, mantenimiento: 0, inactivo: 0 };
     cur[k] = (cur[k] ?? 0) + 1;
     perSupplier.set(r.user_id, cur);
   });
 
-  const supplierName = (id: string) =>
-    profiles.find((p) => p.id === id)?.razon_social || profiles.find((p) => p.id === id)?.correo || id.slice(0, 8);
+  const supplierName = (id: string | null | undefined) => {
+    if (!id) return "Secundario";
+    return profiles.find((p) => p.id === id)?.razon_social || profiles.find((p) => p.id === id)?.correo || id.slice(0, 8);
+  };
 
   const Pill = ({ tone, label, value }: { tone: string; label: string; value: number }) => (
     <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ${tone}`}>
