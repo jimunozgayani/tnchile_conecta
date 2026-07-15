@@ -34,7 +34,7 @@ function OperacionesPage() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {SECTIONS.map(({ icon: Icon, title, desc }) => (
+        {SECTIONS.map(({ icon: Icon, title, desc, to }) => (
           <div key={title} className="rounded-xl border bg-card p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="rounded-md bg-primary-soft p-2">
@@ -43,9 +43,15 @@ function OperacionesPage() {
               <h3 className="text-lg font-semibold">{title}</h3>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">{desc}</p>
-            <span className="mt-4 inline-block rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              Próximamente
-            </span>
+            {to ? (
+              <Link to={to} className="mt-4 inline-block rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-dark">
+                Abrir →
+              </Link>
+            ) : (
+              <span className="mt-4 inline-block rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                Próximamente
+              </span>
+            )}
           </div>
         ))}
       </div>
