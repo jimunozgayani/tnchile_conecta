@@ -86,6 +86,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          {!isAdmin && (
+            <Link to="/mi-disponibilidad" onClick={() => setOpen(false)}
+              className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
+                location.pathname.startsWith("/mi-disponibilidad") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+              }`}>
+              <Truck className="h-4 w-4" />
+              Mi disponibilidad
+            </Link>
+          )}
           {isAdmin && (
             <>
               <Link to="/disponibilidad" onClick={() => setOpen(false)}
@@ -111,6 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             </>
           )}
+
         </nav>
         <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border p-3">
           <p className="px-3 py-2 text-xs italic text-sidebar-foreground/70">
