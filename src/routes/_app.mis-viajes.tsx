@@ -91,10 +91,15 @@ function MisViajes() {
     enabled: !!userId && isApproved,
     queryKey: ["mis-viajes", userId],
     queryFn: async () => {
+      const { data: driverIds, error: idsErr } = await supabase
+        .rpc("chofer_driver_ids", { _uid: userId! });
+      if (idsErr) throw idsErr;
+      const ids = (driverIds ?? []) as string[];
+      if (ids.length === 0) return [];
       const { data, error } = await supabase
         .from("asignaciones")
         .select("*, cotizaciones(*), trucks(patente, tipo)")
-        .eq("chofer_id", userId!)
+        .in("chofer_id", ids)
         .order("fecha_desde", { ascending: false });
       if (error) throw error;
       return data ?? [];
