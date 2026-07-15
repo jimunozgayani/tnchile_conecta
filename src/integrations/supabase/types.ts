@@ -201,42 +201,6 @@ export type Database = {
           },
         ]
       }
-      driver_availability: {
-        Row: {
-          availability: Json
-          created_at: string
-          destination: string | null
-          id: string
-          load_status: string
-          location: string | null
-          name: string | null
-          truck_type: string | null
-          updated_at: string
-        }
-        Insert: {
-          availability?: Json
-          created_at?: string
-          destination?: string | null
-          id?: string
-          load_status?: string
-          location?: string | null
-          name?: string | null
-          truck_type?: string | null
-          updated_at?: string
-        }
-        Update: {
-          availability?: Json
-          created_at?: string
-          destination?: string | null
-          id?: string
-          load_status?: string
-          location?: string | null
-          name?: string | null
-          truck_type?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       drivers: {
         Row: {
           carnet_vencimiento: string | null
