@@ -176,7 +176,7 @@ function CamionesPage() {
                         <UserPlus className="h-3 w-3" /> Asignar chofer
                       </button>
                       <button onClick={() => openEdit(t)} className="ml-3 text-sm text-primary hover:underline">Editar</button>
-                      <button onClick={() => remove(t.id)} className="ml-3 text-destructive hover:opacity-80"><Trash2 className="inline h-4 w-4" /></button>
+                      <button onClick={() => remove(t.id)} aria-label="Eliminar camión" className="ml-3 text-destructive hover:opacity-80"><Trash2 className="inline h-4 w-4" /></button>
                     </td>
                   </tr>
                 )})}
@@ -200,7 +200,7 @@ function CamionesPage() {
           <div className="w-full max-w-2xl rounded-xl bg-card p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">{editing ? "Editar camión" : "Nuevo camión"}</h2>
-              <button onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
+              <button onClick={() => setOpen(false)} aria-label="Cerrar"><X className="h-5 w-5" /></button>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Patente" value={form.patente} onChange={(v) => setForm({ ...form, patente: v })} />
@@ -244,7 +244,7 @@ function AssignModal({ truck, drivers, current, onClose, onAssign }: {
       <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">Asignar chofer</h2>
-          <button onClick={onClose}><X className="h-5 w-5" /></button>
+          <button onClick={onClose} aria-label="Cerrar"><X className="h-5 w-5" /></button>
         </div>
         <p className="mb-3 text-sm text-muted-foreground">
           Camión <span className="font-semibold text-foreground">{truck.patente}</span> · Tipo {truck.tipo}

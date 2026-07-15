@@ -113,7 +113,7 @@ function ChoferesPage() {
               </div>
               <div className="mt-3 flex justify-end gap-3 border-t pt-3 text-sm">
                 <button onClick={() => { setForm(d); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
-                <button onClick={() => remove(d.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+                <button onClick={() => remove(d.id)} aria-label="Eliminar chofer" className="text-destructive"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
           ))}
@@ -124,7 +124,7 @@ function ChoferesPage() {
           <div className="w-full max-w-xl rounded-xl bg-card p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">{editing ? "Editar chofer" : "Nuevo chofer"}</h2>
-              <button onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
+              <button onClick={() => setOpen(false)} aria-label="Cerrar"><X className="h-5 w-5" /></button>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Nombre completo" value={form.nombre_completo} onChange={(v) => setForm({ ...form, nombre_completo: v })} />
