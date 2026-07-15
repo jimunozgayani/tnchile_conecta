@@ -629,11 +629,12 @@ export type Database = {
           numero_ejes: number | null
           patente: string
           permiso_circulacion_vencimiento: string | null
+          proveedor_secundario_nombre: string | null
           revision_tecnica_vencimiento: string | null
           soap_vencimiento: string | null
           tipo: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           anio?: number | null
@@ -648,11 +649,12 @@ export type Database = {
           numero_ejes?: number | null
           patente: string
           permiso_circulacion_vencimiento?: string | null
+          proveedor_secundario_nombre?: string | null
           revision_tecnica_vencimiento?: string | null
           soap_vencimiento?: string | null
           tipo?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           anio?: number | null
@@ -667,11 +669,12 @@ export type Database = {
           numero_ejes?: number | null
           patente?: string
           permiso_circulacion_vencimiento?: string | null
+          proveedor_secundario_nombre?: string | null
           revision_tecnica_vencimiento?: string | null
           soap_vencimiento?: string | null
           tipo?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
