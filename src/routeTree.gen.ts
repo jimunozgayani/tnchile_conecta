@@ -19,6 +19,7 @@ import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
+import { Route as AppDisponibilidadCamionesRouteImport } from './routes/_app.disponibilidad-camiones'
 import { Route as AppDisponibilidadRouteImport } from './routes/_app.disponibilidad'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
@@ -75,6 +76,12 @@ const AppDocumentosRoute = AppDocumentosRouteImport.update({
   path: '/documentos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDisponibilidadCamionesRoute =
+  AppDisponibilidadCamionesRouteImport.update({
+    id: '/disponibilidad-camiones',
+    path: '/disponibilidad-camiones',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppDisponibilidadRoute = AppDisponibilidadRouteImport.update({
   id: '/disponibilidad',
   path: '/disponibilidad',
@@ -118,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad': typeof AppDisponibilidadRoute
+  '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/perfil': typeof AppPerfilRoute
@@ -135,6 +143,7 @@ export interface FileRoutesByTo {
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad': typeof AppDisponibilidadRoute
+  '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/perfil': typeof AppPerfilRoute
@@ -154,6 +163,7 @@ export interface FileRoutesById {
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad': typeof AppDisponibilidadRoute
+  '/_app/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/perfil': typeof AppPerfilRoute
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad'
+    | '/disponibilidad-camiones'
     | '/documentos'
     | '/mensajes'
     | '/perfil'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad'
+    | '/disponibilidad-camiones'
     | '/documentos'
     | '/mensajes'
     | '/perfil'
@@ -208,6 +220,7 @@ export interface FileRouteTypes {
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad'
+    | '/_app/disponibilidad-camiones'
     | '/_app/documentos'
     | '/_app/mensajes'
     | '/_app/perfil'
@@ -295,6 +308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDocumentosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/disponibilidad-camiones': {
+      id: '/_app/disponibilidad-camiones'
+      path: '/disponibilidad-camiones'
+      fullPath: '/disponibilidad-camiones'
+      preLoaderRoute: typeof AppDisponibilidadCamionesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/disponibilidad': {
       id: '/_app/disponibilidad'
       path: '/disponibilidad'
@@ -347,6 +367,7 @@ interface AppRouteChildren {
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadRoute: typeof AppDisponibilidadRoute
+  AppDisponibilidadCamionesRoute: typeof AppDisponibilidadCamionesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
   AppPerfilRoute: typeof AppPerfilRoute
@@ -360,6 +381,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadRoute: AppDisponibilidadRoute,
+  AppDisponibilidadCamionesRoute: AppDisponibilidadCamionesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
   AppPerfilRoute: AppPerfilRoute,
