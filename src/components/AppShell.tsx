@@ -96,6 +96,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Briefcase className="h-4 w-4" />
                 Mis viajes
               </Link>
+              <Link to="/mi-disponibilidad-chofer" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/mi-disponibilidad-chofer") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Truck className="h-4 w-4" />
+                Mi disponibilidad
+              </Link>
             </>
           )}
 

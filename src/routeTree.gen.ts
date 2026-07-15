@@ -26,6 +26,7 @@ import { Route as AppMiDisponibilidadChoferRouteImport } from './routes/_app.mi-
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
+import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
 import { Route as AppDisponibilidadCamionesRouteImport } from './routes/_app.disponibilidad-camiones'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
@@ -121,6 +122,12 @@ const AppDocumentosRoute = AppDocumentosRouteImport.update({
   path: '/documentos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDisponibilidadChoferesRoute =
+  AppDisponibilidadChoferesRouteImport.update({
+    id: '/disponibilidad-choferes',
+    path: '/disponibilidad-choferes',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppDisponibilidadCamionesRoute =
   AppDisponibilidadCamionesRouteImport.update({
     id: '/disponibilidad-camiones',
@@ -179,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
+  '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
@@ -205,6 +213,7 @@ export interface FileRoutesByTo {
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
+  '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad-camiones': typeof AppDisponibilidadCamionesRoute
+  '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-camiones'
+    | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-camiones'
+    | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
     | '/mi-disponibilidad'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad-camiones'
+    | '/_app/disponibilidad-choferes'
     | '/_app/documentos'
     | '/_app/mensajes'
     | '/_app/mi-disponibilidad'
@@ -457,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDocumentosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/disponibilidad-choferes': {
+      id: '/_app/disponibilidad-choferes'
+      path: '/disponibilidad-choferes'
+      fullPath: '/disponibilidad-choferes'
+      preLoaderRoute: typeof AppDisponibilidadChoferesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/disponibilidad-camiones': {
       id: '/_app/disponibilidad-camiones'
       path: '/disponibilidad-camiones'
@@ -525,6 +545,7 @@ interface AppRouteChildren {
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadCamionesRoute: typeof AppDisponibilidadCamionesRoute
+  AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
@@ -545,6 +566,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadCamionesRoute: AppDisponibilidadCamionesRoute,
+  AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
