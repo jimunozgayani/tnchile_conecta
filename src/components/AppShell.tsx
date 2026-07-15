@@ -146,13 +146,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
           {isAdmin && (
             <>
-              <Link to="/operaciones-disponibilidad-mapa" onClick={() => setOpen(false)}
-                className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
-                  location.pathname.startsWith("/operaciones-disponibilidad-mapa") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-                }`}>
-                <Truck className="h-4 w-4" />
-                Disponibilidad camiones
-              </Link>
+
 
               <div className="mt-4 border-t border-sidebar-border pt-3">
                 <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
