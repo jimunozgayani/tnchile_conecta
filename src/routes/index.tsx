@@ -32,7 +32,7 @@ const PORTALS = [
     desc: "Consulta tus asignaciones y cargas del día.",
     cta: "Ingresar",
     to: "/login" as const,
-    secondary: { label: "Crear cuenta", to: "/register-chofer" as const },
+    secondary: null,
   },
   {
     icon: ShieldCheck,
