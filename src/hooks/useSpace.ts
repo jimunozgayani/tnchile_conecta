@@ -1,8 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Space = "proveedor" | "chofer";
 const KEY = "tn.activeSpace";
+
+function spaceFromPath(pathname: string): Space | null {
+  if (pathname === "/chofer" || pathname.startsWith("/chofer/")) return "chofer";
+  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return "proveedor";
+  return null;
+}
 
 export function useSpace() {
   const [roles, setRoles] = useState<string[]>([]);
@@ -52,5 +59,18 @@ export function useSpace() {
   }, [userId]);
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
+
+  // Sync space with the current route (e.g. deep link into /dashboard or /chofer)
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lastSyncedPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (!loaded || !canSwitch) return;
+    const target = spaceFromPath(pathname);
+    if (!target) return;
+    if (lastSyncedPath.current === pathname) return;
+    lastSyncedPath.current = pathname;
+    if (target !== space) setSpace(target);
+  }, [pathname, loaded, canSwitch, space, setSpace]);
+
   return { space, setSpace, canSwitch, roles, loaded };
 }
