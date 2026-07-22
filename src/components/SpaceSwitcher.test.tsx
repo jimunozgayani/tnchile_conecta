@@ -37,17 +37,18 @@ describe("SpaceSwitcher accessibility — disabled options", () => {
   it("marca la opción sin rol con aria-disabled='true' y disabled", () => {
     renderSwitcher({ roles: ["proveedor"] });
     const chofer = screen.getByRole("radio", { name: /no disponible/i });
-    expect(chofer).toHaveAttribute("aria-disabled", "true");
-    expect(chofer).toBeDisabled();
+    expect(chofer.getAttribute("aria-disabled")).toBe("true");
+    expect((chofer as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("excluye del orden de tabulación las opciones deshabilitadas (tabIndex = -1)", () => {
     renderSwitcher({ roles: ["proveedor"] });
     const chofer = screen.getByRole("radio", { name: /no disponible/i });
     const proveedor = screen.getByRole("radio", { name: /espacio activo/i });
-    expect(chofer).toHaveAttribute("tabindex", "-1");
-    expect(proveedor).toHaveAttribute("tabindex", "0");
+    expect(chofer.getAttribute("tabindex")).toBe("-1");
+    expect(proveedor.getAttribute("tabindex")).toBe("0");
   });
+
 
   it("click sobre opción deshabilitada no navega ni cambia el espacio", () => {
     const { setSpace } = renderSwitcher({ roles: ["proveedor"] });
