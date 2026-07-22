@@ -185,22 +185,24 @@ afterEach(() => {
 describe("E2E · Space switching flow", () => {
   it("user clicks the switcher → success toast, active space updates, user_preferences persists", async () => {
     resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
-    const { getByTestId, getByRole } = await mount();
+    const { getByTestId, getByRole, rerender } = await mount();
     expect(getByTestId("active-space").textContent).toBe("proveedor");
 
     const upsertsAfterMount = upsertSpy.mock.calls.length;
 
     const choferBtn = getByRole("radio", { name: /cambiar a espacio choferes/i });
-    // eslint-disable-next-line no-console
-    console.log("[dbg] disabled=", (choferBtn as HTMLButtonElement).disabled, "aria-disabled=", choferBtn.getAttribute("aria-disabled"), "toastSuccess.calls=", toastSuccess.mock.calls.length, "upserts=", upsertSpy.mock.calls.length);
     await act(async () => {
       fireEvent.click(choferBtn);
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
     });
-    // eslint-disable-next-line no-console
-    console.log("[dbg] after-click space=", getByTestId("active-space").textContent, "toastSuccess.calls=", toastSuccess.mock.calls.length, "upserts=", upsertSpy.mock.calls.length, "navigate=", navigateMock.mock.calls.length);
+    // Simulate the router reflecting the navigation the switcher just requested,
+    // so the route-sync effect sees the new pathname (as it would in-app).
+    expect(navigateMock).toHaveBeenCalledWith(expect.objectContaining({ to: "/chofer" }));
+    mockPathname = "/chofer";
+    await act(async () => { rerender(<></>); });
+
 
 
 
