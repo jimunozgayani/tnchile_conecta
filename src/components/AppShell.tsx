@@ -11,6 +11,7 @@ import { InstallPrompt } from "./InstallPrompt";
 import { Footer } from "./Footer";
 import { useSpace } from "@/hooks/useSpace";
 import { SpaceSwitcher } from "./SpaceSwitcher";
+import { SpaceChangeBanner } from "./SpaceChangeBanner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
@@ -32,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const { space, setSpace, canSwitch, roles } = useSpace();
+  const { space, setSpace, canSwitch, roles, autoChange, dismissAutoChange } = useSpace();
   const isChofer = roles.includes("chofer");
   const isProveedor = roles.includes("proveedor");
   // Active view: if switcher applies, follow `space`; otherwise fall back to role
@@ -247,6 +248,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <NotificationBell />
           </div>
         </header>
+        <SpaceChangeBanner change={autoChange} onDismiss={dismissAutoChange} />
         <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
         <Footer />
       </div>
