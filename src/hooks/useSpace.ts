@@ -22,12 +22,69 @@ async function fetchRoles(userId: string): Promise<string[]> {
   return (data ?? []).map((r: any) => r.role as string);
 }
 
+function pickFallback(rs: string[]): Space | null {
+  if (rs.includes("proveedor")) return "proveedor";
+  if (rs.includes("chofer")) return "chofer";
+  return null;
+}
+
 export function useSpace() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [space, setSpaceState] = useState<Space>("proveedor");
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const spaceRef = useRef<Space>("proveedor");
+  useEffect(() => { spaceRef.current = space; }, [space]);
+
+  // Persist to DB + localStorage. Skip persistence if the user no longer has that role.
+  const persistSpace = useCallback(async (s: Space, uid: string, rs: string[]) => {
+    if (!rs.includes(ROLE_FOR_SPACE[s])) return;
+    try { localStorage.setItem(KEY, s); } catch {}
+    void supabase
+      .from("user_preferences" as any)
+      .upsert({ user_id: uid, active_space: s }, { onConflict: "user_id" });
+  }, []);
+
+  // Core reconciliation: given fresh roles, ensure the active space is still valid.
+  // Returns the resolved space (or null if user has neither role).
+  const reconcile = useCallback(
+    (fresh: string[], opts: { silent?: boolean; navigateOnFallback?: boolean } = {}): Space | null => {
+      const prev = roles;
+      setRoles(fresh);
+      const current = spaceRef.current;
+      const currentOk = fresh.includes(ROLE_FOR_SPACE[current]);
+      if (currentOk) {
+        // If they just gained a role, no forced switch — keep current.
+        return current;
+      }
+      const fallback = pickFallback(fresh);
+      if (!opts.silent) {
+        const lostProv = prev.includes("proveedor") && !fresh.includes("proveedor");
+        const lostChof = prev.includes("chofer") && !fresh.includes("chofer");
+        if (fallback) {
+          toast.info(
+            `Tu acceso al espacio ${current === "chofer" ? "Chofer" : "Proveedor"} fue removido. ` +
+            `Cambiamos automáticamente a ${fallback === "chofer" ? "Chofer" : "Proveedor"}.`
+          );
+        } else if (lostProv || lostChof) {
+          toast.error("Ya no tienes acceso a los espacios de Proveedor ni Chofer.");
+        }
+      }
+      if (fallback) {
+        setSpaceState(fallback);
+        spaceRef.current = fallback;
+        if (userId) void persistSpace(fallback, userId, fresh);
+        if (opts.navigateOnFallback) {
+          navigate({ to: fallback === "chofer" ? "/chofer" : "/dashboard" });
+        }
+      } else if (opts.navigateOnFallback) {
+        navigate({ to: "/" });
+      }
+      return fallback;
+    },
+    [roles, userId, persistSpace, navigate],
+  );
 
   useEffect(() => {
     (async () => {
@@ -49,14 +106,51 @@ export function useSpace() {
         initial = preferred === "chofer" || preferred === "proveedor" ? preferred : "proveedor";
       } else if (hasChof && !hasProv) {
         initial = "chofer";
+      } else if (hasProv) {
+        initial = "proveedor";
+      } else {
+        // No relevant role — leave default but clear stale local preference.
+        try { localStorage.removeItem(KEY); } catch {}
+      }
+      // Reconcile stored preference against actual roles (defensive)
+      if (!rs.includes(ROLE_FOR_SPACE[initial])) {
+        const fb = pickFallback(rs);
+        if (fb) initial = fb;
       }
       setSpaceState(initial);
-      if (preferred) {
-        try { localStorage.setItem(KEY, initial); } catch {}
+      spaceRef.current = initial;
+      if (rs.includes(ROLE_FOR_SPACE[initial])) {
+        void persistSpace(initial, user.id, rs);
       }
       setLoaded(true);
     })();
-  }, []);
+  }, [persistSpace]);
+
+  // Auto-revalidate roles: on window focus, and via realtime subscription to user_roles.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    const revalidate = async (silent = false) => {
+      const fresh = await fetchRoles(userId);
+      if (cancelled) return;
+      reconcile(fresh, { silent, navigateOnFallback: false });
+    };
+    const onFocus = () => { void revalidate(false); };
+    window.addEventListener("focus", onFocus);
+    const ch = (supabase as any)
+      .channel(`user-roles-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${userId}` },
+        () => { void revalidate(false); },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      try { (supabase as any).removeChannel(ch); } catch {}
+    };
+  }, [userId, reconcile]);
 
   const setSpace = useCallback(async (s: Space): Promise<boolean> => {
     if (!userId) return false;
@@ -70,31 +164,15 @@ export function useSpace() {
           ? "Ya no tienes acceso al espacio Chofer. Contacta al administrador si crees que es un error."
           : "Ya no tienes acceso al espacio Proveedor. Contacta al administrador si crees que es un error."
       );
-      // If current space also became invalid, bounce to whatever they still have
-      if (!fresh.includes(ROLE_FOR_SPACE[space])) {
-        const fallback: Space | null = fresh.includes("proveedor")
-          ? "proveedor"
-          : fresh.includes("chofer")
-            ? "chofer"
-            : null;
-        if (fallback) {
-          setSpaceState(fallback);
-          try { localStorage.setItem(KEY, fallback); } catch {}
-          navigate({ to: fallback === "chofer" ? "/chofer" : "/dashboard" });
-        } else {
-          navigate({ to: "/" });
-        }
-      }
+      // Reconcile current space in case it also became invalid
+      reconcile(fresh, { silent: true, navigateOnFallback: true });
       return false;
     }
     setSpaceState(s);
-    try { localStorage.setItem(KEY, s); } catch {}
-    supabase
-      .from("user_preferences" as any)
-      .upsert({ user_id: userId, active_space: s }, { onConflict: "user_id" })
-      .then(() => {});
+    spaceRef.current = s;
+    void persistSpace(s, userId, fresh);
     return true;
-  }, [userId, space, navigate]);
+  }, [userId, reconcile, persistSpace]);
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
 
