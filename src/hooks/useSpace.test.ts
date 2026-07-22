@@ -3,10 +3,11 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 
 // ---------- Mocks ----------
 
+let mockPathname = "/dashboard";
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
   useRouterState: ({ select }: { select: (s: any) => any }) =>
-    select({ location: { pathname: "/dashboard" } }),
+    select({ location: { pathname: mockPathname } }),
 }));
 
 const toastInfo = vi.fn();
