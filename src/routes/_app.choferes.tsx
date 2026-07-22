@@ -192,14 +192,14 @@ function ChoferesPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-end gap-3 border-t pt-3 text-sm">
-                {statuses[d.id] !== "active" && (
+                {statuses[d.id] !== "active" && statuses[d.id] !== "owner" && (
                   <button onClick={() => handleInvite(d)} disabled={inviting === d.id}
                     className="flex items-center gap-1 rounded-md border border-primary px-2.5 py-1 text-primary hover:bg-primary-soft disabled:opacity-50">
                     <Mail className="h-3.5 w-3.5" />
                     {inviting === d.id ? "Enviando..." : statuses[d.id] === "pending" ? "Reenviar" : "Invitar"}
                   </button>
                 )}
-                <button onClick={() => { setForm(d); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
+                <button onClick={() => { setForm({ ...EMPTY, ...d, es_dueno_conductor: statuses[d.id] === "owner" }); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
                 <button onClick={() => remove(d.id)} aria-label="Eliminar chofer" className="text-destructive"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
