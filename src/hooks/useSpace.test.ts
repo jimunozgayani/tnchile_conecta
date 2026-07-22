@@ -144,10 +144,7 @@ describe("useSpace — mount reconciliation", () => {
 
   it("prefers a /chofer deep-link route hint on initial load for dual-role users", async () => {
     resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
-    // The router mock always reports /dashboard; simulate a /chofer hint via override.
-    const rr = await import("@tanstack/react-router");
-    (rr.useRouterState as any) = ({ select }: any) =>
-      select({ location: { pathname: "/chofer/mis-viajes" } });
+    mockPathname = "/chofer/mis-viajes";
     const { result } = await loadHook();
     expect(result.current.space).toBe("chofer");
   });
