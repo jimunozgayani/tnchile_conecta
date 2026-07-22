@@ -42,8 +42,24 @@ export function useSpace() {
   const [loaded, setLoaded] = useState(false);
   const [space, setSpaceState] = useState<Space>("proveedor");
   const [userId, setUserId] = useState<string | null>(null);
-  const [autoChange, setAutoChange] = useState<SpaceAutoChange | null>(null);
-  const dismissAutoChange = useCallback(() => setAutoChange(null), []);
+  const [autoChange, setAutoChangeState] = useState<SpaceAutoChange | null>(null);
+  const dismissAutoChange = useCallback(() => setAutoChangeState(null), []);
+  const userIdRef = useRef<string | null>(null);
+  useEffect(() => { userIdRef.current = userId; }, [userId]);
+  const setAutoChange = useCallback((c: SpaceAutoChange) => {
+    setAutoChangeState(c);
+    const uid = userIdRef.current;
+    if (!uid) return;
+    void supabase.from("space_audit_log" as any).insert({
+      user_id: uid,
+      kind: c.kind,
+      from_space: c.from,
+      to_space: c.to,
+      added_roles: c.addedRoles,
+      removed_roles: c.removedRoles,
+      context: { path: typeof window !== "undefined" ? window.location.pathname : null },
+    });
+  }, []);
 
   const navigate = useNavigate();
   const spaceRef = useRef<Space>("proveedor");
