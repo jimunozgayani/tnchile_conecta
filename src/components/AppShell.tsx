@@ -11,6 +11,7 @@ import { InstallPrompt } from "./InstallPrompt";
 import { Footer } from "./Footer";
 import { useSpace } from "@/hooks/useSpace";
 import { SpaceSwitcher } from "./SpaceSwitcher";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const NAV = [
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { space, setSpace, canSwitch, roles } = useSpace();
   const isChofer = roles.includes("chofer");
   const isProveedor = roles.includes("proveedor");
@@ -48,6 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setUserEmail(user.email ?? null);
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       const rs = (data ?? []).map((r: any) => r.role);
       setIsAdmin(rs.includes("admin"));
