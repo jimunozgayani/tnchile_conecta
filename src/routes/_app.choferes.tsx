@@ -186,6 +186,7 @@ function ChoferesPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Nombre completo" value={form.nombre_completo} onChange={(v) => setForm({ ...form, nombre_completo: v })} />
               <Field label="RUT" value={form.rut} onChange={(v) => setForm({ ...form, rut: v })} />
+              <Field label="Correo (para invitación)" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
               <Field label="Celular" value={form.celular} onChange={(v) => setForm({ ...form, celular: v })} />
               <div>
                 <label className="block text-sm font-medium">Clase licencia</label>
