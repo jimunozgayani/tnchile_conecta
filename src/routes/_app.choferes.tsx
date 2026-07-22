@@ -154,12 +154,21 @@ function ChoferesPage() {
               </div>
               <div className="mt-3 space-y-1 text-sm">
                 <p className="text-muted-foreground">📱 {d.celular || "—"}</p>
+                <p className="text-muted-foreground truncate">✉️ {d.email || "—"}</p>
                 <div className="flex flex-wrap gap-1.5 pt-2">
                   <StatusBadge fecha={d.licencia_vencimiento} label="Licencia" />
                   <StatusBadge fecha={d.carnet_vencimiento} label="Carnet" />
+                  <AccountBadge status={statuses[d.id] ?? "none"} />
                 </div>
               </div>
-              <div className="mt-3 flex justify-end gap-3 border-t pt-3 text-sm">
+              <div className="mt-3 flex items-center justify-end gap-3 border-t pt-3 text-sm">
+                {statuses[d.id] !== "active" && (
+                  <button onClick={() => handleInvite(d)} disabled={inviting === d.id}
+                    className="flex items-center gap-1 rounded-md border border-primary px-2.5 py-1 text-primary hover:bg-primary-soft disabled:opacity-50">
+                    <Mail className="h-3.5 w-3.5" />
+                    {inviting === d.id ? "Enviando..." : statuses[d.id] === "pending" ? "Reenviar" : "Invitar"}
+                  </button>
+                )}
                 <button onClick={() => { setForm(d); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
                 <button onClick={() => remove(d.id)} aria-label="Eliminar chofer" className="text-destructive"><Trash2 className="h-4 w-4" /></button>
               </div>
