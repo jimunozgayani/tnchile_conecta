@@ -28,19 +28,48 @@ type InvStatus = "active" | "pending" | "expired" | "none";
 function ChoferesPage() {
   const [items, setItems] = useState<any[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [statuses, setStatuses] = useState<Record<string, InvStatus>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(EMPTY);
   const [editing, setEditing] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
+  const [inviting, setInviting] = useState<string | null>(null);
+  const invite = useServerFn(inviteDriver);
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
     const { data } = await supabase.from("drivers").select("*").is("deleted_at", null).order("created_at", { ascending: false });
-    setItems(data ?? []);
+    const drivers = data ?? [];
+    setItems(drivers);
+
+    // Determine account status per driver
+    const ids = drivers.map((d: any) => d.id);
+    const [{ data: invs }, { data: perfiles }] = await Promise.all([
+      ids.length
+        ? supabase.from("driver_invitations").select("driver_id,estado,expires_at,created_at")
+            .in("driver_id", ids).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      user
+        ? supabase.from("chofer_perfiles").select("rut,estado_validacion").eq("proveedor_id", user.id)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const perfilRuts = new Set((perfiles ?? []).map((p: any) => norm(p.rut)));
+    const latestByDriver: Record<string, any> = {};
+    for (const i of invs ?? []) if (!latestByDriver[i.driver_id]) latestByDriver[i.driver_id] = i;
+    const st: Record<string, InvStatus> = {};
+    for (const d of drivers) {
+      if (perfilRuts.has(norm(d.rut))) { st[d.id] = "active"; continue; }
+      const inv = latestByDriver[d.id];
+      if (!inv) { st[d.id] = "none"; continue; }
+      if (inv.estado !== "pendiente") { st[d.id] = "none"; continue; }
+      st[d.id] = new Date(inv.expires_at).getTime() < Date.now() ? "expired" : "pending";
+    }
+    setStatuses(st);
+
     const urls: Record<string, string> = {};
-    for (const d of data ?? []) {
+    for (const d of drivers) {
       if (d.foto_url) {
         const { data: s } = await supabase.storage.from("driver-photos").createSignedUrl(d.foto_url, 3600);
         if (s?.signedUrl) urls[d.id] = s.signedUrl;
@@ -50,6 +79,18 @@ function ChoferesPage() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const handleInvite = async (d: any) => {
+    if (!d.email) { toast.error("Agrega un correo al chofer primero."); return; }
+    setInviting(d.id);
+    try {
+      const r = await invite({ data: { driver_id: d.id } });
+      toast.success(`Invitación enviada a ${r.email}`);
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo enviar la invitación");
+    } finally { setInviting(null); }
+  };
 
   const uploadPhoto = async (file: File) => {
     const v = validateUpload(file);
