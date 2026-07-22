@@ -44,6 +44,7 @@ function makeQuery(rows: any[]) {
     select: () => chain,
     eq: () => chain,
     maybeSingle: async () => ({ data: rows[0] ?? null, error: null }),
+    insert: async (_row: any) => ({ data: null, error: null }),
     then: (res: any) => Promise.resolve({ data: rows, error: null }).then(res),
   };
   return chain;
@@ -242,5 +243,94 @@ describe("useSpace — setSpace validation", () => {
     expect(upsertSpy).toHaveBeenCalledWith(
       expect.objectContaining({ user_id: "user-1", active_space: "chofer" }),
     );
+  });
+});
+
+describe("useSpace — route sync (no flicker on nested / external / back-forward navigation)", () => {
+  it("does not change space or re-persist when navigating between nested sub-routes of the same space", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("proveedor");
+
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+    const spaceRenders: string[] = [result.current.space];
+
+    // Simulate an external link landing on a nested path with query params
+    await act(async () => { mockPathname = "/dashboard/camiones/42?highlight=1"; rerender(); });
+    spaceRenders.push(result.current.space);
+
+    // Further in-app nav into a deeper sub-route
+    await act(async () => { mockPathname = "/dashboard/camiones/42/editar"; rerender(); });
+    spaceRenders.push(result.current.space);
+
+    expect(spaceRenders.every((s) => s === "proveedor")).toBe(true);
+    // No new persistence calls: target space never changed
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+  });
+
+  it("syncs once to the target space for a deep external link with params, without toggling back", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("proveedor");
+
+    // External link into chofer space with nested path + search params
+    await act(async () => { mockPathname = "/chofer/mis-viajes?tripId=abc"; rerender(); });
+    await waitFor(() => expect(result.current.space).toBe("chofer"));
+
+    // Subsequent navigation to another /chofer sub-route: must not flip back
+    const renders: string[] = [];
+    await act(async () => { mockPathname = "/chofer/mi-disponibilidad-chofer"; rerender(); });
+    renders.push(result.current.space);
+    await act(async () => { mockPathname = "/chofer"; rerender(); });
+    renders.push(result.current.space);
+
+    expect(renders.every((s) => s === "chofer")).toBe(true);
+    // No toast should have been raised by the passive route sync
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("handles browser back/forward between spaces without extra persistence or role re-fetches", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    // Forward navigation to chofer space
+    await act(async () => { mockPathname = "/chofer/mis-viajes"; rerender(); });
+    await waitFor(() => expect(result.current.space).toBe("chofer"));
+
+    // Browser back to proveedor
+    await act(async () => { mockPathname = "/dashboard"; rerender(); });
+    await waitFor(() => expect(result.current.space).toBe("proveedor"));
+
+    // Browser forward to chofer again
+    await act(async () => { mockPathname = "/chofer/mis-viajes"; rerender(); });
+    await waitFor(() => expect(result.current.space).toBe("chofer"));
+
+    // Each real space change persists exactly once — no thrashing
+    const newUpserts = upsertSpy.mock.calls.length - upsertsAfterMount;
+    expect(newUpserts).toBe(3);
+    // No autoChange banner should have been produced by route-driven nav
+    expect(result.current.autoChange).toBeNull();
+  });
+
+  it("ignores route hints for spaces the user does not have", async () => {
+    resetState({ roles: ["proveedor"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("proveedor");
+
+    // External link tries to force /chofer, but user has no chofer role
+    await act(async () => { mockPathname = "/chofer/mis-viajes?x=1"; rerender(); });
+    // A couple of rerenders to make sure nothing async flips it later
+    await act(async () => { rerender(); });
+    await act(async () => { rerender(); });
+
+    expect(result.current.space).toBe("proveedor");
+    expect(result.current.autoChange).toBeNull();
   });
 });
