@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CLASES_LICENCIA } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { validateUpload } from "@/lib/upload-validation";
+import { inviteDriver } from "@/lib/driver-invitations.functions";
 
 export const Route = createFileRoute("/_app/choferes")({
   head: () => pageHead("/choferes", "Mis choferes · Portal Proveedores TN Chile", "Gestiona los choferes de tu empresa en TN Chile: licencias, documentos, vigencias y camiones asignados a cada conductor."),
@@ -14,26 +16,60 @@ export const Route = createFileRoute("/_app/choferes")({
 });
 
 const EMPTY = {
-  nombre_completo: "", rut: "", celular: "", clase_licencia: "A1",
+  nombre_completo: "", rut: "", email: "", celular: "", clase_licencia: "A1",
   licencia_vencimiento: "", carnet_vencimiento: "", foto_url: "",
 };
+
+const norm = (s: string | null | undefined) =>
+  (s ?? "").toLowerCase().replace(/[^0-9k]/g, "");
+
+type InvStatus = "active" | "pending" | "expired" | "none";
 
 function ChoferesPage() {
   const [items, setItems] = useState<any[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [statuses, setStatuses] = useState<Record<string, InvStatus>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(EMPTY);
   const [editing, setEditing] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
+  const [inviting, setInviting] = useState<string | null>(null);
+  const invite = useServerFn(inviteDriver);
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
     const { data } = await supabase.from("drivers").select("*").is("deleted_at", null).order("created_at", { ascending: false });
-    setItems(data ?? []);
+    const drivers = data ?? [];
+    setItems(drivers);
+
+    // Determine account status per driver
+    const ids = drivers.map((d: any) => d.id);
+    const [{ data: invs }, { data: perfiles }] = await Promise.all([
+      ids.length
+        ? supabase.from("driver_invitations").select("driver_id,estado,expires_at,created_at")
+            .in("driver_id", ids).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+      user
+        ? supabase.from("chofer_perfiles").select("rut,estado_validacion").eq("proveedor_id", user.id)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const perfilRuts = new Set((perfiles ?? []).map((p: any) => norm(p.rut)));
+    const latestByDriver: Record<string, any> = {};
+    for (const i of invs ?? []) if (!latestByDriver[i.driver_id]) latestByDriver[i.driver_id] = i;
+    const st: Record<string, InvStatus> = {};
+    for (const d of drivers) {
+      if (perfilRuts.has(norm(d.rut))) { st[d.id] = "active"; continue; }
+      const inv = latestByDriver[d.id];
+      if (!inv) { st[d.id] = "none"; continue; }
+      if (inv.estado !== "pendiente") { st[d.id] = "none"; continue; }
+      st[d.id] = new Date(inv.expires_at).getTime() < Date.now() ? "expired" : "pending";
+    }
+    setStatuses(st);
+
     const urls: Record<string, string> = {};
-    for (const d of data ?? []) {
+    for (const d of drivers) {
       if (d.foto_url) {
         const { data: s } = await supabase.storage.from("driver-photos").createSignedUrl(d.foto_url, 3600);
         if (s?.signedUrl) urls[d.id] = s.signedUrl;
@@ -43,6 +79,18 @@ function ChoferesPage() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const handleInvite = async (d: any) => {
+    if (!d.email) { toast.error("Agrega un correo al chofer primero."); return; }
+    setInviting(d.id);
+    try {
+      const r = await invite({ data: { driver_id: d.id } });
+      toast.success(`Invitación enviada a ${r.email}`);
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo enviar la invitación");
+    } finally { setInviting(null); }
+  };
 
   const uploadPhoto = async (file: File) => {
     const v = validateUpload(file);
@@ -57,6 +105,8 @@ function ChoferesPage() {
   const save = async () => {
     const payload: any = { ...form, user_id: userId };
     ["licencia_vencimiento", "carnet_vencimiento"].forEach((k) => { if (!payload[k]) payload[k] = null; });
+    if (payload.email) payload.email = String(payload.email).trim().toLowerCase();
+    else payload.email = null;
     const res = editing
       ? await supabase.from("drivers").update(payload).eq("id", editing)
       : await supabase.from("drivers").insert(payload);
@@ -106,12 +156,21 @@ function ChoferesPage() {
               </div>
               <div className="mt-3 space-y-1 text-sm">
                 <p className="text-muted-foreground">📱 {d.celular || "—"}</p>
+                <p className="text-muted-foreground truncate">✉️ {d.email || "—"}</p>
                 <div className="flex flex-wrap gap-1.5 pt-2">
                   <StatusBadge fecha={d.licencia_vencimiento} label="Licencia" />
                   <StatusBadge fecha={d.carnet_vencimiento} label="Carnet" />
+                  <AccountBadge status={statuses[d.id] ?? "none"} />
                 </div>
               </div>
-              <div className="mt-3 flex justify-end gap-3 border-t pt-3 text-sm">
+              <div className="mt-3 flex items-center justify-end gap-3 border-t pt-3 text-sm">
+                {statuses[d.id] !== "active" && (
+                  <button onClick={() => handleInvite(d)} disabled={inviting === d.id}
+                    className="flex items-center gap-1 rounded-md border border-primary px-2.5 py-1 text-primary hover:bg-primary-soft disabled:opacity-50">
+                    <Mail className="h-3.5 w-3.5" />
+                    {inviting === d.id ? "Enviando..." : statuses[d.id] === "pending" ? "Reenviar" : "Invitar"}
+                  </button>
+                )}
                 <button onClick={() => { setForm(d); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
                 <button onClick={() => remove(d.id)} aria-label="Eliminar chofer" className="text-destructive"><Trash2 className="h-4 w-4" /></button>
               </div>
@@ -129,6 +188,7 @@ function ChoferesPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Nombre completo" value={form.nombre_completo} onChange={(v) => setForm({ ...form, nombre_completo: v })} />
               <Field label="RUT" value={form.rut} onChange={(v) => setForm({ ...form, rut: v })} />
+              <Field label="Correo (para invitación)" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
               <Field label="Celular" value={form.celular} onChange={(v) => setForm({ ...form, celular: v })} />
               <div>
                 <label className="block text-sm font-medium">Clase licencia</label>
@@ -166,4 +226,14 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
         className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
     </div>
   );
+}
+
+function AccountBadge({ status }: { status: InvStatus }) {
+  if (status === "active")
+    return <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">Cuenta activa</span>;
+  if (status === "pending")
+    return <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">Invitación pendiente</span>;
+  if (status === "expired")
+    return <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">Invitación expirada</span>;
+  return null;
 }

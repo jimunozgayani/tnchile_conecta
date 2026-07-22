@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InvitacionChoferTokenRouteImport } from './routes/invitacion-chofer.$token'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppOperacionesDisponibilidadMapaRouteImport } from './routes/_app.operaciones-disponibilidad-mapa'
@@ -36,6 +37,7 @@ import { Route as AppClienteRouteImport } from './routes/_app.cliente'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
 import { Route as AppChoferRouteImport } from './routes/_app.chofer'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
+import { Route as AppAdminChoferesRouteImport } from './routes/_app.admin-choferes'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -80,6 +82,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvitacionChoferTokenRoute = InvitacionChoferTokenRouteImport.update({
+  id: '/invitacion-chofer/$token',
+  path: '/invitacion-chofer/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppTarifasRoute = AppTarifasRouteImport.update({
@@ -177,6 +184,11 @@ const AppCamionesRoute = AppCamionesRouteImport.update({
   path: '/camiones',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminChoferesRoute = AppAdminChoferesRouteImport.update({
+  id: '/admin-choferes',
+  path: '/admin-choferes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -193,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
+  '/admin-choferes': typeof AppAdminChoferesRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
@@ -211,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
+  '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -222,6 +236,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
+  '/admin-choferes': typeof AppAdminChoferesRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
@@ -240,6 +255,7 @@ export interface FileRoutesByTo {
   '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/perfil': typeof AppPerfilRoute
   '/tarifas': typeof AppTarifasRoute
+  '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -253,6 +269,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_app/admin': typeof AppAdminRoute
+  '/_app/admin-choferes': typeof AppAdminChoferesRoute
   '/_app/camiones': typeof AppCamionesRoute
   '/_app/chofer': typeof AppChoferRoute
   '/_app/choferes': typeof AppChoferesRoute
@@ -271,6 +288,7 @@ export interface FileRoutesById {
   '/_app/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/tarifas': typeof AppTarifasRoute
+  '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -284,6 +302,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/admin'
+    | '/admin-choferes'
     | '/camiones'
     | '/chofer'
     | '/choferes'
@@ -302,6 +321,7 @@ export interface FileRouteTypes {
     | '/operaciones-disponibilidad-mapa'
     | '/perfil'
     | '/tarifas'
+    | '/invitacion-chofer/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -313,6 +333,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/admin'
+    | '/admin-choferes'
     | '/camiones'
     | '/chofer'
     | '/choferes'
@@ -331,6 +352,7 @@ export interface FileRouteTypes {
     | '/operaciones-disponibilidad-mapa'
     | '/perfil'
     | '/tarifas'
+    | '/invitacion-chofer/$token'
   id:
     | '__root__'
     | '/'
@@ -343,6 +365,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/_app/admin'
+    | '/_app/admin-choferes'
     | '/_app/camiones'
     | '/_app/chofer'
     | '/_app/choferes'
@@ -361,6 +384,7 @@ export interface FileRouteTypes {
     | '/_app/operaciones-disponibilidad-mapa'
     | '/_app/perfil'
     | '/_app/tarifas'
+    | '/invitacion-chofer/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -373,6 +397,7 @@ export interface RootRouteChildren {
   RegisterClienteRoute: typeof RegisterClienteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  InvitacionChoferTokenRoute: typeof InvitacionChoferTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -438,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invitacion-chofer/$token': {
+      id: '/invitacion-chofer/$token'
+      path: '/invitacion-chofer/$token'
+      fullPath: '/invitacion-chofer/$token'
+      preLoaderRoute: typeof InvitacionChoferTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/tarifas': {
@@ -566,6 +598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCamionesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin-choferes': {
+      id: '/_app/admin-choferes'
+      path: '/admin-choferes'
+      fullPath: '/admin-choferes'
+      preLoaderRoute: typeof AppAdminChoferesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -578,6 +617,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
+  AppAdminChoferesRoute: typeof AppAdminChoferesRoute
   AppCamionesRoute: typeof AppCamionesRoute
   AppChoferRoute: typeof AppChoferRoute
   AppChoferesRoute: typeof AppChoferesRoute
@@ -600,6 +640,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
+  AppAdminChoferesRoute: AppAdminChoferesRoute,
   AppCamionesRoute: AppCamionesRoute,
   AppChoferRoute: AppChoferRoute,
   AppChoferesRoute: AppChoferesRoute,
@@ -632,6 +673,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterClienteRoute: RegisterClienteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  InvitacionChoferTokenRoute: InvitacionChoferTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
