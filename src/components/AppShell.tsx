@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button className="md:hidden" onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="space-y-1 p-3">
-          {isCliente && !isAdmin && (
+          {showClienteNav && (
             <Link to="/cliente" onClick={() => setOpen(false)}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname.startsWith("/cliente") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Mi portal
             </Link>
           )}
-          {isChofer && !isAdmin && (
+          {showChoferNav && (
             <>
               <Link to="/chofer" onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </>
           )}
 
-          {!isCliente && !isChofer && NAV.map(({ to, label, icon: Icon }) => {
+          {showProveedorNav && NAV.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
             const showBadge = to === "/mensajes" && unreadMsgs > 0;
             return (
@@ -139,7 +139,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          {!isAdmin && !isCliente && !isChofer && (
+          {showProveedorNav && (
             <>
               <Link to="/mi-disponibilidad" onClick={() => setOpen(false)}
                 className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
