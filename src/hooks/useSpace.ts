@@ -46,20 +46,56 @@ export function useSpace() {
   const dismissAutoChange = useCallback(() => setAutoChangeState(null), []);
   const userIdRef = useRef<string | null>(null);
   useEffect(() => { userIdRef.current = userId; }, [userId]);
-  const setAutoChange = useCallback((c: SpaceAutoChange) => {
-    setAutoChangeState(c);
-    const uid = userIdRef.current;
-    if (!uid) return;
-    void supabase.from("space_audit_log" as any).insert({
-      user_id: uid,
-      kind: c.kind,
-      from_space: c.from,
-      to_space: c.to,
-      added_roles: c.addedRoles,
-      removed_roles: c.removedRoles,
-      context: { path: typeof window !== "undefined" ? window.location.pathname : null },
-    });
-  }, []);
+  // Low-level audit writer. `source` distinguishes what caused the change so we
+  // can tell deep-link/route drift apart from real discrepancies (role loss,
+  // rejected switches). `kind` mirrors SpaceAutoChange kinds for UI-facing
+  // events, plus purely informational kinds ("user", "deep-link") that never
+  // raise a banner or toast.
+  type AuditSource = "user" | "deep-link" | "role-change" | "mount";
+  type AuditKind = SpaceAutoChange["kind"] | "user" | "deep-link";
+  const logAudit = useCallback(
+    (entry: {
+      kind: AuditKind;
+      from: Space | null;
+      to: Space | null;
+      addedRoles?: string[];
+      removedRoles?: string[];
+      source: AuditSource;
+      extra?: Record<string, unknown>;
+    }) => {
+      const uid = userIdRef.current;
+      if (!uid) return;
+      void supabase.from("space_audit_log" as any).insert({
+        user_id: uid,
+        kind: entry.kind,
+        from_space: entry.from,
+        to_space: entry.to,
+        added_roles: entry.addedRoles ?? [],
+        removed_roles: entry.removedRoles ?? [],
+        source: entry.source,
+        context: {
+          path: typeof window !== "undefined" ? window.location.pathname : null,
+          ...(entry.extra ?? {}),
+        },
+      });
+    },
+    [],
+  );
+  const setAutoChange = useCallback(
+    (c: SpaceAutoChange, source: AuditSource = "role-change") => {
+      setAutoChangeState(c);
+      logAudit({
+        kind: c.kind,
+        from: c.from,
+        to: c.to,
+        addedRoles: c.addedRoles,
+        removedRoles: c.removedRoles,
+        source,
+      });
+    },
+    [logAudit],
+  );
+
 
   const navigate = useNavigate();
   const spaceRef = useRef<Space>("proveedor");
