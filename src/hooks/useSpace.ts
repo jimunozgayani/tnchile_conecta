@@ -254,6 +254,6 @@ export function useSpace() {
     if (canSwitch && userId) void persistSpace(target, userId, roles);
   }, [pathname, loaded, canSwitch, roles, userId, persistSpace]);
 
-  return { space, setSpace, canSwitch, roles, loaded };
+  return { space, setSpace, canSwitch, roles, loaded, autoChange, dismissAutoChange };
 }
 
