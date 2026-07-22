@@ -9,6 +9,7 @@ import { CLASES_LICENCIA } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { validateUpload } from "@/lib/upload-validation";
 import { inviteDriver } from "@/lib/driver-invitations.functions";
+import { saveOwnerDriver } from "@/lib/owner-driver.functions";
 
 export const Route = createFileRoute("/_app/choferes")({
   head: () => pageHead("/choferes", "Mis choferes · Portal Proveedores TN Chile", "Gestiona los choferes de tu empresa en TN Chile: licencias, documentos, vigencias y camiones asignados a cada conductor."),
