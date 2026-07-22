@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const { space, setSpace, canSwitch, roles } = useSpace();
+  const { space, setSpace, canSwitch, roles, autoChange, dismissAutoChange } = useSpace();
   const isChofer = roles.includes("chofer");
   const isProveedor = roles.includes("proveedor");
   // Active view: if switcher applies, follow `space`; otherwise fall back to role
