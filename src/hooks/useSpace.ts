@@ -86,6 +86,14 @@ export function useSpace() {
     [roles, userId, persistSpace, navigate],
   );
 
+  // Read pathname up-front so the initial load can honor deep links.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathnameRef = useRef(pathname);
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
+  // Dedupe route→space sync by target space (declared here so the initial
+  // load effect can seed it and the sync effect below can read it).
+  const lastSyncedTarget = useRef<Space | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -100,7 +108,10 @@ export function useSpace() {
       const hasChof = rs.includes("chofer");
       const remote = (prefData as any)?.active_space as Space | undefined;
       const stored = (typeof window !== "undefined" ? localStorage.getItem(KEY) : null) as Space | null;
-      const preferred = remote ?? stored ?? undefined;
+      // Prefer the current URL for deep links: query params / nested paths still
+      // resolve to the correct space, avoiding a paint of the wrong space first.
+      const routeHint = spaceFromPath(pathnameRef.current);
+      const preferred = routeHint ?? remote ?? stored ?? undefined;
       let initial: Space = "proveedor";
       if (hasProv && hasChof) {
         initial = preferred === "chofer" || preferred === "proveedor" ? preferred : "proveedor";
@@ -109,16 +120,15 @@ export function useSpace() {
       } else if (hasProv) {
         initial = "proveedor";
       } else {
-        // No relevant role — leave default but clear stale local preference.
         try { localStorage.removeItem(KEY); } catch {}
       }
-      // Reconcile stored preference against actual roles (defensive)
       if (!rs.includes(ROLE_FOR_SPACE[initial])) {
         const fb = pickFallback(rs);
         if (fb) initial = fb;
       }
       setSpaceState(initial);
       spaceRef.current = initial;
+      lastSyncedTarget.current = spaceFromPath(pathnameRef.current) ?? initial;
       if (rs.includes(ROLE_FOR_SPACE[initial])) {
         void persistSpace(initial, user.id, rs);
       }
@@ -164,7 +174,6 @@ export function useSpace() {
           ? "Ya no tienes acceso al espacio Chofer. Contacta al administrador si crees que es un error."
           : "Ya no tienes acceso al espacio Proveedor. Contacta al administrador si crees que es un error."
       );
-      // Reconcile current space in case it also became invalid
       reconcile(fresh, { silent: true, navigateOnFallback: true });
       return false;
     }
@@ -176,17 +185,27 @@ export function useSpace() {
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
 
-  // Sync space with the current route (e.g. deep link into /dashboard or /chofer)
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const lastSyncedPath = useRef<string | null>(null);
+  // Sync space with the current route (deep links like /dashboard/foo?x=1 or
+  // /chofer/bar). Dedupe by *target space* (not pathname) so navigating
+  // between sub-routes of the same space doesn't re-trigger, and use a quiet
+  // local update (no re-fetch, no toast, no navigate) to avoid flicker or
+  // overwriting the user's saved preference when they haven't chosen anything.
   useEffect(() => {
-    if (!loaded || !canSwitch) return;
+    if (!loaded) return;
     const target = spaceFromPath(pathname);
     if (!target) return;
-    if (lastSyncedPath.current === pathname) return;
-    lastSyncedPath.current = pathname;
-    if (target !== space) void setSpace(target);
-  }, [pathname, loaded, canSwitch, space, setSpace]);
+    if (lastSyncedTarget.current === target && spaceRef.current === target) return;
+    lastSyncedTarget.current = target;
+    if (target === spaceRef.current) return;
+    // Only reflect the route if the user actually has that role
+    if (!roles.includes(ROLE_FOR_SPACE[target])) return;
+    setSpaceState(target);
+    spaceRef.current = target;
+    // Persist quietly only for dual-role users so we don't clobber a single-role
+    // user's stored preference with a passing deep link.
+    if (canSwitch && userId) void persistSpace(target, userId, roles);
+  }, [pathname, loaded, canSwitch, roles, userId, persistSpace]);
 
   return { space, setSpace, canSwitch, roles, loaded };
 }
+
