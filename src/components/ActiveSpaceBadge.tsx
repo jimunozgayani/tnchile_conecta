@@ -43,6 +43,7 @@ export function ActiveSpaceBadge({ view, canSwitch = false, userEmail }: Props) 
               className="inline-flex cursor-help items-center rounded-full border border-white/30 bg-white/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1 focus-visible:ring-offset-primary"
               aria-label={`Espacio activo: ${label}`}
               data-testid="active-space-badge"
+              data-space={view}
             >
               {label}
             </span>
