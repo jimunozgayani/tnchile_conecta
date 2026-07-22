@@ -233,7 +233,7 @@ describe("E2E · Space switching flow", () => {
 
     // Banner surfaced with the "switched" copy
     const banner = await findByRole("status");
-    expect(banner.textContent ?? "").toMatch(/cambio de espacio automático/i);
+    expect(banner.textContent ?? "").toMatch(/cambiamos tu vista/i);
 
     // Fallback space persisted
     const newUpserts = upsertSpy.mock.calls.slice(upsertsAfterMount);
@@ -260,7 +260,7 @@ describe("E2E · Space switching flow", () => {
     expect(String(toastError.mock.calls[0][0])).toMatch(/ya no tienes acceso/i);
 
     const banner = await findByRole("alert");
-    expect(banner.textContent ?? "").toMatch(/sin acceso a espacios operativos/i);
+    expect(banner.textContent ?? "").toMatch(/perdiste el acceso/i);
   });
 
   it("realtime GAINS a new relevant role → banner (gained), active space unchanged, no toast", async () => {
@@ -280,7 +280,7 @@ describe("E2E · Space switching flow", () => {
     // Space stays put; the banner announces the new role
     expect(getByTestId("active-space").textContent).toBe("proveedor");
     const banner = await findByRole("status");
-    expect(banner.textContent ?? "").toMatch(/nuevo acceso disponible/i);
+    expect(banner.textContent ?? "").toMatch(/se actualizaron los roles/i);
 
     // No toast on gained — banner-only surface
     const toastCallsAfter =
