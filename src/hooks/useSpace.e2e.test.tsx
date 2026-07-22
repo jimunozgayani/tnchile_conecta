@@ -191,13 +191,17 @@ describe("E2E · Space switching flow", () => {
     const upsertsAfterMount = upsertSpy.mock.calls.length;
 
     const choferBtn = getByRole("radio", { name: /cambiar a espacio choferes/i });
+    // eslint-disable-next-line no-console
+    console.log("[dbg] disabled=", (choferBtn as HTMLButtonElement).disabled, "aria-disabled=", choferBtn.getAttribute("aria-disabled"), "toastSuccess.calls=", toastSuccess.mock.calls.length, "upserts=", upsertSpy.mock.calls.length);
     await act(async () => {
       fireEvent.click(choferBtn);
-      // Let setSpace's async fetchRoles + state updates flush
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
     });
+    // eslint-disable-next-line no-console
+    console.log("[dbg] after-click space=", getByTestId("active-space").textContent, "toastSuccess.calls=", toastSuccess.mock.calls.length, "upserts=", upsertSpy.mock.calls.length, "navigate=", navigateMock.mock.calls.length);
+
 
 
     await waitFor(() => expect(getByTestId("active-space").textContent).toBe("chofer"));
