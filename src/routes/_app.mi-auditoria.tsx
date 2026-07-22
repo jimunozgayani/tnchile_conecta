@@ -73,7 +73,7 @@ function MiAuditoriaPage() {
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <History className="h-5 w-5 text-[#2D7A45]" aria-hidden="true" />
+          <HistoryIcon className="h-5 w-5 text-[#2D7A45]" aria-hidden="true" />
           <h1 className="text-xl md:text-2xl font-semibold">Mi auditoría de acceso</h1>
         </div>
         <Button
