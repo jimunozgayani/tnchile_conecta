@@ -28,6 +28,7 @@ import { Route as AppOperacionesRouteImport } from './routes/_app.operaciones'
 import { Route as AppMisViajesRouteImport } from './routes/_app.mis-viajes'
 import { Route as AppMiDisponibilidadChoferRouteImport } from './routes/_app.mi-disponibilidad-chofer'
 import { Route as AppMiDisponibilidadRouteImport } from './routes/_app.mi-disponibilidad'
+import { Route as AppMiAuditoriaRouteImport } from './routes/_app.mi-auditoria'
 import { Route as AppMensajesRouteImport } from './routes/_app.mensajes'
 import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
@@ -138,6 +139,11 @@ const AppMiDisponibilidadRoute = AppMiDisponibilidadRouteImport.update({
   path: '/mi-disponibilidad',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMiAuditoriaRoute = AppMiAuditoriaRouteImport.update({
+  id: '/mi-auditoria',
+  path: '/mi-auditoria',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMensajesRoute = AppMensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
+  '/mi-auditoria': typeof AppMiAuditoriaRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByTo {
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/documentos': typeof AppDocumentosRoute
   '/mensajes': typeof AppMensajesRoute
+  '/mi-auditoria': typeof AppMiAuditoriaRoute
   '/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/mis-viajes': typeof AppMisViajesRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
   '/_app/documentos': typeof AppDocumentosRoute
   '/_app/mensajes': typeof AppMensajesRoute
+  '/_app/mi-auditoria': typeof AppMiAuditoriaRoute
   '/_app/mi-disponibilidad': typeof AppMiDisponibilidadRoute
   '/_app/mi-disponibilidad-chofer': typeof AppMiDisponibilidadChoferRoute
   '/_app/mis-viajes': typeof AppMisViajesRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
+    | '/mi-auditoria'
     | '/mi-disponibilidad'
     | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/disponibilidad-choferes'
     | '/documentos'
     | '/mensajes'
+    | '/mi-auditoria'
     | '/mi-disponibilidad'
     | '/mi-disponibilidad-chofer'
     | '/mis-viajes'
@@ -375,6 +386,7 @@ export interface FileRouteTypes {
     | '/_app/disponibilidad-choferes'
     | '/_app/documentos'
     | '/_app/mensajes'
+    | '/_app/mi-auditoria'
     | '/_app/mi-disponibilidad'
     | '/_app/mi-disponibilidad-chofer'
     | '/_app/mis-viajes'
@@ -535,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMiDisponibilidadRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mi-auditoria': {
+      id: '/_app/mi-auditoria'
+      path: '/mi-auditoria'
+      fullPath: '/mi-auditoria'
+      preLoaderRoute: typeof AppMiAuditoriaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mensajes': {
       id: '/_app/mensajes'
       path: '/mensajes'
@@ -627,6 +646,7 @@ interface AppRouteChildren {
   AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
   AppDocumentosRoute: typeof AppDocumentosRoute
   AppMensajesRoute: typeof AppMensajesRoute
+  AppMiAuditoriaRoute: typeof AppMiAuditoriaRoute
   AppMiDisponibilidadRoute: typeof AppMiDisponibilidadRoute
   AppMiDisponibilidadChoferRoute: typeof AppMiDisponibilidadChoferRoute
   AppMisViajesRoute: typeof AppMisViajesRoute
@@ -650,6 +670,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
   AppDocumentosRoute: AppDocumentosRoute,
   AppMensajesRoute: AppMensajesRoute,
+  AppMiAuditoriaRoute: AppMiAuditoriaRoute,
   AppMiDisponibilidadRoute: AppMiDisponibilidadRoute,
   AppMiDisponibilidadChoferRoute: AppMiDisponibilidadChoferRoute,
   AppMisViajesRoute: AppMisViajesRoute,
