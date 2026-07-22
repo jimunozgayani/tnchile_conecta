@@ -46,20 +46,56 @@ export function useSpace() {
   const dismissAutoChange = useCallback(() => setAutoChangeState(null), []);
   const userIdRef = useRef<string | null>(null);
   useEffect(() => { userIdRef.current = userId; }, [userId]);
-  const setAutoChange = useCallback((c: SpaceAutoChange) => {
-    setAutoChangeState(c);
-    const uid = userIdRef.current;
-    if (!uid) return;
-    void supabase.from("space_audit_log" as any).insert({
-      user_id: uid,
-      kind: c.kind,
-      from_space: c.from,
-      to_space: c.to,
-      added_roles: c.addedRoles,
-      removed_roles: c.removedRoles,
-      context: { path: typeof window !== "undefined" ? window.location.pathname : null },
-    });
-  }, []);
+  // Low-level audit writer. `source` distinguishes what caused the change so we
+  // can tell deep-link/route drift apart from real discrepancies (role loss,
+  // rejected switches). `kind` mirrors SpaceAutoChange kinds for UI-facing
+  // events, plus purely informational kinds ("user", "deep-link") that never
+  // raise a banner or toast.
+  type AuditSource = "user" | "deep-link" | "role-change" | "mount";
+  type AuditKind = SpaceAutoChange["kind"] | "user" | "deep-link";
+  const logAudit = useCallback(
+    (entry: {
+      kind: AuditKind;
+      from: Space | null;
+      to: Space | null;
+      addedRoles?: string[];
+      removedRoles?: string[];
+      source: AuditSource;
+      extra?: Record<string, unknown>;
+    }) => {
+      const uid = userIdRef.current;
+      if (!uid) return;
+      void supabase.from("space_audit_log" as any).insert({
+        user_id: uid,
+        kind: entry.kind,
+        from_space: entry.from,
+        to_space: entry.to,
+        added_roles: entry.addedRoles ?? [],
+        removed_roles: entry.removedRoles ?? [],
+        source: entry.source,
+        context: {
+          path: typeof window !== "undefined" ? window.location.pathname : null,
+          ...(entry.extra ?? {}),
+        },
+      });
+    },
+    [],
+  );
+  const setAutoChange = useCallback(
+    (c: SpaceAutoChange, source: AuditSource = "role-change") => {
+      setAutoChangeState(c);
+      logAudit({
+        kind: c.kind,
+        from: c.from,
+        to: c.to,
+        addedRoles: c.addedRoles,
+        removedRoles: c.removedRoles,
+        source,
+      });
+    },
+    [logAudit],
+  );
+
 
   const navigate = useNavigate();
   const spaceRef = useRef<Space>("proveedor");
@@ -231,16 +267,26 @@ export function useSpace() {
     const fresh = await fetchRoles(userId);
     setRoles(fresh);
     const required = ROLE_FOR_SPACE[s];
+    const previous = spaceRef.current;
     if (!fresh.includes(required)) {
+      // Real discrepancy: the user asked for a space they no longer own.
+      // Surface an error toast and record the rejected attempt with context
+      // for triage. This is the only "user" path that emits an error.
       toast.error(
         s === "chofer"
           ? "Ya no tienes acceso al espacio Chofer. Contacta al administrador si crees que es un error."
           : "Ya no tienes acceso al espacio Proveedor. Contacta al administrador si crees que es un error."
       );
+      logAudit({
+        kind: "user",
+        from: previous,
+        to: s,
+        source: "user",
+        extra: { rejected: true, reason: "role_missing" },
+      });
       reconcile(fresh, { silent: true, navigateOnFallback: true });
       return false;
     }
-    const previous = spaceRef.current;
     setSpaceState(s);
     spaceRef.current = s;
     void persistSpace(s, userId, fresh);
@@ -249,9 +295,10 @@ export function useSpace() {
         `Vista actualizada a ${s === "chofer" ? "Espacio Choferes" : "Portal Proveedor"}. Tu sesión sigue activa.`,
         { duration: 2500 }
       );
+      logAudit({ kind: "user", from: previous, to: s, source: "user" });
     }
     return true;
-  }, [userId, reconcile, persistSpace]);
+  }, [userId, reconcile, persistSpace, logAudit]);
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
 
@@ -271,15 +318,25 @@ export function useSpace() {
     if (target === spaceRef.current) return;
     // Only reflect the route if the user actually has that role
     if (!roles.includes(ROLE_FOR_SPACE[target])) return;
+    const previous = spaceRef.current;
     setSpaceState(target);
     spaceRef.current = target;
+    // Deep-link driven change: informational only, never an error toast or
+    // banner — expected navigation, not a discrepancy.
+    logAudit({
+      kind: "deep-link",
+      from: previous,
+      to: target,
+      source: "deep-link",
+      extra: { pathname, hash },
+    });
     // Persist quietly only for dual-role users so we don't clobber a single-role
     // user's stored preference with a passing deep link.
     if (canSwitch && userId) void persistSpace(target, userId, roles);
     // `hash` is included in deps intentionally so hash-only URL changes still
     // re-run this effect, but the dedupe above guarantees they never overwrite
     // the active space.
-  }, [pathname, hash, loaded, canSwitch, roles, userId, persistSpace]);
+  }, [pathname, hash, loaded, canSwitch, roles, userId, persistSpace, logAudit]);
 
 
   return { space, setSpace, canSwitch, roles, loaded, autoChange, dismissAutoChange };

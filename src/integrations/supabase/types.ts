@@ -840,6 +840,7 @@ export type Database = {
           id: string
           kind: string
           removed_roles: string[]
+          source: string | null
           to_space: string | null
           user_id: string
         }
@@ -851,6 +852,7 @@ export type Database = {
           id?: string
           kind: string
           removed_roles?: string[]
+          source?: string | null
           to_space?: string | null
           user_id: string
         }
@@ -862,6 +864,7 @@ export type Database = {
           id?: string
           kind?: string
           removed_roles?: string[]
+          source?: string | null
           to_space?: string | null
           user_id?: string
         }
