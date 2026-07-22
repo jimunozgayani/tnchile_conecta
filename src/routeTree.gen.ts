@@ -20,6 +20,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InvitacionChoferTokenRouteImport } from './routes/invitacion-chofer.$token'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
+import { Route as AppProveedoresRouteImport } from './routes/_app.proveedores'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
 import { Route as AppOperacionesDisponibilidadMapaRouteImport } from './routes/_app.operaciones-disponibilidad-mapa'
 import { Route as AppOperacionesCotizacionesRouteImport } from './routes/_app.operaciones-cotizaciones'
@@ -93,6 +94,11 @@ const InvitacionChoferTokenRoute = InvitacionChoferTokenRouteImport.update({
 const AppTarifasRoute = AppTarifasRouteImport.update({
   id: '/tarifas',
   path: '/tarifas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProveedoresRoute = AppProveedoresRouteImport.update({
+  id: '/proveedores',
+  path: '/proveedores',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPerfilRoute = AppPerfilRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/perfil': typeof AppPerfilRoute
+  '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
 }
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/perfil': typeof AppPerfilRoute
+  '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
 }
@@ -296,6 +304,7 @@ export interface FileRoutesById {
   '/_app/operaciones-cotizaciones': typeof AppOperacionesCotizacionesRoute
   '/_app/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/_app/perfil': typeof AppPerfilRoute
+  '/_app/proveedores': typeof AppProveedoresRoute
   '/_app/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
 }
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/operaciones-cotizaciones'
     | '/operaciones-disponibilidad-mapa'
     | '/perfil'
+    | '/proveedores'
     | '/tarifas'
     | '/invitacion-chofer/$token'
   fileRoutesByTo: FileRoutesByTo
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/operaciones-cotizaciones'
     | '/operaciones-disponibilidad-mapa'
     | '/perfil'
+    | '/proveedores'
     | '/tarifas'
     | '/invitacion-chofer/$token'
   id:
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/_app/operaciones-cotizaciones'
     | '/_app/operaciones-disponibilidad-mapa'
     | '/_app/perfil'
+    | '/_app/proveedores'
     | '/_app/tarifas'
     | '/invitacion-chofer/$token'
   fileRoutesById: FileRoutesById
@@ -489,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/tarifas'
       fullPath: '/tarifas'
       preLoaderRoute: typeof AppTarifasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/proveedores': {
+      id: '/_app/proveedores'
+      path: '/proveedores'
+      fullPath: '/proveedores'
+      preLoaderRoute: typeof AppProveedoresRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/perfil': {
@@ -655,6 +674,7 @@ interface AppRouteChildren {
   AppOperacionesCotizacionesRoute: typeof AppOperacionesCotizacionesRoute
   AppOperacionesDisponibilidadMapaRoute: typeof AppOperacionesDisponibilidadMapaRoute
   AppPerfilRoute: typeof AppPerfilRoute
+  AppProveedoresRoute: typeof AppProveedoresRoute
   AppTarifasRoute: typeof AppTarifasRoute
 }
 
@@ -679,6 +699,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOperacionesCotizacionesRoute: AppOperacionesCotizacionesRoute,
   AppOperacionesDisponibilidadMapaRoute: AppOperacionesDisponibilidadMapaRoute,
   AppPerfilRoute: AppPerfilRoute,
+  AppProveedoresRoute: AppProveedoresRoute,
   AppTarifasRoute: AppTarifasRoute,
 }
 
