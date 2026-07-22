@@ -177,9 +177,16 @@ export function useSpace() {
       reconcile(fresh, { silent: true, navigateOnFallback: true });
       return false;
     }
+    const previous = spaceRef.current;
     setSpaceState(s);
     spaceRef.current = s;
     void persistSpace(s, userId, fresh);
+    if (s !== previous) {
+      toast.success(
+        `Vista actualizada a ${s === "chofer" ? "Espacio Choferes" : "Portal Proveedor"}. Tu sesión sigue activa.`,
+        { duration: 2500 }
+      );
+    }
     return true;
   }, [userId, reconcile, persistSpace]);
 
