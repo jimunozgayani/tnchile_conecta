@@ -35,8 +35,8 @@ function InvitacionChoferPage() {
       try {
         const res = await getDriverInvitationByToken({ data: { token } });
         setStatus(res.status);
-        setDriverName(res.driverName);
-        setEmail(res.email);
+        setDriverName(res.driverName ?? null);
+        setEmail(res.email ?? null);
       } catch {
         setStatus("invalida");
       }
