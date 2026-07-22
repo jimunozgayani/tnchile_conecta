@@ -7,6 +7,7 @@ import markUrl from "@/assets/tn-chile-mark.png";
 import { SessionExpiryWarning } from "./SessionExpiryWarning";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
+import { CriticalAlertsListener } from "./CriticalAlertsListener";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { InstallPrompt } from "./InstallPrompt";
 import { Footer } from "./Footer";
@@ -281,6 +282,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setSpace={canSwitch ? setSpace : undefined}
       />
       <InstallPrompt />
+      <CriticalAlertsListener />
     </div>
   );
 }
