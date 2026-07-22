@@ -5,7 +5,7 @@ import type { Space } from "@/hooks/useSpace";
 
 type Props = {
   space: Space;
-  setSpace: (s: Space) => void;
+  setSpace: (s: Space) => Promise<boolean> | boolean | void;
   className?: string;
   compact?: boolean;
 };
@@ -19,10 +19,10 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
   const navigate = useNavigate();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  const go = (s: Space) => {
+  const go = async (s: Space) => {
     if (s === space) return;
-    setSpace(s);
-    navigate({ to: s === "chofer" ? "/chofer" : "/dashboard" });
+    const ok = await Promise.resolve(setSpace(s));
+    if (ok !== false) navigate({ to: s === "chofer" ? "/chofer" : "/dashboard" });
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

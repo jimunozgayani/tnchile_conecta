@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Space = "proveedor" | "chofer";
@@ -11,22 +12,32 @@ function spaceFromPath(pathname: string): Space | null {
   return null;
 }
 
+const ROLE_FOR_SPACE: Record<Space, string> = {
+  proveedor: "proveedor",
+  chofer: "chofer",
+};
+
+async function fetchRoles(userId: string): Promise<string[]> {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  return (data ?? []).map((r: any) => r.role as string);
+}
+
 export function useSpace() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [space, setSpaceState] = useState<Space>("proveedor");
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoaded(true); return; }
       setUserId(user.id);
-      const [{ data: rolesData }, { data: prefData }] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", user.id),
+      const [rs, { data: prefData }] = await Promise.all([
+        fetchRoles(user.id),
         supabase.from("user_preferences" as any).select("active_space").eq("user_id", user.id).maybeSingle(),
       ]);
-      const rs = (rolesData ?? []).map((r: any) => r.role as string);
       setRoles(rs);
       const hasProv = rs.includes("proveedor");
       const hasChof = rs.includes("chofer");
@@ -47,16 +58,43 @@ export function useSpace() {
     })();
   }, []);
 
-  const setSpace = useCallback((s: Space) => {
+  const setSpace = useCallback(async (s: Space): Promise<boolean> => {
+    if (!userId) return false;
+    // Re-validate roles from DB before switching — the user may have lost the role
+    const fresh = await fetchRoles(userId);
+    setRoles(fresh);
+    const required = ROLE_FOR_SPACE[s];
+    if (!fresh.includes(required)) {
+      toast.error(
+        s === "chofer"
+          ? "Ya no tienes acceso al espacio Chofer. Contacta al administrador si crees que es un error."
+          : "Ya no tienes acceso al espacio Proveedor. Contacta al administrador si crees que es un error."
+      );
+      // If current space also became invalid, bounce to whatever they still have
+      if (!fresh.includes(ROLE_FOR_SPACE[space])) {
+        const fallback: Space | null = fresh.includes("proveedor")
+          ? "proveedor"
+          : fresh.includes("chofer")
+            ? "chofer"
+            : null;
+        if (fallback) {
+          setSpaceState(fallback);
+          try { localStorage.setItem(KEY, fallback); } catch {}
+          navigate({ to: fallback === "chofer" ? "/chofer" : "/dashboard" });
+        } else {
+          navigate({ to: "/" });
+        }
+      }
+      return false;
+    }
     setSpaceState(s);
     try { localStorage.setItem(KEY, s); } catch {}
-    if (userId) {
-      supabase
-        .from("user_preferences" as any)
-        .upsert({ user_id: userId, active_space: s }, { onConflict: "user_id" })
-        .then(() => {});
-    }
-  }, [userId]);
+    supabase
+      .from("user_preferences" as any)
+      .upsert({ user_id: userId, active_space: s }, { onConflict: "user_id" })
+      .then(() => {});
+    return true;
+  }, [userId, space, navigate]);
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
 
@@ -69,7 +107,7 @@ export function useSpace() {
     if (!target) return;
     if (lastSyncedPath.current === pathname) return;
     lastSyncedPath.current = pathname;
-    if (target !== space) setSpace(target);
+    if (target !== space) void setSpace(target);
   }, [pathname, loaded, canSwitch, space, setSpace]);
 
   return { space, setSpace, canSwitch, roles, loaded };
