@@ -114,6 +114,7 @@ async function loadHook() {
 beforeEach(() => {
   vi.resetModules();
   mockPathname = "/";
+  mockHash = "";
   resetState();
 });
 
