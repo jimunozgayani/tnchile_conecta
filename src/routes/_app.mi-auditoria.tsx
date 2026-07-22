@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
 import { useEffect, useState, useCallback } from "react";
-import { History as HistoryIcon, RefreshCw, ArrowRightLeft, Plus, XCircle } from "lucide-react";
+import { History as HistoryIcon, RefreshCw, ArrowRightLeft, Plus, XCircle, MousePointerClick, Link as LinkIcon, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
