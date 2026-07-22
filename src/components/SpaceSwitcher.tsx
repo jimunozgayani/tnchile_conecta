@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Truck, Briefcase, Check } from "lucide-react";
+import { Truck, Briefcase, Check, Lock } from "lucide-react";
 import { useRef, type KeyboardEvent } from "react";
 import type { Space } from "@/hooks/useSpace";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -9,16 +9,19 @@ type Props = {
   setSpace: (s: Space) => Promise<boolean> | boolean | void;
   className?: string;
   compact?: boolean;
+  roles?: string[];
 };
 
-const SPACES: { value: Space; label: string; fullLabel: string; Icon: typeof Briefcase }[] = [
-  { value: "proveedor", label: "Proveedor", fullLabel: "Portal Proveedor", Icon: Briefcase },
-  { value: "chofer", label: "Chofer", fullLabel: "Espacio Choferes", Icon: Truck },
+const SPACES: { value: Space; role: string; label: string; fullLabel: string; Icon: typeof Briefcase }[] = [
+  { value: "proveedor", role: "proveedor", label: "Proveedor", fullLabel: "Portal Proveedor", Icon: Briefcase },
+  { value: "chofer", role: "chofer", label: "Chofer", fullLabel: "Espacio Choferes", Icon: Truck },
 ];
 
-export function SpaceSwitcher({ space, setSpace, className = "", compact = false }: Props) {
+export function SpaceSwitcher({ space, setSpace, className = "", compact = false, roles }: Props) {
   const navigate = useNavigate();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const isEnabled = (s: (typeof SPACES)[number]) => !roles || roles.includes(s.role);
 
   const go = async (s: Space) => {
     if (s === space) return;
@@ -27,22 +30,25 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const enabledIdx = SPACES.map((s, i) => (isEnabled(s) ? i : -1)).filter((i) => i >= 0);
+    if (enabledIdx.length === 0) return;
     const currentIndex = SPACES.findIndex((s) => s.value === space);
+    const pos = enabledIdx.indexOf(currentIndex);
     let nextIndex = currentIndex;
     switch (e.key) {
       case "ArrowRight":
       case "ArrowDown":
-        nextIndex = (currentIndex + 1) % SPACES.length;
+        nextIndex = enabledIdx[(Math.max(pos, 0) + 1) % enabledIdx.length];
         break;
       case "ArrowLeft":
       case "ArrowUp":
-        nextIndex = (currentIndex - 1 + SPACES.length) % SPACES.length;
+        nextIndex = enabledIdx[(Math.max(pos, 0) - 1 + enabledIdx.length) % enabledIdx.length];
         break;
       case "Home":
-        nextIndex = 0;
+        nextIndex = enabledIdx[0];
         break;
       case "End":
-        nextIndex = SPACES.length - 1;
+        nextIndex = enabledIdx[enabledIdx.length - 1];
         break;
       default:
         return;
@@ -68,6 +74,8 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
       >
         {SPACES.map((s, i) => {
           const selected = space === s.value;
+          const enabled = isEnabled(s);
+          const disabledLabel = `${s.fullLabel} — no disponible para tu cuenta`;
           return (
             <Tooltip key={s.value}>
               <TooltipTrigger asChild>
@@ -78,22 +86,34 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
                   type="button"
                   role="radio"
                   aria-checked={selected}
+                  aria-disabled={!enabled}
+                  disabled={!enabled}
                   aria-label={
-                    selected
+                    !enabled
+                      ? disabledLabel
+                      : selected
                       ? `${s.fullLabel} (espacio activo)`
                       : `Cambiar a ${s.fullLabel}`
                   }
-                  tabIndex={selected ? 0 : -1}
-                  onClick={() => go(s.value)}
+                  tabIndex={selected && enabled ? 0 : -1}
+                  onClick={() => enabled && go(s.value)}
                   className={`${base} ${
-                    selected
+                    !enabled
+                      ? "cursor-not-allowed text-white/40 opacity-60"
+                      : selected
                       ? "bg-white text-primary shadow-sm ring-1 ring-white"
                       : "text-white/90 hover:bg-white/10"
                   }`}
                 >
                   <s.Icon className="h-3.5 w-3.5" aria-hidden="true" />
                   {!compact && <span>{s.label}</span>}
-                  {selected && (
+                  {!enabled && (
+                    <>
+                      <Lock className="ml-0.5 h-3 w-3" aria-hidden="true" />
+                      <span className="sr-only">No disponible</span>
+                    </>
+                  )}
+                  {enabled && selected && (
                     <>
                       <span
                         className="ml-0.5 inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-primary"
@@ -104,8 +124,18 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[220px] text-xs leading-snug">
-                {selected ? (
+              <TooltipContent side="bottom" className="max-w-[240px] text-xs leading-snug">
+                {!enabled ? (
+                  <span className="flex flex-col gap-0.5">
+                    <span className="flex items-center gap-1.5 font-semibold">
+                      <Lock className="h-3 w-3" aria-hidden="true" />
+                      No disponible
+                    </span>
+                    <span>
+                      Tu cuenta no tiene el rol {s.label} asignado. Contacta al administrador si necesitas acceso a {s.fullLabel}.
+                    </span>
+                  </span>
+                ) : selected ? (
                   <span className="flex items-center gap-1.5 font-semibold">
                     <Check className="h-3 w-3" aria-hidden="true" />
                     Espacio activo: {s.fullLabel}

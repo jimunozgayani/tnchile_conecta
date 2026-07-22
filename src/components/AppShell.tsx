@@ -241,8 +241,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Tooltip>
               </TooltipProvider>
             )}
-            {canSwitch && !isAdmin && !isCliente && (
-              <SpaceSwitcher space={space} setSpace={setSpace} compact className="hidden sm:inline-flex" />
+            {(isChofer || isProveedor) && !isAdmin && !isCliente && (
+              <SpaceSwitcher
+                space={space}
+                setSpace={setSpace}
+                roles={roles}
+                compact
+                className="hidden sm:inline-flex"
+              />
             )}
             <div className="hidden text-xs italic opacity-90 lg:block">La logística la hacemos juntos.</div>
             <NotificationBell />
