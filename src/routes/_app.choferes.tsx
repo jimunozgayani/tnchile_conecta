@@ -225,3 +225,13 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
     </div>
   );
 }
+
+function AccountBadge({ status }: { status: InvStatus }) {
+  if (status === "active")
+    return <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">Cuenta activa</span>;
+  if (status === "pending")
+    return <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">Invitación pendiente</span>;
+  if (status === "expired")
+    return <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">Invitación expirada</span>;
+  return null;
+}
