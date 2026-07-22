@@ -19,10 +19,10 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
   const navigate = useNavigate();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  const go = (s: Space) => {
+  const go = async (s: Space) => {
     if (s === space) return;
-    setSpace(s);
-    navigate({ to: s === "chofer" ? "/chofer" : "/dashboard" });
+    const ok = await setSpace(s);
+    if (ok) navigate({ to: s === "chofer" ? "/chofer" : "/dashboard" });
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
