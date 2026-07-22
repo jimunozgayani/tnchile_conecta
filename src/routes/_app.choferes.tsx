@@ -9,6 +9,7 @@ import { CLASES_LICENCIA } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { validateUpload } from "@/lib/upload-validation";
 import { inviteDriver } from "@/lib/driver-invitations.functions";
+import { saveOwnerDriver } from "@/lib/owner-driver.functions";
 
 export const Route = createFileRoute("/_app/choferes")({
   head: () => pageHead("/choferes", "Mis choferes · Portal Proveedores TN Chile", "Gestiona los choferes de tu empresa en TN Chile: licencias, documentos, vigencias y camiones asignados a cada conductor."),
@@ -18,12 +19,13 @@ export const Route = createFileRoute("/_app/choferes")({
 const EMPTY = {
   nombre_completo: "", rut: "", email: "", celular: "", clase_licencia: "A1",
   licencia_vencimiento: "", carnet_vencimiento: "", foto_url: "",
+  es_dueno_conductor: false,
 };
 
 const norm = (s: string | null | undefined) =>
   (s ?? "").toLowerCase().replace(/[^0-9k]/g, "");
 
-type InvStatus = "active" | "pending" | "expired" | "none";
+type InvStatus = "active" | "pending" | "expired" | "owner" | "none";
 
 function ChoferesPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -36,6 +38,7 @@ function ChoferesPage() {
   const [userId, setUserId] = useState("");
   const [inviting, setInviting] = useState<string | null>(null);
   const invite = useServerFn(inviteDriver);
+  const saveOwner = useServerFn(saveOwnerDriver);
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -52,14 +55,18 @@ function ChoferesPage() {
             .in("driver_id", ids).order("created_at", { ascending: false })
         : Promise.resolve({ data: [] as any[] }),
       user
-        ? supabase.from("chofer_perfiles").select("rut,estado_validacion").eq("proveedor_id", user.id)
+        ? supabase.from("chofer_perfiles").select("rut,user_id,estado_validacion").eq("proveedor_id", user.id)
         : Promise.resolve({ data: [] as any[] }),
     ]);
     const perfilRuts = new Set((perfiles ?? []).map((p: any) => norm(p.rut)));
+    const ownerRuts = new Set(
+      (perfiles ?? []).filter((p: any) => p.user_id === user?.id).map((p: any) => norm(p.rut))
+    );
     const latestByDriver: Record<string, any> = {};
     for (const i of invs ?? []) if (!latestByDriver[i.driver_id]) latestByDriver[i.driver_id] = i;
     const st: Record<string, InvStatus> = {};
     for (const d of drivers) {
+      if (ownerRuts.has(norm(d.rut))) { st[d.id] = "owner"; continue; }
       if (perfilRuts.has(norm(d.rut))) { st[d.id] = "active"; continue; }
       const inv = latestByDriver[d.id];
       if (!inv) { st[d.id] = "none"; continue; }
@@ -103,7 +110,28 @@ function ChoferesPage() {
   };
 
   const save = async () => {
+    if (form.es_dueno_conductor) {
+      try {
+        await saveOwner({ data: {
+          driver_id: editing ?? undefined,
+          nombre_completo: form.nombre_completo,
+          rut: form.rut,
+          email: form.email || null,
+          celular: form.celular || null,
+          clase_licencia: form.clase_licencia,
+          licencia_vencimiento: form.licencia_vencimiento || null,
+          carnet_vencimiento: form.carnet_vencimiento || null,
+          foto_url: form.foto_url || null,
+        }});
+        toast.success(editing ? "Actualizado" : "Agregado como dueño-conductor");
+        setOpen(false); load();
+      } catch (e: any) {
+        toast.error(e.message ?? "No se pudo guardar");
+      }
+      return;
+    }
     const payload: any = { ...form, user_id: userId };
+    delete payload.es_dueno_conductor;
     ["licencia_vencimiento", "carnet_vencimiento"].forEach((k) => { if (!payload[k]) payload[k] = null; });
     if (payload.email) payload.email = String(payload.email).trim().toLowerCase();
     else payload.email = null;
@@ -164,14 +192,14 @@ function ChoferesPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-end gap-3 border-t pt-3 text-sm">
-                {statuses[d.id] !== "active" && (
+                {statuses[d.id] !== "active" && statuses[d.id] !== "owner" && (
                   <button onClick={() => handleInvite(d)} disabled={inviting === d.id}
                     className="flex items-center gap-1 rounded-md border border-primary px-2.5 py-1 text-primary hover:bg-primary-soft disabled:opacity-50">
                     <Mail className="h-3.5 w-3.5" />
                     {inviting === d.id ? "Enviando..." : statuses[d.id] === "pending" ? "Reenviar" : "Invitar"}
                   </button>
                 )}
-                <button onClick={() => { setForm(d); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
+                <button onClick={() => { setForm({ ...EMPTY, ...d, es_dueno_conductor: statuses[d.id] === "owner" }); setEditing(d.id); setOpen(true); }} className="text-primary hover:underline">Editar</button>
                 <button onClick={() => remove(d.id)} aria-label="Eliminar chofer" className="text-destructive"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
@@ -206,6 +234,16 @@ function ChoferesPage() {
                   className="mt-1 block text-sm" />
                 {form.foto_url && <p className="mt-1 text-xs text-success">✓ Foto cargada</p>}
               </div>
+              {(!editing || statuses[editing] !== "active") && (
+                <label className="md:col-span-2 mt-1 flex items-start gap-2 rounded-md border border-primary/30 bg-primary-soft/40 p-3 text-sm">
+                  <input type="checkbox" className="mt-0.5" checked={!!form.es_dueno_conductor}
+                    onChange={(e) => setForm({ ...form, es_dueno_conductor: e.target.checked })} />
+                  <span>
+                    <span className="font-medium">Soy yo mismo el chofer de este camión (dueño-conductor)</span>
+                    <span className="block text-xs text-muted-foreground">Se vinculará tu cuenta al chofer automáticamente. Igualmente deberás cargar licencia y cédula para validación.</span>
+                  </span>
+                </label>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button onClick={() => setOpen(false)} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
@@ -229,6 +267,8 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
 }
 
 function AccountBadge({ status }: { status: InvStatus }) {
+  if (status === "owner")
+    return <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Dueño-conductor</span>;
   if (status === "active")
     return <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">Cuenta activa</span>;
   if (status === "pending")
