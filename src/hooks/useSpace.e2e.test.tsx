@@ -187,7 +187,7 @@ afterEach(() => {
 describe("E2E · Space switching flow", () => {
   it("user clicks the switcher → success toast, active space updates, user_preferences persists", async () => {
     resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
-    const { getByTestId, getByRole, rerender } = await mount();
+    const { getByTestId, getByRole, rerenderHarness } = await mount();
     expect(getByTestId("active-space").textContent).toBe("proveedor");
 
     const upsertsAfterMount = upsertSpy.mock.calls.length;
@@ -203,7 +203,8 @@ describe("E2E · Space switching flow", () => {
     // so the route-sync effect sees the new pathname (as it would in-app).
     expect(navigateMock).toHaveBeenCalledWith(expect.objectContaining({ to: "/chofer" }));
     mockPathname = "/chofer";
-    await act(async () => { rerender(<></>); });
+    await act(async () => { rerenderHarness(); });
+
 
 
 
