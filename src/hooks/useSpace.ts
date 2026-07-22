@@ -42,6 +42,9 @@ export function useSpace() {
   const [loaded, setLoaded] = useState(false);
   const [space, setSpaceState] = useState<Space>("proveedor");
   const [userId, setUserId] = useState<string | null>(null);
+  const [autoChange, setAutoChange] = useState<SpaceAutoChange | null>(null);
+  const dismissAutoChange = useCallback(() => setAutoChange(null), []);
+
   const navigate = useNavigate();
   const spaceRef = useRef<Space>("proveedor");
   useEffect(() => { spaceRef.current = space; }, [space]);
