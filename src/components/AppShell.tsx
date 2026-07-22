@@ -159,6 +159,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <ShieldCheck className="h-4 w-4" />
                   Administración
                 </Link>
+                <Link to="/admin-choferes" onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname.startsWith("/admin-choferes") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Invitar choferes
+                </Link>
                 <Link to="/operaciones" onClick={() => setOpen(false)}
                   className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     location.pathname.startsWith("/operaciones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
