@@ -59,5 +59,18 @@ export function useSpace() {
   }, [userId]);
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
+
+  // Sync space with the current route (e.g. deep link into /dashboard or /chofer)
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lastSyncedPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (!loaded || !canSwitch) return;
+    const target = spaceFromPath(pathname);
+    if (!target) return;
+    if (lastSyncedPath.current === pathname) return;
+    lastSyncedPath.current = pathname;
+    if (target !== space) setSpace(target);
+  }, [pathname, loaded, canSwitch, space, setSpace]);
+
   return { space, setSpace, canSwitch, roles, loaded };
 }
