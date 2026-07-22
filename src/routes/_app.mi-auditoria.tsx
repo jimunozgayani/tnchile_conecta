@@ -123,12 +123,30 @@ function MiAuditoriaPage() {
           {items.map((e) => (
             <li key={e.id} className="border rounded-lg p-3 bg-card">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <KindBadge kind={e.kind} />
+                <KindBadge kind={e.kind} rejected={e.context?.rejected} />
                 <time className="text-xs text-muted-foreground">
                   {new Date(e.created_at).toLocaleString("es-CL")}
                 </time>
               </div>
               <div className="mt-2 text-sm">
+                {e.context?.rejected && (
+                  <p className="text-red-800">
+                    Se rechazó tu intento de cambiar a <strong>{spaceLabel(e.to_space)}</strong>
+                    {e.context?.reason ? <> ({e.context.reason})</> : null}.
+                  </p>
+                )}
+                {!e.context?.rejected && e.kind === "user" && (
+                  <p>
+                    Cambiaste manualmente de <strong>{spaceLabel(e.from_space)}</strong> a{" "}
+                    <strong>{spaceLabel(e.to_space)}</strong>.
+                  </p>
+                )}
+                {e.kind === "deep-link" && (
+                  <p>
+                    Un enlace directo te llevó de <strong>{spaceLabel(e.from_space)}</strong> a{" "}
+                    <strong>{spaceLabel(e.to_space)}</strong>.
+                  </p>
+                )}
                 {e.kind === "switched" && (
                   <p>
                     Cambiado de <strong>{spaceLabel(e.from_space)}</strong> a{" "}
