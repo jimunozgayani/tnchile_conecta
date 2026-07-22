@@ -1,7 +1,8 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Truck, Users, DollarSign, FileText } from "lucide-react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { LayoutDashboard, Truck, Users, DollarSign, FileText, Briefcase, RefreshCw } from "lucide-react";
+import type { Space } from "@/hooks/useSpace";
 
-const TABS = [
+const PROVEEDOR_TABS = [
   { to: "/dashboard", label: "Panel", icon: LayoutDashboard },
   { to: "/camiones", label: "Equipos", icon: Truck },
   { to: "/choferes", label: "Choferes", icon: Users },
@@ -9,14 +10,38 @@ const TABS = [
   { to: "/documentos", label: "Docs", icon: FileText },
 ] as const;
 
-export function MobileBottomNav() {
+const CHOFER_TABS = [
+  { to: "/chofer", label: "Inicio", icon: LayoutDashboard },
+  { to: "/mis-viajes", label: "Viajes", icon: Briefcase },
+  { to: "/mi-disponibilidad-chofer", label: "Disponibilidad", icon: Truck },
+] as const;
+
+type Props = {
+  space?: Space;
+  setSpace?: (s: Space) => void;
+};
+
+export function MobileBottomNav({ space, setSpace }: Props) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const canSwitch = !!space && !!setSpace;
+  const tabs = space === "chofer" ? CHOFER_TABS : PROVEEDOR_TABS;
+  const cols = canSwitch ? tabs.length + 1 : tabs.length;
+
+  const toggleSpace = () => {
+    if (!setSpace || !space) return;
+    const next: Space = space === "chofer" ? "proveedor" : "chofer";
+    setSpace(next);
+    navigate({ to: next === "chofer" ? "/chofer" : "/dashboard" });
+  };
+
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 grid border-t bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] md:hidden"
+      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
       aria-label="Navegación inferior"
     >
-      {TABS.map(({ to, label, icon: Icon }) => {
+      {tabs.map(({ to, label, icon: Icon }) => {
         const active = pathname === to || pathname.startsWith(to + "/");
         return (
           <Link
@@ -30,6 +55,18 @@ export function MobileBottomNav() {
           </Link>
         );
       })}
+      {canSwitch && (
+        <button
+          type="button"
+          onClick={toggleSpace}
+          aria-label={`Cambiar a espacio ${space === "chofer" ? "proveedor" : "chofer"}`}
+          className="flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] font-semibold"
+          style={{ color: "#2D7A45" }}
+        >
+          <RefreshCw className="h-5 w-5" />
+          <span>{space === "chofer" ? "Proveedor" : "Chofer"}</span>
+        </button>
+      )}
     </nav>
   );
 }

@@ -9,6 +9,8 @@ import { NotificationBell } from "./NotificationBell";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { InstallPrompt } from "./InstallPrompt";
 import { Footer } from "./Footer";
+import { useSpace } from "@/hooks/useSpace";
+import { SpaceSwitcher } from "./SpaceSwitcher";
 
 
 const NAV = [
@@ -28,7 +30,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
-  const [isChofer, setIsChofer] = useState(false);
+  const { space, setSpace, canSwitch, roles } = useSpace();
+  const isChofer = roles.includes("chofer");
+  const isProveedor = roles.includes("proveedor");
+  // Active view: if switcher applies, follow `space`; otherwise fall back to role
+  const view: "admin" | "cliente" | "chofer" | "proveedor" =
+    isAdmin ? "admin"
+    : isCliente ? "cliente"
+    : canSwitch ? (space === "chofer" ? "chofer" : "proveedor")
+    : isChofer ? "chofer"
+    : "proveedor";
+  const showChoferNav = view === "chofer";
+  const showProveedorNav = view === "proveedor";
+  const showClienteNav = view === "cliente";
 
   useEffect(() => {
     (async () => {
@@ -38,7 +52,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const rs = (data ?? []).map((r: any) => r.role);
       setIsAdmin(rs.includes("admin"));
       setIsCliente(rs.includes("cliente"));
-      setIsChofer(rs.includes("chofer"));
     })();
   }, []);
 
@@ -71,7 +84,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button className="md:hidden" onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="space-y-1 p-3">
-          {isCliente && !isAdmin && (
+          {showClienteNav && (
             <Link to="/cliente" onClick={() => setOpen(false)}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname.startsWith("/cliente") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
@@ -80,7 +93,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Mi portal
             </Link>
           )}
-          {isChofer && !isAdmin && (
+          {showChoferNav && (
             <>
               <Link to="/chofer" onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
@@ -106,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </>
           )}
 
-          {!isCliente && !isChofer && NAV.map(({ to, label, icon: Icon }) => {
+          {showProveedorNav && NAV.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
             const showBadge = to === "/mensajes" && unreadMsgs > 0;
             return (
@@ -126,7 +139,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          {!isAdmin && !isCliente && !isChofer && (
+          {showProveedorNav && (
             <>
               <Link to="/mi-disponibilidad" onClick={() => setOpen(false)}
                 className={`mt-3 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-sm font-medium transition-colors ${
@@ -198,15 +211,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden text-xs italic opacity-90 md:block">La logística la hacemos juntos.</div>
+            {canSwitch && !isAdmin && !isCliente && (
+              <SpaceSwitcher space={space} setSpace={setSpace} compact className="hidden sm:inline-flex" />
+            )}
+            <div className="hidden text-xs italic opacity-90 lg:block">La logística la hacemos juntos.</div>
             <NotificationBell />
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
         <Footer />
       </div>
       <SessionExpiryWarning />
-      <MobileBottomNav />
+      <MobileBottomNav
+        space={canSwitch ? space : undefined}
+        setSpace={canSwitch ? setSpace : undefined}
+      />
       <InstallPrompt />
     </div>
   );
