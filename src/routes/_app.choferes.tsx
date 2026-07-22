@@ -110,7 +110,28 @@ function ChoferesPage() {
   };
 
   const save = async () => {
+    if (form.es_dueno_conductor) {
+      try {
+        await saveOwner({ data: {
+          driver_id: editing ?? undefined,
+          nombre_completo: form.nombre_completo,
+          rut: form.rut,
+          email: form.email || null,
+          celular: form.celular || null,
+          clase_licencia: form.clase_licencia,
+          licencia_vencimiento: form.licencia_vencimiento || null,
+          carnet_vencimiento: form.carnet_vencimiento || null,
+          foto_url: form.foto_url || null,
+        }});
+        toast.success(editing ? "Actualizado" : "Agregado como dueño-conductor");
+        setOpen(false); load();
+      } catch (e: any) {
+        toast.error(e.message ?? "No se pudo guardar");
+      }
+      return;
+    }
     const payload: any = { ...form, user_id: userId };
+    delete payload.es_dueno_conductor;
     ["licencia_vencimiento", "carnet_vencimiento"].forEach((k) => { if (!payload[k]) payload[k] = null; });
     if (payload.email) payload.email = String(payload.email).trim().toLowerCase();
     else payload.email = null;
