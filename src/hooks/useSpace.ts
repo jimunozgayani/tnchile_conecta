@@ -267,16 +267,26 @@ export function useSpace() {
     const fresh = await fetchRoles(userId);
     setRoles(fresh);
     const required = ROLE_FOR_SPACE[s];
+    const previous = spaceRef.current;
     if (!fresh.includes(required)) {
+      // Real discrepancy: the user asked for a space they no longer own.
+      // Surface an error toast and record the rejected attempt with context
+      // for triage. This is the only "user" path that emits an error.
       toast.error(
         s === "chofer"
           ? "Ya no tienes acceso al espacio Chofer. Contacta al administrador si crees que es un error."
           : "Ya no tienes acceso al espacio Proveedor. Contacta al administrador si crees que es un error."
       );
+      logAudit({
+        kind: "user",
+        from: previous,
+        to: s,
+        source: "user",
+        extra: { rejected: true, reason: "role_missing" },
+      });
       reconcile(fresh, { silent: true, navigateOnFallback: true });
       return false;
     }
-    const previous = spaceRef.current;
     setSpaceState(s);
     spaceRef.current = s;
     void persistSpace(s, userId, fresh);
@@ -285,9 +295,10 @@ export function useSpace() {
         `Vista actualizada a ${s === "chofer" ? "Espacio Choferes" : "Portal Proveedor"}. Tu sesión sigue activa.`,
         { duration: 2500 }
       );
+      logAudit({ kind: "user", from: previous, to: s, source: "user" });
     }
     return true;
-  }, [userId, reconcile, persistSpace]);
+  }, [userId, reconcile, persistSpace, logAudit]);
 
   const canSwitch = roles.includes("proveedor") && roles.includes("chofer");
 
@@ -307,15 +318,25 @@ export function useSpace() {
     if (target === spaceRef.current) return;
     // Only reflect the route if the user actually has that role
     if (!roles.includes(ROLE_FOR_SPACE[target])) return;
+    const previous = spaceRef.current;
     setSpaceState(target);
     spaceRef.current = target;
+    // Deep-link driven change: informational only, never an error toast or
+    // banner — expected navigation, not a discrepancy.
+    logAudit({
+      kind: "deep-link",
+      from: previous,
+      to: target,
+      source: "deep-link",
+      extra: { pathname, hash },
+    });
     // Persist quietly only for dual-role users so we don't clobber a single-role
     // user's stored preference with a passing deep link.
     if (canSwitch && userId) void persistSpace(target, userId, roles);
     // `hash` is included in deps intentionally so hash-only URL changes still
     // re-run this effect, but the dedupe above guarantees they never overwrite
     // the active space.
-  }, [pathname, hash, loaded, canSwitch, roles, userId, persistSpace]);
+  }, [pathname, hash, loaded, canSwitch, roles, userId, persistSpace, logAudit]);
 
 
   return { space, setSpace, canSwitch, roles, loaded, autoChange, dismissAutoChange };
