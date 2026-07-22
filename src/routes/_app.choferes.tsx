@@ -267,6 +267,8 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
 }
 
 function AccountBadge({ status }: { status: InvStatus }) {
+  if (status === "owner")
+    return <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Dueño-conductor</span>;
   if (status === "active")
     return <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">Cuenta activa</span>;
   if (status === "pending")
