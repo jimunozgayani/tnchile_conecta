@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CLASES_LICENCIA } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { validateUpload } from "@/lib/upload-validation";
+import { inviteDriver } from "@/lib/driver-invitations.functions";
 
 export const Route = createFileRoute("/_app/choferes")({
   head: () => pageHead("/choferes", "Mis choferes · Portal Proveedores TN Chile", "Gestiona los choferes de tu empresa en TN Chile: licencias, documentos, vigencias y camiones asignados a cada conductor."),
@@ -14,9 +16,14 @@ export const Route = createFileRoute("/_app/choferes")({
 });
 
 const EMPTY = {
-  nombre_completo: "", rut: "", celular: "", clase_licencia: "A1",
+  nombre_completo: "", rut: "", email: "", celular: "", clase_licencia: "A1",
   licencia_vencimiento: "", carnet_vencimiento: "", foto_url: "",
 };
+
+const norm = (s: string | null | undefined) =>
+  (s ?? "").toLowerCase().replace(/[^0-9k]/g, "");
+
+type InvStatus = "active" | "pending" | "expired" | "none";
 
 function ChoferesPage() {
   const [items, setItems] = useState<any[]>([]);
