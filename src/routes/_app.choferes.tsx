@@ -19,12 +19,13 @@ export const Route = createFileRoute("/_app/choferes")({
 const EMPTY = {
   nombre_completo: "", rut: "", email: "", celular: "", clase_licencia: "A1",
   licencia_vencimiento: "", carnet_vencimiento: "", foto_url: "",
+  es_dueno_conductor: false,
 };
 
 const norm = (s: string | null | undefined) =>
   (s ?? "").toLowerCase().replace(/[^0-9k]/g, "");
 
-type InvStatus = "active" | "pending" | "expired" | "none";
+type InvStatus = "active" | "pending" | "expired" | "owner" | "none";
 
 function ChoferesPage() {
   const [items, setItems] = useState<any[]>([]);
