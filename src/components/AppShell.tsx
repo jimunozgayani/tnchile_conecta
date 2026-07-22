@@ -282,6 +282,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setSpace={canSwitch ? setSpace : undefined}
       />
       <InstallPrompt />
+      <CriticalAlertsListener />
     </div>
   );
 }
