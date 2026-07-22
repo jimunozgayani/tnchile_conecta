@@ -257,9 +257,11 @@ export function useSpace() {
 
   // Sync space with the current route (deep links like /dashboard/foo?x=1 or
   // /chofer/bar). Dedupe by *target space* (not pathname) so navigating
-  // between sub-routes of the same space doesn't re-trigger, and use a quiet
-  // local update (no re-fetch, no toast, no navigate) to avoid flicker or
-  // overwriting the user's saved preference when they haven't chosen anything.
+  // between sub-routes of the same space — including pure hash changes like
+  // /dashboard#seccion → /dashboard#otra — never re-fires persistence or a
+  // toast. Only the pathname resolves the target space; hash is intentionally
+  // ignored except for triggering the effect (so consumers can still react to
+  // it) while we treat the active space as immutable across hash changes.
   useEffect(() => {
     if (!loaded) return;
     const target = spaceFromPath(pathname);
@@ -274,7 +276,11 @@ export function useSpace() {
     // Persist quietly only for dual-role users so we don't clobber a single-role
     // user's stored preference with a passing deep link.
     if (canSwitch && userId) void persistSpace(target, userId, roles);
-  }, [pathname, loaded, canSwitch, roles, userId, persistSpace]);
+    // `hash` is included in deps intentionally so hash-only URL changes still
+    // re-run this effect, but the dedupe above guarantees they never overwrite
+    // the active space.
+  }, [pathname, hash, loaded, canSwitch, roles, userId, persistSpace]);
+
 
   return { space, setSpace, canSwitch, roles, loaded, autoChange, dismissAutoChange };
 }
