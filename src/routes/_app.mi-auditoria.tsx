@@ -175,9 +175,10 @@ function MiAuditoriaPage() {
                     − {e.removed_roles.join(", ")}
                   </p>
                 )}
-                {e.context?.path && (
+                {(e.context?.path || e.context?.pathname) && (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Ruta: <code>{e.context.path}</code>
+                    Ruta: <code>{e.context?.pathname ?? e.context?.path}{e.context?.hash ?? ""}</code>
+                    {e.source ? <> · Origen: <code>{e.source}</code></> : null}
                   </p>
                 )}
               </div>
