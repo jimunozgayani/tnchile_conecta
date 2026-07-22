@@ -984,6 +984,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          active_space: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_space?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_space?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
