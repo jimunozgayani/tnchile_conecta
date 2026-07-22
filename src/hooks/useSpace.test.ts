@@ -336,3 +336,54 @@ describe("useSpace — route sync (no flicker on nested / external / back-forwar
     expect(result.current.autoChange).toBeNull();
   });
 });
+
+describe("useSpace — hash-only navigation", () => {
+  it("does not overwrite the active space or re-persist when only the hash changes within /dashboard", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    mockHash = "";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("proveedor");
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    await act(async () => { mockHash = "#seccion"; rerender(); });
+    expect(result.current.space).toBe("proveedor");
+    await act(async () => { mockHash = "#otra"; rerender(); });
+    expect(result.current.space).toBe("proveedor");
+    await act(async () => { mockHash = ""; rerender(); });
+    expect(result.current.space).toBe("proveedor");
+
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(result.current.autoChange).toBeNull();
+  });
+
+  it("does not overwrite the active space when only the hash changes within /chofer", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "chofer" });
+    mockPathname = "/chofer/mis-viajes";
+    mockHash = "#viaje-1";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("chofer");
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    await act(async () => { mockHash = "#viaje-2"; rerender(); });
+    await act(async () => { mockHash = "#detalle"; rerender(); });
+
+    expect(result.current.space).toBe("chofer");
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("preserves the active space through a pathname change combined with a hash change", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("proveedor");
+
+    await act(async () => { mockPathname = "/dashboard/camiones"; mockHash = "#foo"; rerender(); });
+    expect(result.current.space).toBe("proveedor");
+    await act(async () => { mockHash = "#bar"; rerender(); });
+    expect(result.current.space).toBe("proveedor");
+  });
+});
