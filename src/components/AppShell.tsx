@@ -14,7 +14,6 @@ import { Footer } from "./Footer";
 import { useSpace } from "@/hooks/useSpace";
 import { SpaceSwitcher } from "./SpaceSwitcher";
 import { SpaceChangeBanner } from "./SpaceChangeBanner";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ActiveSpaceBadge } from "./ActiveSpaceBadge";
 
 
