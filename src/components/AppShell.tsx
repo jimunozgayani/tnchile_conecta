@@ -9,6 +9,8 @@ import { NotificationBell } from "./NotificationBell";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { InstallPrompt } from "./InstallPrompt";
 import { Footer } from "./Footer";
+import { useSpace } from "@/hooks/useSpace";
+import { SpaceSwitcher } from "./SpaceSwitcher";
 
 
 const NAV = [
@@ -28,7 +30,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
-  const [isChofer, setIsChofer] = useState(false);
+  const { space, setSpace, canSwitch, roles } = useSpace();
+  const isChofer = roles.includes("chofer");
+  const isProveedor = roles.includes("proveedor");
+  // Active view: if switcher applies, follow `space`; otherwise fall back to role
+  const view: "admin" | "cliente" | "chofer" | "proveedor" =
+    isAdmin ? "admin"
+    : isCliente ? "cliente"
+    : canSwitch ? (space === "chofer" ? "chofer" : "proveedor")
+    : isChofer ? "chofer"
+    : "proveedor";
+  const showChoferNav = view === "chofer";
+  const showProveedorNav = view === "proveedor";
+  const showClienteNav = view === "cliente";
 
   useEffect(() => {
     (async () => {
@@ -38,7 +52,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const rs = (data ?? []).map((r: any) => r.role);
       setIsAdmin(rs.includes("admin"));
       setIsCliente(rs.includes("cliente"));
-      setIsChofer(rs.includes("chofer"));
     })();
   }, []);
 
