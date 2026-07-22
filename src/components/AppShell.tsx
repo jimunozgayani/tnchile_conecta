@@ -92,13 +92,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="space-y-1 p-3">
           {showClienteNav && (
-            <Link to="/cliente" onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname.startsWith("/cliente") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-              }`}>
-              <User className="h-4 w-4" />
-              Mi portal
-            </Link>
+            <>
+              <Link to="/cliente" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/cliente") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <User className="h-4 w-4" />
+                Mi portal
+              </Link>
+              <Link to="/proveedores" onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname.startsWith("/proveedores") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                }`}>
+                <Building2 className="h-4 w-4" />
+                Proveedores
+              </Link>
+            </>
           )}
           {showChoferNav && (
             <>
