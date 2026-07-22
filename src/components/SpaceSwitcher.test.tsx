@@ -108,3 +108,63 @@ describe("SpaceSwitcher accessibility — disabled options", () => {
     expect(tips.length).toBeGreaterThan(0);
   });
 });
+
+describe("SpaceSwitcher accessibility — radiogroup semantics & roving focus", () => {
+  it("el contenedor es un radiogroup con aria-label que menciona el espacio activo", () => {
+    renderSwitcher({ space: "chofer", roles: ["proveedor", "chofer"] });
+    const group = screen.getByRole("radiogroup");
+    expect(group.getAttribute("aria-label")).toMatch(/espacio activo: espacio choferes/i);
+  });
+
+  it("aria-checked refleja la opción seleccionada y solo una está checked=true", () => {
+    renderSwitcher({ space: "proveedor", roles: ["proveedor", "chofer"] });
+    const radios = screen.getAllByRole("radio");
+    const checked = radios.filter((r) => r.getAttribute("aria-checked") === "true");
+    expect(checked).toHaveLength(1);
+    expect(checked[0].getAttribute("aria-label")).toMatch(/portal proveedor \(espacio activo\)/i);
+  });
+
+  it("roving tabindex: solo la opción activa es tabbable (0), el resto -1", () => {
+    renderSwitcher({ space: "chofer", roles: ["proveedor", "chofer"] });
+    const radios = screen.getAllByRole("radio");
+    const tabbables = radios.filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbables).toHaveLength(1);
+    expect(tabbables[0].getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("ArrowLeft/ArrowUp navegan hacia atrás entre opciones habilitadas", async () => {
+    const setSpace = vi.fn().mockResolvedValue(true);
+    renderSwitcher({ space: "chofer", roles: ["proveedor", "chofer"], setSpace });
+    const group = screen.getByRole("radiogroup");
+    await act(async () => { fireEvent.keyDown(group, { key: "ArrowLeft" }); });
+    expect(setSpace).toHaveBeenCalledWith("proveedor");
+  });
+
+  it("mueve el foco DOM a la opción destino al navegar por teclado", async () => {
+    renderSwitcher({ space: "proveedor", roles: ["proveedor", "chofer"] });
+    const group = screen.getByRole("radiogroup");
+    await act(async () => { fireEvent.keyDown(group, { key: "ArrowRight" }); });
+    const chofer = screen.getByRole("radio", { name: /cambiar a espacio choferes/i });
+    expect(document.activeElement).toBe(chofer);
+  });
+
+  it("iconos decorativos están marcados aria-hidden y exponen texto sr-only 'Activo'", () => {
+    const { container } = renderSwitcher({ space: "proveedor", roles: ["proveedor", "chofer"] });
+    const svgs = container.querySelectorAll("svg");
+    svgs.forEach((svg) => expect(svg.getAttribute("aria-hidden")).toBe("true"));
+    expect(container.querySelector(".sr-only")?.textContent).toMatch(/activo/i);
+  });
+
+  it("teclas no manejadas (Tab, Enter, letras) no cambian el espacio", async () => {
+    const setSpace = vi.fn().mockResolvedValue(true);
+    renderSwitcher({ space: "proveedor", roles: ["proveedor", "chofer"], setSpace });
+    const group = screen.getByRole("radiogroup");
+    await act(async () => {
+      fireEvent.keyDown(group, { key: "Tab" });
+      fireEvent.keyDown(group, { key: "Enter" });
+      fireEvent.keyDown(group, { key: "a" });
+    });
+    expect(setSpace).not.toHaveBeenCalled();
+  });
+});
+
