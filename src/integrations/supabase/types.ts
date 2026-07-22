@@ -458,6 +458,47 @@ export type Database = {
           },
         ]
       }
+      driver_invitations: {
+        Row: {
+          created_at: string
+          driver_id: string
+          estado: string
+          expires_at: string
+          id: string
+          invited_by: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          estado?: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          estado?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_invitations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           carnet_vencimiento: string | null
@@ -465,6 +506,7 @@ export type Database = {
           clase_licencia: string | null
           created_at: string
           deleted_at: string | null
+          email: string | null
           estado_doc: string | null
           foto_url: string | null
           id: string
@@ -480,6 +522,7 @@ export type Database = {
           clase_licencia?: string | null
           created_at?: string
           deleted_at?: string | null
+          email?: string | null
           estado_doc?: string | null
           foto_url?: string | null
           id?: string
@@ -495,6 +538,7 @@ export type Database = {
           clase_licencia?: string | null
           created_at?: string
           deleted_at?: string | null
+          email?: string | null
           estado_doc?: string | null
           foto_url?: string | null
           id?: string
