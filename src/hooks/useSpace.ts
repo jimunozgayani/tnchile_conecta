@@ -143,10 +143,16 @@ export function useSpace() {
   );
 
 
-  // Read pathname up-front so the initial load can honor deep links.
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Read pathname + hash up-front so the initial load can honor deep links,
+  // and so hash-only navigations (e.g. /dashboard#seccion → /dashboard#otra)
+  // re-render this hook without altering the active space.
+  const routeLoc = useRouterState({
+    select: (s) => ({ pathname: s.location.pathname, hash: s.location.hash ?? "" }),
+  });
+  const { pathname, hash } = routeLoc;
   const pathnameRef = useRef(pathname);
   useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
+
   // Dedupe route→space sync by target space (declared here so the initial
   // load effect can seed it and the sync effect below can read it).
   const lastSyncedTarget = useRef<Space | null>(null);
