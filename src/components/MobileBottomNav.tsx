@@ -18,7 +18,7 @@ const CHOFER_TABS = [
 
 type Props = {
   space?: Space;
-  setSpace?: (s: Space) => void;
+  setSpace?: (s: Space) => Promise<boolean> | boolean | void;
 };
 
 export function MobileBottomNav({ space, setSpace }: Props) {
@@ -28,11 +28,11 @@ export function MobileBottomNav({ space, setSpace }: Props) {
   const tabs = space === "chofer" ? CHOFER_TABS : PROVEEDOR_TABS;
   const cols = canSwitch ? tabs.length + 1 : tabs.length;
 
-  const toggleSpace = () => {
+  const toggleSpace = async () => {
     if (!setSpace || !space) return;
     const next: Space = space === "chofer" ? "proveedor" : "chofer";
-    setSpace(next);
-    navigate({ to: next === "chofer" ? "/chofer" : "/dashboard" });
+    const ok = await Promise.resolve(setSpace(next));
+    if (ok !== false) navigate({ to: next === "chofer" ? "/chofer" : "/dashboard" });
   };
 
   return (
