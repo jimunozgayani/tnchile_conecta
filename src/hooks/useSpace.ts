@@ -90,6 +90,9 @@ export function useSpace() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const pathnameRef = useRef(pathname);
   useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
+  // Dedupe route→space sync by target space (declared here so the initial
+  // load effect can seed it and the sync effect below can read it).
+  const lastSyncedTarget = useRef<Space | null>(null);
 
   useEffect(() => {
     (async () => {
