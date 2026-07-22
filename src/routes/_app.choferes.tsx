@@ -38,6 +38,7 @@ function ChoferesPage() {
   const [userId, setUserId] = useState("");
   const [inviting, setInviting] = useState<string | null>(null);
   const invite = useServerFn(inviteDriver);
+  const saveOwner = useServerFn(saveOwnerDriver);
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -54,14 +55,18 @@ function ChoferesPage() {
             .in("driver_id", ids).order("created_at", { ascending: false })
         : Promise.resolve({ data: [] as any[] }),
       user
-        ? supabase.from("chofer_perfiles").select("rut,estado_validacion").eq("proveedor_id", user.id)
+        ? supabase.from("chofer_perfiles").select("rut,user_id,estado_validacion").eq("proveedor_id", user.id)
         : Promise.resolve({ data: [] as any[] }),
     ]);
     const perfilRuts = new Set((perfiles ?? []).map((p: any) => norm(p.rut)));
+    const ownerRuts = new Set(
+      (perfiles ?? []).filter((p: any) => p.user_id === user?.id).map((p: any) => norm(p.rut))
+    );
     const latestByDriver: Record<string, any> = {};
     for (const i of invs ?? []) if (!latestByDriver[i.driver_id]) latestByDriver[i.driver_id] = i;
     const st: Record<string, InvStatus> = {};
     for (const d of drivers) {
+      if (ownerRuts.has(norm(d.rut))) { st[d.id] = "owner"; continue; }
       if (perfilRuts.has(norm(d.rut))) { st[d.id] = "active"; continue; }
       const inv = latestByDriver[d.id];
       if (!inv) { st[d.id] = "none"; continue; }
