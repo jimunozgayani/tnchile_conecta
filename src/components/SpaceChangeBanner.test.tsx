@@ -17,7 +17,7 @@ function make(change: Partial<SpaceAutoChange> & Pick<SpaceAutoChange, "kind">):
 describe("SpaceChangeBanner", () => {
   it("no renderiza nada cuando change es null", () => {
     const { container } = render(<SpaceChangeBanner change={null} onDismiss={() => {}} />);
-    expect(container).toBeEmptyDOMElement();
+    expect(container.childNodes.length).toBe(0);
   });
 
   it("switched: muestra headline de cambio de vista con role=status", () => {
@@ -33,8 +33,8 @@ describe("SpaceChangeBanner", () => {
       />
     );
     const banner = screen.getByRole("status");
-    expect(banner).toHaveTextContent(/Cambiamos tu vista a Espacio Choferes/i);
-    expect(banner).toHaveTextContent(/Ya no tienes acceso a Portal Proveedor/i);
+    expect(banner.textContent).toMatch(/Cambiamos tu vista a Espacio Choferes/i);
+    expect(banner.textContent).toMatch(/Ya no tienes acceso a Portal Proveedor/i);
   });
 
   it("gained: muestra headline de nuevos roles con role=status", () => {
@@ -50,8 +50,8 @@ describe("SpaceChangeBanner", () => {
       />
     );
     const banner = screen.getByRole("status");
-    expect(banner).toHaveTextContent(/Se actualizaron los roles/i);
-    expect(banner).toHaveTextContent(/nuevos espacios/i);
+    expect(banner.textContent).toMatch(/Se actualizaron los roles/i);
+    expect(banner.textContent).toMatch(/nuevos espacios/i);
   });
 
   it("lost-all: muestra alerta con role=alert y aria-live assertive", () => {
@@ -67,8 +67,8 @@ describe("SpaceChangeBanner", () => {
       />
     );
     const banner = screen.getByRole("alert");
-    expect(banner).toHaveAttribute("aria-live", "assertive");
-    expect(banner).toHaveTextContent(/Perdiste el acceso/i);
+    expect(banner.getAttribute("aria-live")).toBe("assertive");
+    expect(banner.textContent).toMatch(/Perdiste el acceso/i);
   });
 
   it("Ver detalles abre el diálogo con los roles agregados y removidos", () => {
@@ -121,8 +121,8 @@ describe("SpaceChangeBanner", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: /entendido/i }));
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
-    // Radix removes the dialog from the tree on close
-    await screen.findByRole("status"); // banner still there
+    // Banner remains mounted
+    expect(screen.getByRole("status")).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
