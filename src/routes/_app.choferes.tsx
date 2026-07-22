@@ -234,6 +234,16 @@ function ChoferesPage() {
                   className="mt-1 block text-sm" />
                 {form.foto_url && <p className="mt-1 text-xs text-success">✓ Foto cargada</p>}
               </div>
+              {(!editing || statuses[editing] !== "active") && (
+                <label className="md:col-span-2 mt-1 flex items-start gap-2 rounded-md border border-primary/30 bg-primary-soft/40 p-3 text-sm">
+                  <input type="checkbox" className="mt-0.5" checked={!!form.es_dueno_conductor}
+                    onChange={(e) => setForm({ ...form, es_dueno_conductor: e.target.checked })} />
+                  <span>
+                    <span className="font-medium">Soy yo mismo el chofer de este camión (dueño-conductor)</span>
+                    <span className="block text-xs text-muted-foreground">Se vinculará tu cuenta al chofer automáticamente. Igualmente deberás cargar licencia y cédula para validación.</span>
+                  </span>
+                </label>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button onClick={() => setOpen(false)} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
