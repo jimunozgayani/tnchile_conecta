@@ -191,7 +191,14 @@ describe("E2E · Space switching flow", () => {
     const upsertsAfterMount = upsertSpy.mock.calls.length;
 
     const choferBtn = getByRole("radio", { name: /cambiar a espacio choferes/i });
-    await act(async () => { fireEvent.click(choferBtn); });
+    await act(async () => {
+      fireEvent.click(choferBtn);
+      // Let setSpace's async fetchRoles + state updates flush
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
 
     await waitFor(() => expect(getByTestId("active-space").textContent).toBe("chofer"));
     expect(toastSuccess).toHaveBeenCalledTimes(1);
