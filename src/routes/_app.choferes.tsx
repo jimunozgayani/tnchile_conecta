@@ -105,6 +105,8 @@ function ChoferesPage() {
   const save = async () => {
     const payload: any = { ...form, user_id: userId };
     ["licencia_vencimiento", "carnet_vencimiento"].forEach((k) => { if (!payload[k]) payload[k] = null; });
+    if (payload.email) payload.email = String(payload.email).trim().toLowerCase();
+    else payload.email = null;
     const res = editing
       ? await supabase.from("drivers").update(payload).eq("id", editing)
       : await supabase.from("drivers").insert(payload);
