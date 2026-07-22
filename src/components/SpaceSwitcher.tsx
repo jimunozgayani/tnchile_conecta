@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Truck, Briefcase, Check, Lock } from "lucide-react";
 import { useRef, type KeyboardEvent } from "react";
 import type { Space } from "@/hooks/useSpace";
@@ -17,8 +17,46 @@ const SPACES: { value: Space; role: string; label: string; fullLabel: string; Ic
   { value: "chofer", role: "chofer", label: "Chofer", fullLabel: "Espacio Choferes", Icon: Truck },
 ];
 
+// Query params that carry cross-space context worth keeping when the user
+// switches views (tracking, referrers, deep-link hints, debug flags, and
+// return_to/highlight cues). Space-scoped ids like ?tripId=, ?camionId=,
+// ?asignacionId= are intentionally excluded — they belong to a single space
+// and would 404 on the other side.
+const CONTEXT_PARAM_KEYS = new Set<string>([
+  "ref",
+  "from",
+  "source",
+  "return_to",
+  "returnTo",
+  "redirect",
+  "debug",
+  "preview",
+  "highlight",
+  "lang",
+  "locale",
+  "theme",
+]);
+const CONTEXT_PARAM_PREFIXES = ["utm_", "mc_", "gclid", "fbclid"] as const;
+
+function isContextParam(key: string): boolean {
+  if (CONTEXT_PARAM_KEYS.has(key)) return true;
+  const k = key.toLowerCase();
+  return CONTEXT_PARAM_PREFIXES.some((p) => k === p || k.startsWith(p));
+}
+
+function pickContextParams(prev: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!prev) return {};
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(prev)) {
+    if (v === undefined || v === null || v === "") continue;
+    if (isContextParam(k)) out[k] = v;
+  }
+  return out;
+}
+
 export function SpaceSwitcher({ space, setSpace, className = "", compact = false, roles }: Props) {
   const navigate = useNavigate();
+  const hash = useRouterState({ select: (s) => s.location.hash ?? "" });
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const isEnabled = (s: (typeof SPACES)[number]) => !roles || roles.includes(s.role);
@@ -26,8 +64,18 @@ export function SpaceSwitcher({ space, setSpace, className = "", compact = false
   const go = async (s: Space) => {
     if (s === space) return;
     const ok = await Promise.resolve(setSpace(s));
-    if (ok !== false) navigate({ to: s === "chofer" ? "/chofer" : "/dashboard" });
+    if (ok !== false) {
+      navigate({
+        to: s === "chofer" ? "/chofer" : "/dashboard",
+        // Preserve cross-space context (utm, ref, debug, return_to…) and hash
+        // so deep-link intent survives the switch. Space-scoped ids are
+        // intentionally dropped by pickContextParams.
+        search: (prev: Record<string, unknown> | undefined) => pickContextParams(prev),
+        hash: hash || undefined,
+      });
+    }
   };
+
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const enabledIdx = SPACES.map((s, i) => (isEnabled(s) ? i : -1)).filter((i) => i >= 0);
