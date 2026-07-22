@@ -248,6 +248,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <NotificationBell />
           </div>
         </header>
+        <SpaceChangeBanner change={autoChange} onDismiss={dismissAutoChange} />
         <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
         <Footer />
       </div>
