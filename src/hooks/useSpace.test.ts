@@ -387,3 +387,118 @@ describe("useSpace — hash-only navigation", () => {
     expect(result.current.space).toBe("proveedor");
   });
 });
+
+describe("useSpace — deep-link fallbacks for extra / invalid routes", () => {
+  it("ignores unknown space paths like /proveedor on initial load and uses saved preference", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "chofer" });
+    mockPathname = "/proveedor"; // not a recognized space route
+    const { result } = await loadHook();
+    // Falls back to saved preference, not to the URL string
+    expect(result.current.space).toBe("chofer");
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("navigating to an unrecognized path (/proveedor, /admin, /random) never changes the active space or toasts", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    for (const p of ["/proveedor", "/proveedor/foo", "/admin", "/admin/panel", "/random?x=1"]) {
+      await act(async () => { mockPathname = p; rerender(); });
+      expect(result.current.space).toBe("proveedor");
+    }
+
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(result.current.autoChange).toBeNull();
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("paths that only share a prefix (e.g. /dashboard-xyz, /choferes) do not resolve to a space", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "chofer" });
+    mockPathname = "/chofer/mis-viajes";
+    const { result, rerender } = await loadHook();
+    expect(result.current.space).toBe("chofer");
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    await act(async () => { mockPathname = "/dashboard-xyz"; rerender(); });
+    expect(result.current.space).toBe("chofer");
+    await act(async () => { mockPathname = "/choferes"; rerender(); });
+    expect(result.current.space).toBe("chofer");
+    await act(async () => { mockPathname = "/chofer-legacy"; rerender(); });
+    expect(result.current.space).toBe("chofer");
+
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(toastInfo).not.toHaveBeenCalled();
+  });
+
+  it("deep-linking to /chofer when the user lacks the chofer role is silently ignored (no error toast)", async () => {
+    resetState({ roles: ["proveedor"], pref: "proveedor" });
+    mockPathname = "/chofer/mis-viajes?tripId=abc";
+    const { result, rerender } = await loadHook();
+    // Initial reconciliation resolves to the only available role
+    expect(result.current.space).toBe("proveedor");
+    // Passive route sync must not raise any toast (deep-link is informational)
+    await act(async () => { rerender(); });
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+  });
+
+  it("setSpace() to a role the user no longer has emits an error toast and falls back", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result } = await loadHook();
+    expect(result.current.space).toBe("proveedor");
+
+    // DB no longer has the chofer role
+    state.roles = ["proveedor"];
+
+    let ok: boolean | undefined;
+    await act(async () => { ok = await result.current.setSpace("chofer"); });
+
+    expect(ok).toBe(false);
+    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(toastError.mock.calls[0][0]).toMatch(/espacio Chofer/i);
+    // Space stays on the still-valid role
+    await waitFor(() => expect(result.current.space).toBe("proveedor"));
+  });
+
+  it("setSpace() when the user has lost ALL relevant roles is rejected with an error toast", async () => {
+    resetState({ roles: ["proveedor"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result } = await loadHook();
+
+    state.roles = []; // lost everything
+
+    let ok: boolean | undefined;
+    await act(async () => { ok = await result.current.setSpace("proveedor"); });
+
+    expect(ok).toBe(false);
+    // The rejected setSpace raises its own error toast. Reconcile runs silently
+    // (silent:true) so no info toast or autoChange banner is produced here — the
+    // realtime channel is the channel that surfaces lost-all to the user.
+    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+  });
+
+
+  it("hash-only change on an unrecognized path (/proveedor#tab=x) is a no-op", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    await act(async () => { mockPathname = "/proveedor"; mockHash = "#tab=general"; rerender(); });
+    await act(async () => { mockHash = "#tab=camiones"; rerender(); });
+
+    expect(result.current.space).toBe("proveedor");
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+});
