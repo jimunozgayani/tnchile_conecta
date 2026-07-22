@@ -44,6 +44,7 @@ function makeQuery(rows: any[]) {
     select: () => chain,
     eq: () => chain,
     maybeSingle: async () => ({ data: rows[0] ?? null, error: null }),
+    insert: async (_row: any) => ({ data: null, error: null }),
     then: (res: any) => Promise.resolve({ data: rows, error: null }).then(res),
   };
   return chain;
