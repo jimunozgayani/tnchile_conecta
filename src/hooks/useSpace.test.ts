@@ -467,7 +467,7 @@ describe("useSpace — deep-link fallbacks for extra / invalid routes", () => {
     await waitFor(() => expect(result.current.space).toBe("proveedor"));
   });
 
-  it("setSpace() when the user has lost ALL relevant roles emits lost-all toast", async () => {
+  it("setSpace() when the user has lost ALL relevant roles is rejected with an error toast", async () => {
     resetState({ roles: ["proveedor"], pref: "proveedor" });
     mockPathname = "/dashboard";
     const { result } = await loadHook();
@@ -478,11 +478,14 @@ describe("useSpace — deep-link fallbacks for extra / invalid routes", () => {
     await act(async () => { ok = await result.current.setSpace("proveedor"); });
 
     expect(ok).toBe(false);
-    // The rejected setSpace raises its own error toast, and reconcile then
-    // surfaces the lost-all state via autoChange (silent:true skips the info toast).
-    expect(toastError).toHaveBeenCalled();
-    await waitFor(() => expect(result.current.autoChange?.kind).toBe("lost-all"));
+    // The rejected setSpace raises its own error toast. Reconcile runs silently
+    // (silent:true) so no info toast or autoChange banner is produced here — the
+    // realtime channel is the channel that surfaces lost-all to the user.
+    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(toastInfo).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
   });
+
 
   it("hash-only change on an unrecognized path (/proveedor#tab=x) is a no-op", async () => {
     resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
