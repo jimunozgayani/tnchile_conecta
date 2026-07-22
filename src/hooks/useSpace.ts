@@ -66,21 +66,49 @@ export function useSpace() {
       setRoles(fresh);
       const current = spaceRef.current;
       const currentOk = fresh.includes(ROLE_FOR_SPACE[current]);
+      const relevant = ["proveedor", "chofer", "admin", "cliente"];
+      const addedRoles = fresh.filter((r) => !prev.includes(r) && relevant.includes(r));
+      const removedRoles = prev.filter((r) => !fresh.includes(r) && relevant.includes(r));
+
       if (currentOk) {
-        // If they just gained a role, no forced switch — keep current.
+        // Gained a new relevant role — surface a banner but keep current space.
+        if (!opts.silent && addedRoles.length > 0 && prev.length > 0) {
+          setAutoChange({
+            kind: "gained",
+            from: current,
+            to: current,
+            addedRoles,
+            removedRoles,
+            at: Date.now(),
+          });
+        }
         return current;
       }
       const fallback = pickFallback(fresh);
       if (!opts.silent) {
-        const lostProv = prev.includes("proveedor") && !fresh.includes("proveedor");
-        const lostChof = prev.includes("chofer") && !fresh.includes("chofer");
         if (fallback) {
           toast.info(
             `Tu acceso al espacio ${current === "chofer" ? "Chofer" : "Proveedor"} fue removido. ` +
             `Cambiamos automáticamente a ${fallback === "chofer" ? "Chofer" : "Proveedor"}.`
           );
-        } else if (lostProv || lostChof) {
+          setAutoChange({
+            kind: "switched",
+            from: current,
+            to: fallback,
+            addedRoles,
+            removedRoles,
+            at: Date.now(),
+          });
+        } else if (removedRoles.length > 0) {
           toast.error("Ya no tienes acceso a los espacios de Proveedor ni Chofer.");
+          setAutoChange({
+            kind: "lost-all",
+            from: current,
+            to: null,
+            addedRoles,
+            removedRoles,
+            at: Date.now(),
+          });
         }
       }
       if (fallback) {
@@ -97,6 +125,7 @@ export function useSpace() {
     },
     [roles, userId, persistSpace, navigate],
   );
+
 
   // Read pathname up-front so the initial load can honor deep links.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
