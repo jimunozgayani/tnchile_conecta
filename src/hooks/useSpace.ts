@@ -190,7 +190,6 @@ export function useSpace() {
   // between sub-routes of the same space doesn't re-trigger, and use a quiet
   // local update (no re-fetch, no toast, no navigate) to avoid flicker or
   // overwriting the user's saved preference when they haven't chosen anything.
-  const lastSyncedTarget = useRef<Space | null>(null);
   useEffect(() => {
     if (!loaded) return;
     const target = spaceFromPath(pathname);
