@@ -227,46 +227,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>
           <div className="flex items-center gap-3">
-            {(() => {
-              const label =
-                view === "admin" ? "Administración"
-                : view === "cliente" ? "Portal Cliente"
-                : view === "chofer" ? "Espacio Choferes"
-                : "Portal Proveedor";
-              const tooltip =
-                view === "admin"
-                  ? "Estás en el panel de administración de TN Chile."
-                  : view === "cliente"
-                  ? "Estás en el portal de clientes."
-                  : canSwitch
-                  ? "Tienes acceso a ambos espacios. Usa el selector para cambiar sin cerrar sesión."
-                  : "Este es el espacio asignado a tu cuenta.";
-              return (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2">
-                        {userEmail && (
-                          <span className="hidden max-w-[160px] truncate text-xs font-medium text-primary-foreground/90 sm:inline">
-                            {userEmail}
-                          </span>
-                        )}
-                        <span
-                          className="inline-flex cursor-help items-center rounded-full border border-white/30 bg-white/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
-                          aria-label={`Espacio activo: ${label}`}
-                          data-testid="active-space-badge"
-                        >
-                          {label}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" align="end" className="max-w-[240px] text-xs leading-snug">
-                      {tooltip}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            })()}
+            <ActiveSpaceBadge
+              view={
+                view === "admin" ? "admin"
+                : view === "cliente" ? "cliente"
+                : view === "chofer" ? "chofer"
+                : "proveedor"
+              }
+              canSwitch={canSwitch}
+              userEmail={userEmail}
+            />
+
             {(isChofer || isProveedor) && !isAdmin && !isCliente && (
               <SpaceSwitcher
                 space={space}
