@@ -211,15 +211,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-lg font-bold tracking-tight">TN CHILE</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden text-xs italic opacity-90 md:block">La logística la hacemos juntos.</div>
+            {canSwitch && !isAdmin && !isCliente && (
+              <SpaceSwitcher space={space} setSpace={setSpace} compact className="hidden sm:inline-flex" />
+            )}
+            <div className="hidden text-xs italic opacity-90 lg:block">La logística la hacemos juntos.</div>
             <NotificationBell />
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
         <Footer />
       </div>
       <SessionExpiryWarning />
-      <MobileBottomNav />
+      <MobileBottomNav
+        space={canSwitch ? space : undefined}
+        setSpace={canSwitch ? setSpace : undefined}
+      />
       <InstallPrompt />
     </div>
   );
