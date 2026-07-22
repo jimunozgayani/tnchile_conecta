@@ -16,21 +16,30 @@ export const Route = createFileRoute("/_app/mi-auditoria")({
   component: MiAuditoriaPage,
 });
 
+type EntryKind = "switched" | "lost-all" | "gained" | "user" | "deep-link";
+type EntrySource = "user" | "deep-link" | "role-change" | "mount" | null;
 type Entry = {
   id: string;
-  kind: "switched" | "lost-all" | "gained";
+  kind: EntryKind;
   from_space: string | null;
   to_space: string | null;
   added_roles: string[];
   removed_roles: string[];
-  context: { path?: string | null } | null;
+  context: { path?: string | null; pathname?: string | null; hash?: string | null; rejected?: boolean; reason?: string } | null;
+  source: EntrySource;
   created_at: string;
 };
 
 const spaceLabel = (s: string | null) =>
   s === "chofer" ? "Espacio Choferes" : s === "proveedor" ? "Portal Proveedor" : "—";
 
-function KindBadge({ kind }: { kind: Entry["kind"] }) {
+function KindBadge({ kind, rejected }: { kind: EntryKind; rejected?: boolean }) {
+  if (rejected)
+    return (
+      <Badge className="bg-red-100 text-red-900 hover:bg-red-100">
+        <ShieldAlert className="h-3 w-3 mr-1" /> Rechazado
+      </Badge>
+    );
   if (kind === "switched")
     return (
       <Badge className="bg-amber-100 text-amber-900 hover:bg-amber-100">
@@ -41,6 +50,18 @@ function KindBadge({ kind }: { kind: Entry["kind"] }) {
     return (
       <Badge className="bg-emerald-100 text-emerald-900 hover:bg-emerald-100">
         <Plus className="h-3 w-3 mr-1" /> Rol agregado
+      </Badge>
+    );
+  if (kind === "user")
+    return (
+      <Badge className="bg-sky-100 text-sky-900 hover:bg-sky-100">
+        <MousePointerClick className="h-3 w-3 mr-1" /> Cambio manual
+      </Badge>
+    );
+  if (kind === "deep-link")
+    return (
+      <Badge className="bg-slate-100 text-slate-900 hover:bg-slate-100">
+        <LinkIcon className="h-3 w-3 mr-1" /> Deep link
       </Badge>
     );
   return (
