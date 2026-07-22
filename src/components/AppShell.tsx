@@ -23,7 +23,7 @@ const NAV = [
   { to: "/tarifas", label: "Tarifas", icon: DollarSign },
   { to: "/documentos", label: "Documentos", icon: FileText },
   { to: "/mensajes", label: "Mensajes", icon: MessageSquare },
-  { to: "/mi-auditoria", label: "Mi auditoría", icon: History },
+  { to: "/mi-auditoria", label: "Mi auditoría", icon: HistoryIcon },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
