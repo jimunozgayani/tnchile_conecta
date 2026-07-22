@@ -502,3 +502,102 @@ describe("useSpace — deep-link fallbacks for extra / invalid routes", () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 });
+
+describe("useSpace — user_preferences is never overwritten inappropriately by auto-selection", () => {
+  it("does NOT upsert user_preferences when a 'gained' auto-change fires (current space still valid)", async () => {
+    resetState({ roles: ["proveedor"], pref: "proveedor" });
+    const { result } = await loadHook();
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    state.roles = ["proveedor", "chofer"];
+    await act(async () => {
+      state.channelHandlers.forEach((h) => h({}));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(result.current.autoChange?.kind).toBe("gained"));
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(state.pref).toBe("proveedor");
+  });
+
+  it("does NOT upsert user_preferences when all relevant roles are lost ('lost-all')", async () => {
+    resetState({ roles: ["proveedor"], pref: "proveedor" });
+    const { result } = await loadHook();
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    state.roles = [];
+    await act(async () => {
+      state.channelHandlers.forEach((h) => h({}));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(result.current.autoChange?.kind).toBe("lost-all"));
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(state.pref).toBe("proveedor");
+  });
+
+  it("on auto-'switched', persists the NEW fallback but never the removed/invalid space", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    const { result } = await loadHook();
+    upsertSpy.mockClear();
+
+    state.roles = ["chofer"];
+    await act(async () => {
+      state.channelHandlers.forEach((h) => h({}));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(result.current.autoChange?.kind).toBe("switched"));
+    expect(upsertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ user_id: "user-1", active_space: "chofer" }),
+    );
+    expect(upsertSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ active_space: "proveedor" }),
+    );
+    expect(state.pref).toBe("chofer");
+  });
+
+  it("mount with an invalid saved preference does not re-persist the invalid space", async () => {
+    resetState({ roles: ["proveedor"], pref: "chofer" });
+    const { result } = await loadHook();
+
+    expect(result.current.space).toBe("proveedor");
+    expect(upsertSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ active_space: "chofer" }),
+    );
+  });
+
+  it("rejected setSpace (role missing) does not upsert the requested-but-invalid space", async () => {
+    resetState({ roles: ["proveedor", "chofer"], pref: "proveedor" });
+    const { result } = await loadHook();
+    upsertSpy.mockClear();
+
+    state.roles = ["proveedor"];
+    let ok: boolean | undefined;
+    await act(async () => {
+      ok = await result.current.setSpace("chofer");
+    });
+
+    expect(ok).toBe(false);
+    expect(upsertSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ active_space: "chofer" }),
+    );
+    expect(state.pref).toBe("proveedor");
+  });
+
+  it("route deep-link to a space the user does NOT have does not overwrite user_preferences", async () => {
+    resetState({ roles: ["proveedor"], pref: "proveedor" });
+    mockPathname = "/dashboard";
+    const { result, rerender } = await loadHook();
+    const upsertsAfterMount = upsertSpy.mock.calls.length;
+
+    await act(async () => { mockPathname = "/chofer"; rerender(); });
+
+    expect(result.current.space).toBe("proveedor");
+    expect(upsertSpy.mock.calls.length).toBe(upsertsAfterMount);
+    expect(state.pref).toBe("proveedor");
+  });
+});
