@@ -166,8 +166,10 @@ async function mount() {
   const { Harness } = await importHarness();
   const utils = render(<Harness />);
   await waitFor(() => expect(utils.getByTestId("active-space")).toBeTruthy());
-  return utils;
+  const rerenderHarness = () => utils.rerender(<Harness />);
+  return { ...utils, rerenderHarness };
 }
+
 
 beforeEach(() => {
   vi.resetModules();
