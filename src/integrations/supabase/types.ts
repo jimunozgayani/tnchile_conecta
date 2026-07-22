@@ -831,6 +831,42 @@ export type Database = {
         }
         Relationships: []
       }
+      space_audit_log: {
+        Row: {
+          added_roles: string[]
+          context: Json | null
+          created_at: string
+          from_space: string | null
+          id: string
+          kind: string
+          removed_roles: string[]
+          to_space: string | null
+          user_id: string
+        }
+        Insert: {
+          added_roles?: string[]
+          context?: Json | null
+          created_at?: string
+          from_space?: string | null
+          id?: string
+          kind: string
+          removed_roles?: string[]
+          to_space?: string | null
+          user_id: string
+        }
+        Update: {
+          added_roles?: string[]
+          context?: Json | null
+          created_at?: string
+          from_space?: string | null
+          id?: string
+          kind?: string
+          removed_roles?: string[]
+          to_space?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       supplier_invitations: {
         Row: {
           activated_at: string | null
