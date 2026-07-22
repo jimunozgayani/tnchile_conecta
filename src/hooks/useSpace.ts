@@ -6,6 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 export type Space = "proveedor" | "chofer";
 const KEY = "tn.activeSpace";
 
+export type SpaceAutoChange = {
+  kind: "switched" | "lost-all" | "gained";
+  from: Space | null;
+  to: Space | null;
+  addedRoles: string[];
+  removedRoles: string[];
+  at: number;
+};
+
 function spaceFromPath(pathname: string): Space | null {
   if (pathname === "/chofer" || pathname.startsWith("/chofer/")) return "chofer";
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return "proveedor";
