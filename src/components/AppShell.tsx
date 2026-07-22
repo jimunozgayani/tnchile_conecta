@@ -6,6 +6,7 @@ import { Logo } from "./Logo";
 import markUrl from "@/assets/tn-chile-mark.png";
 import { SessionExpiryWarning } from "./SessionExpiryWarning";
 import { NotificationBell } from "./NotificationBell";
+import { ThemeToggle } from "./ThemeToggle";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { InstallPrompt } from "./InstallPrompt";
 import { Footer } from "./Footer";
@@ -266,6 +267,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               />
             )}
             <div className="hidden text-xs italic opacity-90 lg:block">La logística la hacemos juntos.</div>
+            <ThemeToggle />
             <NotificationBell />
           </div>
         </header>
