@@ -47,10 +47,12 @@ export function MobileBottomNav({ space, setSpace }: Props) {
           <Link
             key={to}
             to={to}
-            className="flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+            aria-label={label}
+            aria-current={active ? "page" : undefined}
+            className="flex min-h-[56px] min-w-[44px] flex-col items-center justify-center gap-0.5 text-[11px] font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
             style={{ color: active ? "#2D7A45" : "hsl(var(--muted-foreground))" }}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
             <span>{label}</span>
           </Link>
         );
@@ -59,11 +61,13 @@ export function MobileBottomNav({ space, setSpace }: Props) {
         <button
           type="button"
           onClick={toggleSpace}
-          aria-label={`Cambiar a espacio ${space === "chofer" ? "proveedor" : "chofer"}`}
-          className="flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] font-semibold"
+          role="switch"
+          aria-checked={space === "chofer"}
+          aria-label={`Espacio activo: ${space === "chofer" ? "Chofer" : "Proveedor"}. Cambiar a ${space === "chofer" ? "Proveedor" : "Chofer"}`}
+          className="flex min-h-[56px] min-w-[44px] flex-col items-center justify-center gap-0.5 text-[11px] font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
           style={{ color: "#2D7A45" }}
         >
-          <RefreshCw className="h-5 w-5" />
+          <RefreshCw className="h-5 w-5" aria-hidden="true" />
           <span>{space === "chofer" ? "Proveedor" : "Chofer"}</span>
         </button>
       )}
