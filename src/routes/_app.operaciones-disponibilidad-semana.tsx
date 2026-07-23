@@ -115,8 +115,7 @@ function OpsWeekPage() {
           "id, driver_id, fecha_desde, fecha_hasta, estado, lugar_ciudad_id, lugar_texto, destino_ciudad_id, destino_texto, modalidad, truck_id, fuente, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), truck:truck_id(patente, tipo)",
         )
         .gte("fecha_desde", days[0])
-        .lte("fecha_desde", days[6])
-        .filter("fecha_desde", "eq", "fecha_hasta"); // may not work; safer client-side filter
+        .lte("fecha_desde", days[6]);
       if (error) throw error;
       // client-side ensure single-day rows only
       return (data ?? []).filter((r: any) => r.fecha_desde === r.fecha_hasta);
