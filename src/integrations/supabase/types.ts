@@ -305,6 +305,7 @@ export type Database = {
           estado: string
           fecha_desde: string
           fecha_hasta: string
+          fuente: string
           id: string
           lugar_ciudad_id: string | null
           lugar_texto: string | null
@@ -322,6 +323,7 @@ export type Database = {
           estado: string
           fecha_desde: string
           fecha_hasta: string
+          fuente?: string
           id?: string
           lugar_ciudad_id?: string | null
           lugar_texto?: string | null
@@ -339,6 +341,7 @@ export type Database = {
           estado?: string
           fecha_desde?: string
           fecha_hasta?: string
+          fuente?: string
           id?: string
           lugar_ciudad_id?: string | null
           lugar_texto?: string | null
@@ -504,6 +507,7 @@ export type Database = {
           carnet_vencimiento: string | null
           celular: string | null
           clase_licencia: string | null
+          creado_por: string | null
           created_at: string
           deleted_at: string | null
           email: string | null
@@ -512,6 +516,7 @@ export type Database = {
           id: string
           licencia_vencimiento: string | null
           nombre_completo: string
+          origen_registro: string
           rut: string | null
           updated_at: string
           user_id: string
@@ -520,6 +525,7 @@ export type Database = {
           carnet_vencimiento?: string | null
           celular?: string | null
           clase_licencia?: string | null
+          creado_por?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -528,6 +534,7 @@ export type Database = {
           id?: string
           licencia_vencimiento?: string | null
           nombre_completo: string
+          origen_registro?: string
           rut?: string | null
           updated_at?: string
           user_id: string
@@ -536,6 +543,7 @@ export type Database = {
           carnet_vencimiento?: string | null
           celular?: string | null
           clase_licencia?: string | null
+          creado_por?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -544,6 +552,7 @@ export type Database = {
           id?: string
           licencia_vencimiento?: string | null
           nombre_completo?: string
+          origen_registro?: string
           rut?: string | null
           updated_at?: string
           user_id?: string
