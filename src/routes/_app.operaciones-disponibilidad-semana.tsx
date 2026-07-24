@@ -68,7 +68,8 @@ function OpsWeekPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [truckFilter, setTruckFilter] = useState<string>("all");
   const [newNombre, setNewNombre] = useState("");
-  const [newTruckId, setNewTruckId] = useState<string>("");
+  const [newTipoCamionId, setNewTipoCamionId] = useState<string>("");
+  const [newTipoCamionOtro, setNewTipoCamionOtro] = useState<string>("");
   const [newLugarId, setNewLugarId] = useState<string | null>(null);
   const [newLugarTexto, setNewLugarTexto] = useState<string | null>(null);
   const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
