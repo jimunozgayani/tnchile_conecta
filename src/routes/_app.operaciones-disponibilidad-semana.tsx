@@ -345,8 +345,10 @@ function OpsWeekPage() {
       // Optional pre-fill: only create disp rows if the admin filled any of
       // truck/lugar/destino. Otherwise leave zero rows so the driver renders
       // as 7x "sin confirmar".
+      const otroTrim = newTipoCamionOtro.trim();
+      const hasTipo = !!newTipoCamionId || (newTipoCamionId === "__otro" && !!otroTrim);
       const hasMeta =
-        !!newTruckId || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
+        hasTipo || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
       if (hasMeta && inserted?.id) {
         for (const date of days) {
           await upsertDay(
@@ -354,7 +356,8 @@ function OpsWeekPage() {
             date,
             {
               estado: "disponible",
-              truck_id: newTruckId || null,
+              tipo_camion_id: newTipoCamionId && newTipoCamionId !== "__otro" ? newTipoCamionId : null,
+              tipo_camion_otro: newTipoCamionId === "__otro" ? (otroTrim || null) : null,
               lugar_ciudad_id: newLugarId,
               lugar_texto: newLugarTexto,
               destino_ciudad_id: newDestinoId,
@@ -367,7 +370,8 @@ function OpsWeekPage() {
 
       toast.success(`Chofer "${nombre}" agregado`);
       setNewNombre("");
-      setNewTruckId("");
+      setNewTipoCamionId("");
+      setNewTipoCamionOtro("");
       setNewLugarId(null);
       setNewLugarTexto(null);
       setNewDestinoId(null);
