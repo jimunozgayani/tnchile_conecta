@@ -68,7 +68,8 @@ function OpsWeekPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [truckFilter, setTruckFilter] = useState<string>("all");
   const [newNombre, setNewNombre] = useState("");
-  const [newTruckId, setNewTruckId] = useState<string>("");
+  const [newTipoCamionId, setNewTipoCamionId] = useState<string>("");
+  const [newTipoCamionOtro, setNewTipoCamionOtro] = useState<string>("");
   const [newLugarId, setNewLugarId] = useState<string | null>(null);
   const [newLugarTexto, setNewLugarTexto] = useState<string | null>(null);
   const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
@@ -111,6 +112,23 @@ function OpsWeekPage() {
       return data ?? [];
     },
   });
+
+  // Catalog of general truck types (independent of a specific vehicle)
+  const tiposQ = useQuery({
+    queryKey: ["tipos-camion"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tipos_camion")
+        .select("id, nombre, orden")
+        .eq("activo", true)
+        .order("orden", { ascending: true, nullsFirst: false })
+        .order("nombre");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const tipos = tiposQ.data ?? [];
+
 
   // Availability rows for current week (single-day rows only)
   const dispQ = useQuery({
@@ -327,8 +345,10 @@ function OpsWeekPage() {
       // Optional pre-fill: only create disp rows if the admin filled any of
       // truck/lugar/destino. Otherwise leave zero rows so the driver renders
       // as 7x "sin confirmar".
+      const otroTrim = newTipoCamionOtro.trim();
+      const hasTipo = !!newTipoCamionId || (newTipoCamionId === "__otro" && !!otroTrim);
       const hasMeta =
-        !!newTruckId || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
+        hasTipo || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
       if (hasMeta && inserted?.id) {
         for (const date of days) {
           await upsertDay(
@@ -336,7 +356,8 @@ function OpsWeekPage() {
             date,
             {
               estado: "disponible",
-              truck_id: newTruckId || null,
+              tipo_camion_id: newTipoCamionId && newTipoCamionId !== "__otro" ? newTipoCamionId : null,
+              tipo_camion_otro: newTipoCamionId === "__otro" ? (otroTrim || null) : null,
               lugar_ciudad_id: newLugarId,
               lugar_texto: newLugarTexto,
               destino_ciudad_id: newDestinoId,
@@ -349,7 +370,8 @@ function OpsWeekPage() {
 
       toast.success(`Chofer "${nombre}" agregado`);
       setNewNombre("");
-      setNewTruckId("");
+      setNewTipoCamionId("");
+      setNewTipoCamionOtro("");
       setNewLugarId(null);
       setNewLugarTexto(null);
       setNewDestinoId(null);
@@ -603,19 +625,30 @@ function OpsWeekPage() {
             placeholder="Nombre completo *"
             className="rounded border border-input bg-background px-2 py-2 text-sm"
           />
-          <select
-            value={newTruckId}
-            onChange={(e) => setNewTruckId(e.target.value)}
-            className="rounded border border-input bg-background px-2 py-2 text-sm"
-          >
-            <option value="">Tipo de camión (opcional)</option>
-            {trucks.map((t: any) => (
-              <option key={t.id} value={t.id}>
-                {t.patente}
-                {t.tipo ? ` · ${t.tipo}` : ""}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col gap-2">
+            <select
+              value={newTipoCamionId}
+              onChange={(e) => setNewTipoCamionId(e.target.value)}
+              className="rounded border border-input bg-background px-2 py-2 text-sm"
+            >
+              <option value="">Tipo de camión (opcional)</option>
+              {tipos.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+              <option value="__otro">Otro (especificar)</option>
+            </select>
+            {newTipoCamionId === "__otro" && (
+              <input
+                type="text"
+                value={newTipoCamionOtro}
+                onChange={(e) => setNewTipoCamionOtro(e.target.value)}
+                placeholder="Especificar tipo"
+                className="rounded border border-input bg-background px-2 py-2 text-sm"
+              />
+            )}
+          </div>
           <CityCombobox
             value={newLugarId}
             freeText={newLugarTexto}

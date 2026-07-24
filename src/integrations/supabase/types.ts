@@ -311,6 +311,8 @@ export type Database = {
           lugar_texto: string | null
           modalidad: string | null
           notas: string | null
+          tipo_camion_id: string | null
+          tipo_camion_otro: string | null
           truck_id: string | null
           updated_at: string
         }
@@ -329,6 +331,8 @@ export type Database = {
           lugar_texto?: string | null
           modalidad?: string | null
           notas?: string | null
+          tipo_camion_id?: string | null
+          tipo_camion_otro?: string | null
           truck_id?: string | null
           updated_at?: string
         }
@@ -347,6 +351,8 @@ export type Database = {
           lugar_texto?: string | null
           modalidad?: string | null
           notas?: string | null
+          tipo_camion_id?: string | null
+          tipo_camion_otro?: string | null
           truck_id?: string | null
           updated_at?: string
         }
@@ -370,6 +376,13 @@ export type Database = {
             columns: ["lugar_ciudad_id"]
             isOneToOne: false
             referencedRelation: "ciudades_chile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidad_chofer_tipo_camion_id_fkey"
+            columns: ["tipo_camion_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_camion"
             referencedColumns: ["id"]
           },
           {
@@ -966,6 +979,27 @@ export type Database = {
           tipo_camion?: string
           updated_at?: string
           vigente_desde?: string
+        }
+        Relationships: []
+      }
+      tipos_camion: {
+        Row: {
+          activo: boolean
+          id: string
+          nombre: string
+          orden: number | null
+        }
+        Insert: {
+          activo?: boolean
+          id?: string
+          nombre: string
+          orden?: number | null
+        }
+        Update: {
+          activo?: boolean
+          id?: string
+          nombre?: string
+          orden?: number | null
         }
         Relationships: []
       }
