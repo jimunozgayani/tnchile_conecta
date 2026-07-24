@@ -67,6 +67,13 @@ function weekDates(monday: Date): string[] {
 function OpsWeekPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [truckFilter, setTruckFilter] = useState<string>("all");
+  const [newNombre, setNewNombre] = useState("");
+  const [newTruckId, setNewTruckId] = useState<string>("");
+  const [newLugarId, setNewLugarId] = useState<string | null>(null);
+  const [newLugarTexto, setNewLugarTexto] = useState<string | null>(null);
+  const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
+  const [newDestinoTexto, setNewDestinoTexto] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const monday = useMemo(() => startOfWeek(new Date()), []);
   const days = useMemo(() => weekDates(monday), [monday]);
