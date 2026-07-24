@@ -625,19 +625,30 @@ function OpsWeekPage() {
             placeholder="Nombre completo *"
             className="rounded border border-input bg-background px-2 py-2 text-sm"
           />
-          <select
-            value={newTruckId}
-            onChange={(e) => setNewTruckId(e.target.value)}
-            className="rounded border border-input bg-background px-2 py-2 text-sm"
-          >
-            <option value="">Tipo de camión (opcional)</option>
-            {trucks.map((t: any) => (
-              <option key={t.id} value={t.id}>
-                {t.patente}
-                {t.tipo ? ` · ${t.tipo}` : ""}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col gap-2">
+            <select
+              value={newTipoCamionId}
+              onChange={(e) => setNewTipoCamionId(e.target.value)}
+              className="rounded border border-input bg-background px-2 py-2 text-sm"
+            >
+              <option value="">Tipo de camión (opcional)</option>
+              {tipos.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre}
+                </option>
+              ))}
+              <option value="__otro">Otro (especificar)</option>
+            </select>
+            {newTipoCamionId === "__otro" && (
+              <input
+                type="text"
+                value={newTipoCamionOtro}
+                onChange={(e) => setNewTipoCamionOtro(e.target.value)}
+                placeholder="Especificar tipo"
+                className="rounded border border-input bg-background px-2 py-2 text-sm"
+              />
+            )}
+          </div>
           <CityCombobox
             value={newLugarId}
             freeText={newLugarTexto}
