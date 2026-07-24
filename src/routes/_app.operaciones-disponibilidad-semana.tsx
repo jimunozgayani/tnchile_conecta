@@ -581,6 +581,69 @@ function OpsWeekPage() {
           </table>
         </div>
       )}
+
+      {/* Agregar chofer ocasional */}
+      <section
+        aria-label="Agregar chofer"
+        className="rounded-xl border bg-card p-4 shadow-sm"
+      >
+        <h2 className="mb-3 text-sm font-semibold text-primary-dark">
+          Agregar chofer ocasional
+        </h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Los campos opcionales pre-llenan la semana como “disponible”. Si solo
+          ingresas el nombre, el chofer aparecerá con los 7 días en “sin
+          confirmar”.
+        </p>
+        <div className="grid gap-3 md:grid-cols-5">
+          <input
+            type="text"
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            placeholder="Nombre completo *"
+            className="rounded border border-input bg-background px-2 py-2 text-sm"
+          />
+          <select
+            value={newTruckId}
+            onChange={(e) => setNewTruckId(e.target.value)}
+            className="rounded border border-input bg-background px-2 py-2 text-sm"
+          >
+            <option value="">Tipo de camión (opcional)</option>
+            {trucks.map((t: any) => (
+              <option key={t.id} value={t.id}>
+                {t.patente}
+                {t.tipo ? ` · ${t.tipo}` : ""}
+              </option>
+            ))}
+          </select>
+          <CityCombobox
+            value={newLugarId}
+            freeText={newLugarTexto}
+            onChange={(id, txt) => {
+              setNewLugarId(id);
+              setNewLugarTexto(txt);
+            }}
+            placeholder="Lugar (opcional)"
+          />
+          <CityCombobox
+            value={newDestinoId}
+            freeText={newDestinoTexto}
+            onChange={(id, txt) => {
+              setNewDestinoId(id);
+              setNewDestinoTexto(txt);
+            }}
+            placeholder="Destino (opcional)"
+          />
+          <button
+            type="button"
+            onClick={addDriver}
+            disabled={submitting || !newNombre.trim()}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+          >
+            {submitting ? "Agregando…" : "Agregar chofer"}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
