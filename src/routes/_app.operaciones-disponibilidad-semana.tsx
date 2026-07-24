@@ -262,18 +262,15 @@ function OpsWeekPage() {
   const cycleDay = async (driverId: string, date: string) => {
     const existing = rowsByDriverDate.get(driverId)?.get(date) ?? null;
     try {
+      // 3-state initial (sin_confirmar -> disponible on first click), then toggle
+      // disponible <-> no_disponible. We never delete rows here to preserve
+      // historical availability data.
       if (!existing) {
-        // sin_confirmar -> disponible : create
         await upsertDay(driverId, date, { estado: "disponible" }, null);
       } else if (existing.estado === "disponible") {
         await upsertDay(driverId, date, { estado: "no_disponible" }, existing);
       } else {
-        // no_disponible -> sin_confirmar : delete
-        const { error } = await supabase
-          .from("disponibilidad_chofer")
-          .delete()
-          .eq("id", existing.id);
-        if (error) throw error;
+        await upsertDay(driverId, date, { estado: "disponible" }, existing);
       }
       dispQ.refetch();
     } catch (e: any) {
