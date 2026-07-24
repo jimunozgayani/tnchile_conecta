@@ -113,6 +113,23 @@ function OpsWeekPage() {
     },
   });
 
+  // Catalog of general truck types (independent of a specific vehicle)
+  const tiposQ = useQuery({
+    queryKey: ["tipos-camion"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tipos_camion")
+        .select("id, nombre, orden")
+        .eq("activo", true)
+        .order("orden", { ascending: true, nullsFirst: false })
+        .order("nombre");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const tipos = tiposQ.data ?? [];
+
+
   // Availability rows for current week (single-day rows only)
   const dispQ = useQuery({
     queryKey: ["ops-week-disp", days[0], days[6]],
