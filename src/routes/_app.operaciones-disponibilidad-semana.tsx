@@ -302,7 +302,69 @@ function OpsWeekPage() {
     }
   };
 
+  // ---------- Add occasional driver ----------
+
+  const addDriver = async () => {
+    const nombre = newNombre.trim();
+    if (!nombre) {
+      toast.error("Ingresa el nombre del chofer");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data: inserted, error } = await supabase
+        .from("drivers")
+        .insert({
+          nombre_completo: nombre,
+          origen_registro: "operaciones",
+          user_id: null,
+          creado_por: userId,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      // Optional pre-fill: only create disp rows if the admin filled any of
+      // truck/lugar/destino. Otherwise leave zero rows so the driver renders
+      // as 7x "sin confirmar".
+      const hasMeta =
+        !!newTruckId || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
+      if (hasMeta && inserted?.id) {
+        for (const date of days) {
+          await upsertDay(
+            inserted.id,
+            date,
+            {
+              estado: "disponible",
+              truck_id: newTruckId || null,
+              lugar_ciudad_id: newLugarId,
+              lugar_texto: newLugarTexto,
+              destino_ciudad_id: newDestinoId,
+              destino_texto: newDestinoTexto,
+            },
+            null,
+          );
+        }
+      }
+
+      toast.success(`Chofer "${nombre}" agregado`);
+      setNewNombre("");
+      setNewTruckId("");
+      setNewLugarId(null);
+      setNewLugarTexto(null);
+      setNewDestinoId(null);
+      setNewDestinoTexto(null);
+      driversQ.refetch();
+      dispQ.refetch();
+    } catch (e: any) {
+      toast.error(`Error al agregar chofer: ${e.message ?? e}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ---------- Render ----------
+
 
   const loading = driversQ.isLoading || trucksQ.isLoading || dispQ.isLoading;
 
