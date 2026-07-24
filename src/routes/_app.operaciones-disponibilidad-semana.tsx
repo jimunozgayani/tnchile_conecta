@@ -67,6 +67,13 @@ function weekDates(monday: Date): string[] {
 function OpsWeekPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [truckFilter, setTruckFilter] = useState<string>("all");
+  const [newNombre, setNewNombre] = useState("");
+  const [newTruckId, setNewTruckId] = useState<string>("");
+  const [newLugarId, setNewLugarId] = useState<string | null>(null);
+  const [newLugarTexto, setNewLugarTexto] = useState<string | null>(null);
+  const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
+  const [newDestinoTexto, setNewDestinoTexto] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const monday = useMemo(() => startOfWeek(new Date()), []);
   const days = useMemo(() => weekDates(monday), [monday]);
@@ -262,18 +269,15 @@ function OpsWeekPage() {
   const cycleDay = async (driverId: string, date: string) => {
     const existing = rowsByDriverDate.get(driverId)?.get(date) ?? null;
     try {
+      // 3-state initial (sin_confirmar -> disponible on first click), then toggle
+      // disponible <-> no_disponible. We never delete rows here to preserve
+      // historical availability data.
       if (!existing) {
-        // sin_confirmar -> disponible : create
         await upsertDay(driverId, date, { estado: "disponible" }, null);
       } else if (existing.estado === "disponible") {
         await upsertDay(driverId, date, { estado: "no_disponible" }, existing);
       } else {
-        // no_disponible -> sin_confirmar : delete
-        const { error } = await supabase
-          .from("disponibilidad_chofer")
-          .delete()
-          .eq("id", existing.id);
-        if (error) throw error;
+        await upsertDay(driverId, date, { estado: "disponible" }, existing);
       }
       dispQ.refetch();
     } catch (e: any) {
@@ -298,7 +302,69 @@ function OpsWeekPage() {
     }
   };
 
+  // ---------- Add occasional driver ----------
+
+  const addDriver = async () => {
+    const nombre = newNombre.trim();
+    if (!nombre) {
+      toast.error("Ingresa el nombre del chofer");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data: inserted, error } = await supabase
+        .from("drivers")
+        .insert({
+          nombre_completo: nombre,
+          origen_registro: "operaciones",
+          user_id: null as any,
+          creado_por: userId,
+        } as any)
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      // Optional pre-fill: only create disp rows if the admin filled any of
+      // truck/lugar/destino. Otherwise leave zero rows so the driver renders
+      // as 7x "sin confirmar".
+      const hasMeta =
+        !!newTruckId || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
+      if (hasMeta && inserted?.id) {
+        for (const date of days) {
+          await upsertDay(
+            inserted.id,
+            date,
+            {
+              estado: "disponible",
+              truck_id: newTruckId || null,
+              lugar_ciudad_id: newLugarId,
+              lugar_texto: newLugarTexto,
+              destino_ciudad_id: newDestinoId,
+              destino_texto: newDestinoTexto,
+            },
+            null,
+          );
+        }
+      }
+
+      toast.success(`Chofer "${nombre}" agregado`);
+      setNewNombre("");
+      setNewTruckId("");
+      setNewLugarId(null);
+      setNewLugarTexto(null);
+      setNewDestinoId(null);
+      setNewDestinoTexto(null);
+      driversQ.refetch();
+      dispQ.refetch();
+    } catch (e: any) {
+      toast.error(`Error al agregar chofer: ${e.message ?? e}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ---------- Render ----------
+
 
   const loading = driversQ.isLoading || trucksQ.isLoading || dispQ.isLoading;
 
@@ -515,6 +581,69 @@ function OpsWeekPage() {
           </table>
         </div>
       )}
+
+      {/* Agregar chofer ocasional */}
+      <section
+        aria-label="Agregar chofer"
+        className="rounded-xl border bg-card p-4 shadow-sm"
+      >
+        <h2 className="mb-3 text-sm font-semibold text-primary-dark">
+          Agregar chofer ocasional
+        </h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Los campos opcionales pre-llenan la semana como “disponible”. Si solo
+          ingresas el nombre, el chofer aparecerá con los 7 días en “sin
+          confirmar”.
+        </p>
+        <div className="grid gap-3 md:grid-cols-5">
+          <input
+            type="text"
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            placeholder="Nombre completo *"
+            className="rounded border border-input bg-background px-2 py-2 text-sm"
+          />
+          <select
+            value={newTruckId}
+            onChange={(e) => setNewTruckId(e.target.value)}
+            className="rounded border border-input bg-background px-2 py-2 text-sm"
+          >
+            <option value="">Tipo de camión (opcional)</option>
+            {trucks.map((t: any) => (
+              <option key={t.id} value={t.id}>
+                {t.patente}
+                {t.tipo ? ` · ${t.tipo}` : ""}
+              </option>
+            ))}
+          </select>
+          <CityCombobox
+            value={newLugarId}
+            freeText={newLugarTexto}
+            onChange={(id, txt) => {
+              setNewLugarId(id);
+              setNewLugarTexto(txt);
+            }}
+            placeholder="Lugar (opcional)"
+          />
+          <CityCombobox
+            value={newDestinoId}
+            freeText={newDestinoTexto}
+            onChange={(id, txt) => {
+              setNewDestinoId(id);
+              setNewDestinoTexto(txt);
+            }}
+            placeholder="Destino (opcional)"
+          />
+          <button
+            type="button"
+            onClick={addDriver}
+            disabled={submitting || !newNombre.trim()}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+          >
+            {submitting ? "Agregando…" : "Agregar chofer"}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
