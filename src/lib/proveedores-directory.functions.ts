@@ -24,15 +24,22 @@ export const listProveedoresDirectory = createServerFn({ method: "GET" })
       .select("role")
       .eq("user_id", userId);
     const rs = (roles ?? []).map((r: any) => r.role);
-    if (!rs.includes("cliente") && !rs.includes("admin")) {
+    const isAdmin = rs.includes("admin");
+    if (!rs.includes("cliente") && !isAdmin) {
       throw new Response("Forbidden", { status: 403 });
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Admins get full contact details; clients get a non-sensitive business directory
+    // (no email, phone, or RUT) to prevent bulk PII scraping via self-signup.
+    const selectCols = isAdmin
+      ? "id, razon_social, rut_empresa, region, correo, telefono, estado_doc, deleted_at"
+      : "id, razon_social, region, estado_doc, deleted_at";
+
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
-      .select("id, razon_social, rut_empresa, region, correo, telefono, estado_doc, deleted_at")
+      .select(selectCols)
       .is("deleted_at", null);
     if (error) throw new Error(error.message);
 
@@ -52,10 +59,10 @@ export const listProveedoresDirectory = createServerFn({ method: "GET" })
     return (profiles ?? []).map((p: any) => ({
       id: p.id,
       razon_social: p.razon_social,
-      rut_empresa: p.rut_empresa,
+      rut_empresa: isAdmin ? p.rut_empresa : null,
       region: p.region,
-      correo: p.correo,
-      telefono: p.telefono,
+      correo: isAdmin ? p.correo : null,
+      telefono: isAdmin ? p.telefono : null,
       estado_doc: p.estado_doc,
       trucks_count: truckCounts.get(p.id) ?? 0,
       drivers_count: driverCounts.get(p.id) ?? 0,
