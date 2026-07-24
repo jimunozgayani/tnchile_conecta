@@ -317,9 +317,9 @@ function OpsWeekPage() {
         .insert({
           nombre_completo: nombre,
           origen_registro: "operaciones",
-          user_id: null,
+          user_id: null as any,
           creado_por: userId,
-        })
+        } as any)
         .select("id")
         .single();
       if (error) throw error;
