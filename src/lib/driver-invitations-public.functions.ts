@@ -109,6 +109,19 @@ export const activateDriverInvitation = createServerFn({ method: "POST" })
       throw new Error(pErr.message);
     }
 
+    // Grant the 'chofer' role so the driver can access their portal
+    const { error: rErr } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: newUid, role: "chofer" }, { onConflict: "user_id,role", ignoreDuplicates: true });
+    if (rErr) {
+      await supabaseAdmin.from("chofer_perfiles").delete().eq("user_id", newUid);
+      await supabaseAdmin.auth.admin.deleteUser(newUid).catch(() => {});
+      throw new Error(rErr.message);
+    }
+
+    // Link driver record to the new auth user
+    await supabaseAdmin.from("drivers").update({ user_id: newUid }).eq("id", drv.id);
+
     // Mark invitation used
     await supabaseAdmin
       .from("driver_invitations")

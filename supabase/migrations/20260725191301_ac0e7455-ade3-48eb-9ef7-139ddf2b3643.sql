@@ -1,0 +1,2 @@
+ALTER TABLE public.space_audit_log DROP CONSTRAINT IF EXISTS space_audit_log_kind_check;
+ALTER TABLE public.space_audit_log ADD CONSTRAINT space_audit_log_kind_check CHECK (kind IN ('switched','lost-all','gained','user','deep-link'));
