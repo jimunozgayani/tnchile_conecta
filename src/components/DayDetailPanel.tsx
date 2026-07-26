@@ -76,7 +76,7 @@ export function useDayRows(selected: string) {
       const { data, error } = await supabase
         .from("disponibilidad_chofer")
         .select(
-          "*, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), tipo_camion:tipo_camion_id(nombre), truck:truck_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+          "*, lugar:lugar_ciudad_id(nombre, lat, lng), destino:destino_ciudad_id(nombre, lat, lng), tipo_camion:tipo_camion_id(nombre), truck:truck_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
         )
         .eq("fecha_desde", selected)
         .eq("fecha_hasta", selected);
