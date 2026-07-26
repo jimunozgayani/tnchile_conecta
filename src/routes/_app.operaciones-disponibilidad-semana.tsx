@@ -220,7 +220,7 @@ function OpsAvailabilityPage() {
     }
   };
 
-  const selectedData = dataByDate.get(selected);
+  const dayRows = useDayRows(selected);
 
   return (
     <div className="space-y-4 pb-24">
