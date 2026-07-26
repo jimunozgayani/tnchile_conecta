@@ -260,6 +260,10 @@ export function DayDetailPanel({
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [tipoFilter, setTipoFilter] = useState<string | null>(null);
+  const [picking, setPicking] = useState<DayRow | null>(null);
+  const viewer = useViewer().data;
+
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["ops-day-disp"] });
