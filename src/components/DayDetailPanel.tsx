@@ -120,7 +120,7 @@ export function DayDetailPanel({
       const { error } = await supabase.rpc("upsert_disponibilidad_dia", {
         _driver_id: row.driver_id,
         _fecha: selected,
-        _estado: patch.estado ?? row.estado === "sin_confirmar" ? patch.estado ?? "disponible" : row.estado,
+        _estado: patch.estado ?? (row.estado === "sin_confirmar" ? "disponible" : row.estado),
         _lugar_ciudad_id: patch.lugar_ciudad_id ?? null,
         _lugar_texto: patch.lugar_texto ?? null,
         _destino_ciudad_id: patch.destino_ciudad_id ?? null,
