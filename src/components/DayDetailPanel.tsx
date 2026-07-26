@@ -252,18 +252,22 @@ export function DayDetailPanel({
   readOnly,
   rows,
   isLoading,
+  selectedDriverId,
+  onSelectDriver,
 }: {
   selected: string;
   readOnly: boolean;
+  /** Already-filtered rows: the list and the map share the exact same array. */
   rows: DayRow[];
   isLoading: boolean;
+  selectedDriverId?: string | null;
+  onSelectDriver?: (driverId: string) => void;
 }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
-  const [filter, setFilter] = useState("");
-  const [tipoFilter, setTipoFilter] = useState<string | null>(null);
   const [picking, setPicking] = useState<DayRow | null>(null);
   const viewer = useViewer().data;
+
 
 
   const refresh = () => {
