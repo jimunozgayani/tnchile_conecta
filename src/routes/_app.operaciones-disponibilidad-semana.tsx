@@ -491,22 +491,21 @@ function OpsWeekPage() {
                         {d.clase_licencia ? ` · Lic. ${d.clase_licencia}` : ""}
                       </div>
                     </td>
-                    <td className="px-2 py-2 min-w-[140px]">
-                      <select
-                        value={meta.truck_id ?? ""}
-                        onChange={(e) =>
-                          setRowMeta(d.id, { truck_id: e.target.value || null })
-                        }
-                        className="w-full rounded border border-input bg-background px-2 py-1 text-xs"
-                      >
-                        <option value="">— sin camión —</option>
-                        {trucks.map((t: any) => (
-                          <option key={t.id} value={t.id}>
-                            {t.patente}
-                            {t.tipo ? ` · ${t.tipo}` : ""}
-                          </option>
-                        ))}
-                      </select>
+                    <td className="px-2 py-2 min-w-[160px]">
+                      <div className="flex items-start justify-between gap-2">
+                        <CamionLabel truck={truckForDriver(d)} />
+                        {canAssign(d) && (
+                          <button
+                            type="button"
+                            onClick={() => setAssignFor(d)}
+                            title="Cambiar camión asignado"
+                            aria-label={`Cambiar camión asignado de ${d.nombre_completo}`}
+                            className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-primary"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-2 min-w-[160px]">
                       <CityCombobox
