@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/operaciones-cotizaciones")({
   head: () => pageHead("/operaciones-cotizaciones", "Cotizaciones · Operaciones TN Chile", "Bandeja de cotizaciones enviadas por clientes: revisa carga, fotos, origen y destinos, y actualiza el estado de cada solicitud."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

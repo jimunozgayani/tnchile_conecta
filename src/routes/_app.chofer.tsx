@@ -11,6 +11,8 @@ import { validateUpload, ALLOWED_UPLOAD_ACCEPT } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/chofer")({
   head: () => pageHead("/chofer", "Portal del chofer · TN Chile", "Consulta el estado de tu inscripción como chofer TN Chile, sube documentos y accede a tus viajes y disponibilidad."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

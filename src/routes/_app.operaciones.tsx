@@ -5,6 +5,8 @@ import { ClipboardList, Phone, Package, CalendarClock, ArrowRightLeft } from "lu
 
 export const Route = createFileRoute("/_app/operaciones")({
   head: () => pageHead("/operaciones", "Operaciones · Portal TN Chile", "Espacio operativo TN Chile: cotizaciones, asignaciones de carga, disponibilidad de choferes y camiones, y seguimiento de viajes."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

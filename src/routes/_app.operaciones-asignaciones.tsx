@@ -6,6 +6,8 @@ import { Truck, User, MapPin, Calendar, Package, Loader2, X, RefreshCw, AlertCir
 
 export const Route = createFileRoute("/_app/operaciones-asignaciones")({
   head: () => pageHead("/operaciones-asignaciones", "Asignaciones · Operaciones TN Chile", "Asigna cargas pendientes a choferes disponibles con camión compatible, y gestiona reasignaciones y cancelaciones desde operaciones TN Chile."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw redirect({ to: "/login" });

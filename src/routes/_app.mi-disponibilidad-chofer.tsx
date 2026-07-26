@@ -10,6 +10,8 @@ import { CamionLabel } from "@/components/CamionLabel";
 
 export const Route = createFileRoute("/_app/mi-disponibilidad-chofer")({
   head: () => pageHead("/mi-disponibilidad-chofer", "Mi disponibilidad · Portal Choferes TN Chile", "Marca los días que estás disponible o no, tu lugar actual, destino, modalidad y camión para recibir asignaciones de TN Chile."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();
