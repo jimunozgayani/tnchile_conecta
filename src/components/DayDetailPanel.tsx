@@ -485,6 +485,16 @@ export function DayDetailPanel({
           </li>
         ))}
       </ul>
+
+      {picking && (
+        <CamionPicker
+          row={picking}
+          isAdmin={!!viewer?.isAdmin}
+          onClose={() => setPicking(null)}
+          onSaved={refresh}
+        />
+      )}
     </div>
   );
+
 }
