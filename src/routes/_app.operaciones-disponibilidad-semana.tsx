@@ -1,19 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
-import { CamionLabel } from "@/components/CamionLabel";
-import { CalendarDays, Pencil, Truck, Users, X } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { MonthCalendar, toISODate, type DayData } from "@/components/MonthCalendar";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
     pageHead(
       "/operaciones-disponibilidad-semana",
-      "Disponibilidad semanal · Operaciones TN Chile",
-      "Panel semanal de operaciones TN Chile: gestiona la disponibilidad diaria, camión, ruta y tipo de carga de cada chofer.",
+      "Calendario de disponibilidad · Operaciones TN Chile",
+      "Calendario mensual de operaciones TN Chile: revisa de un vistazo cuántos choferes están disponibles cada día y qué días faltan por cargar.",
     ),
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
@@ -29,45 +29,33 @@ export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")(
       throw redirect({ to: "/dashboard" });
     }
   },
-  component: OpsWeekPage,
+  component: OpsAvailabilityPage,
 });
 
-// ---------- Helpers ----------
+const LONG_DATE = new Intl.DateTimeFormat("es-CL", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
 
-type Estado = "disponible" | "no_disponible";
-type Modalidad = "consolidado" | "rampla_completa" | null;
-
-const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"] as const;
-
-function startOfWeek(d = new Date()) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  const day = x.getDay(); // 0=sun..6=sat
-  const diff = day === 0 ? -6 : 1 - day;
-  x.setDate(x.getDate() + diff);
-  return x;
+function fromISO(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
-function toISODate(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${dd}`;
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function weekDates(monday: Date): string[] {
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(d.getDate() + i);
-    return toISODate(d);
-  });
-}
+function OpsAvailabilityPage() {
+  const today = useMemo(() => new Date(), []);
+  const todayISO = toISODate(today);
 
-// ---------- Page ----------
-
-function OpsWeekPage() {
   const [userId, setUserId] = useState<string | null>(null);
-  const [truckFilter, setTruckFilter] = useState<string>("all");
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [selected, setSelected] = useState(todayISO);
+
   const [newNombre, setNewNombre] = useState("");
   const [newTipoCamionId, setNewTipoCamionId] = useState<string>("");
   const [newTipoCamionOtro, setNewTipoCamionOtro] = useState<string>("");
@@ -76,62 +64,17 @@ function OpsWeekPage() {
   const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
   const [newDestinoTexto, setNewDestinoTexto] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [assignFor, setAssignFor] = useState<any | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  const monday = useMemo(() => startOfWeek(new Date()), []);
-  const days = useMemo(() => weekDates(monday), [monday]);
-  const todayISO = toISODate(new Date());
 
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      const uid = data.user?.id ?? null;
-      setUserId(uid);
-      if (!uid) return;
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
-    })();
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
 
-  // Admin, or the proveedor that owns the driver record
-  const canAssign = useCallback(
-    (d: any) => isAdmin || (!!userId && d?.user_id === userId),
-    [isAdmin, userId],
-  );
+  const monthStart = useMemo(() => toISODate(new Date(year, month, 1)), [year, month]);
+  const monthEnd = useMemo(() => toISODate(new Date(year, month + 1, 0)), [year, month]);
+  // Grid can show days from the neighbouring months, so widen the window a week.
+  const rangeStart = useMemo(() => toISODate(new Date(year, month, -6)), [year, month]);
+  const rangeEnd = useMemo(() => toISODate(new Date(year, month + 1, 7)), [year, month]);
 
-  // Drivers (both proveedor and operaciones origin)
-  const driversQ = useQuery({
-    queryKey: ["ops-week-drivers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("id, nombre_completo, user_id, origen_registro, clase_licencia, camion_asignado_id")
-        .is("deleted_at", null)
-        .in("origen_registro", ["proveedor", "operaciones"])
-        .order("nombre_completo");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  // Trucks (for the driver-level "camión asignado" picker + type display)
-  const trucksQ = useQuery({
-    queryKey: ["ops-week-trucks"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("trucks")
-        .select(
-          "id, patente, tipo, user_id, tipo_camion_id, acoplado_a_truck_id, tipo_camion:tipo_camion_id(nombre, requiere_acople)",
-        )
-        .is("deleted_at", null)
-        .order("patente");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  // Catalog of general truck types (independent of a specific vehicle)
   const tiposQ = useQuery({
     queryKey: ["tipos-camion"],
     queryFn: async () => {
@@ -147,197 +90,72 @@ function OpsWeekPage() {
   });
   const tipos = tiposQ.data ?? [];
 
-
-  // Availability rows for current week (single-day rows only)
-  const dispQ = useQuery({
-    queryKey: ["ops-week-disp", days[0], days[6]],
+  // One aggregate query per month (never one per cell).
+  const monthQ = useQuery({
+    queryKey: ["ops-month-disp", rangeStart, rangeEnd],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("disponibilidad_chofer")
         .select(
-          "id, driver_id, fecha_desde, fecha_hasta, estado, lugar_ciudad_id, lugar_texto, destino_ciudad_id, destino_texto, modalidad, truck_id, fuente, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), truck:truck_id(patente, tipo)",
+          "id, driver_id, fecha_desde, fecha_hasta, estado, tipo_camion_otro, lugar_texto, destino_texto, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), tipo_camion:tipo_camion_id(nombre), truck:truck_id(tipo, tipo_camion:tipo_camion_id(nombre)), driver:driver_id(nombre_completo)",
         )
-        .gte("fecha_desde", days[0])
-        .lte("fecha_desde", days[6]);
+        .gte("fecha_desde", rangeStart)
+        .lte("fecha_desde", rangeEnd);
       if (error) throw error;
-      // client-side ensure single-day rows only
       return (data ?? []).filter((r: any) => r.fecha_desde === r.fecha_hasta);
     },
   });
 
-  const drivers = driversQ.data ?? [];
-  const trucks = trucksQ.data ?? [];
-  const rows = dispQ.data ?? [];
-
-  // Index rows by driver_id -> date -> row
-  const rowsByDriverDate = useMemo(() => {
-    const m = new Map<string, Map<string, any>>();
-    for (const r of rows) {
-      if (!m.has(r.driver_id)) m.set(r.driver_id, new Map());
-      m.get(r.driver_id)!.set(r.fecha_desde, r);
-    }
-    return m;
-  }, [rows]);
-
-  // Row-level metadata per driver: pick from any row (first non-null); today's row wins
-  const metaByDriver = useMemo(() => {
-    const m = new Map<
-      string,
-      {
-        lugar_ciudad_id: string | null;
-        lugar_texto: string | null;
-        destino_ciudad_id: string | null;
-        destino_texto: string | null;
-        modalidad: Modalidad;
-      }
-    >();
-    for (const d of drivers) {
-      const byDate = rowsByDriverDate.get(d.id);
-      const preferred =
-        byDate?.get(todayISO) ??
-        days.map((iso) => byDate?.get(iso)).find((r) => r) ??
-        null;
-      m.set(d.id, {
-        lugar_ciudad_id: preferred?.lugar_ciudad_id ?? null,
-        lugar_texto: preferred?.lugar_texto ?? null,
-        destino_ciudad_id: preferred?.destino_ciudad_id ?? null,
-        destino_texto: preferred?.destino_texto ?? null,
-        modalidad: (preferred?.modalidad ?? null) as Modalidad,
-      });
-    }
-    return m;
-  }, [drivers, rowsByDriverDate, days, todayISO]);
-
-  const truckById = useMemo(() => {
-    const m = new Map<string, any>();
-    for (const t of trucks) m.set(t.id, t);
-    return m;
-  }, [trucks]);
-
-  // Driver-level assigned truck (not per-day), with the coupled unit resolved
-  const truckForDriver = useCallback(
-    (d: any) => {
-      const t = d?.camion_asignado_id ? truckById.get(d.camion_asignado_id) : null;
-      if (!t) return null;
-      return {
-        ...t,
-        acoplado: t.acoplado_a_truck_id ? truckById.get(t.acoplado_a_truck_id) ?? null : null,
-      };
-    },
-    [truckById],
-  );
-
-  const tipoLabelFor = useCallback(
-    (d: any) => {
-      const t = truckForDriver(d);
-      return t?.tipo_camion?.nombre ?? t?.tipo ?? "sin_camion";
-    },
-    [truckForDriver],
-  );
-
-  // Truck-type filter chips (based on the driver's assigned truck type)
-  const typeChips = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const d of drivers) {
-      const tipo = tipoLabelFor(d);
-      counts.set(tipo, (counts.get(tipo) ?? 0) + 1);
-    }
-    return Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [drivers, tipoLabelFor]);
-
-  const filteredDrivers = useMemo(() => {
-    if (truckFilter === "all") return drivers;
-    return drivers.filter((d) => tipoLabelFor(d) === truckFilter);
-  }, [drivers, truckFilter, tipoLabelFor]);
-
-  // Today's disponibles
-  const todayAvailables = useMemo(() => {
-    return drivers
-      .map((d) => {
-        const r = rowsByDriverDate.get(d.id)?.get(todayISO);
-        if (!r || r.estado !== "disponible") return null;
-        const t = truckForDriver(d);
-        const patentes = [t?.patente, t?.tipo_camion?.requiere_acople ? t?.acoplado?.patente : null]
-          .filter(Boolean)
-          .join(" + ");
-        return {
-          id: d.id,
-          nombre: d.nombre_completo,
-          patentes: patentes || null,
-          tipo: t ? (t.tipo_camion?.nombre ?? t.tipo ?? null) : null,
+  const dataByDate = useMemo(() => {
+    const m = new Map<string, DayData>();
+    for (const r of (monthQ.data ?? []) as any[]) {
+      const iso = r.fecha_desde as string;
+      if (!m.has(iso)) m.set(iso, { disponibles: [], otros: 0 });
+      const bucket = m.get(iso)!;
+      if (r.estado === "disponible") {
+        bucket.disponibles.push({
+          id: r.id,
+          nombre: r.driver?.nombre_completo ?? "Chofer",
+          tipo:
+            r.tipo_camion?.nombre ??
+            r.tipo_camion_otro ??
+            r.truck?.tipo_camion?.nombre ??
+            r.truck?.tipo ??
+            null,
           lugar: r.lugar?.nombre ?? r.lugar_texto ?? null,
-        };
-      })
-      .filter(Boolean) as Array<{
-      id: string;
-      nombre: string;
-      patentes: string | null;
-      tipo: string | null;
-      lugar: string | null;
-    }>;
-  }, [drivers, rowsByDriverDate, todayISO, truckForDriver]);
-
-  // ---------- Mutations ----------
-
-  // All writes go through the RPC: PostgREST cannot express the partial
-  // unique index (WHERE fecha_desde = fecha_hasta) in an upsert.
-  const upsertDay = useCallback(
-    async (driverId: string, date: string, patch: Record<string, any>) => {
-      const { error } = await supabase.rpc("upsert_disponibilidad_dia", {
-        _driver_id: driverId,
-        _fecha: date,
-        _estado: patch.estado ?? null,
-        _lugar_ciudad_id: patch.lugar_ciudad_id ?? null,
-        _lugar_texto: patch.lugar_texto ?? null,
-        _destino_ciudad_id: patch.destino_ciudad_id ?? null,
-        _destino_texto: patch.destino_texto ?? null,
-        _modalidad: patch.modalidad ?? null,
-        _tipo_camion_id: patch.tipo_camion_id ?? null,
-        _tipo_camion_otro: patch.tipo_camion_otro ?? null,
-        _fuente: "operaciones",
-      } as any);
-      if (error) throw error;
-    },
-    [],
-  );
-
-  const isPast = (date: string) => date < todayISO;
-
-  const cycleDay = async (driverId: string, date: string) => {
-    const existing = rowsByDriverDate.get(driverId)?.get(date) ?? null;
-    if (isPast(date)) {
-      toast.error("No se puede modificar una fecha pasada");
-      return;
+          destino: r.destino?.nombre ?? r.destino_texto ?? null,
+        });
+      } else {
+        bucket.otros += 1;
+      }
     }
-    try {
-      // 3-state: sin_confirmar -> disponible on first click, then toggle
-      // disponible <-> no_disponible. Rows are never deleted here.
-      const estado =
-        !existing || existing.estado !== "disponible"
-          ? "disponible"
-          : "no_disponible";
-      await upsertDay(driverId, date, { estado });
-      dispQ.refetch();
-    } catch (e: any) {
-      toast.error(e.message ?? "Error al actualizar");
+    return m;
+  }, [monthQ.data]);
+
+  const monthTotals = useMemo(() => {
+    let dias = 0;
+    let cupos = 0;
+    for (const [iso, d] of dataByDate) {
+      if (iso < monthStart || iso > monthEnd) continue;
+      if (d.disponibles.length > 0) dias += 1;
+      cupos += d.disponibles.length;
     }
+    return { dias, cupos };
+  }, [dataByDate, monthStart, monthEnd]);
+
+  const goToday = () => {
+    setYear(today.getFullYear());
+    setMonth(today.getMonth());
+    setSelected(todayISO);
   };
 
-  const setRowMeta = async (
-    driverId: string,
-    patch: Record<string, any>,
-  ) => {
-    try {
-      // One RPC call per visible day; past dates are skipped server-side rules.
-      for (const date of days) {
-        if (isPast(date)) continue;
-        await upsertDay(driverId, date, patch);
-      }
-      dispQ.refetch();
-    } catch (e: any) {
-      toast.error(e.message ?? "Error al guardar");
+  const selectDay = (iso: string) => {
+    setSelected(iso);
+    const d = fromISO(iso);
+    if (d.getMonth() !== month || d.getFullYear() !== year) {
+      setYear(d.getFullYear());
+      setMonth(d.getMonth());
     }
-
   };
 
   // ---------- Add occasional driver ----------
@@ -362,25 +180,24 @@ function OpsWeekPage() {
         .single();
       if (error) throw error;
 
-      // Pre-fill the current week via the RPC (one call per day, skipping
-      // past dates). Metadata is only sent when the admin filled it in.
-      const otroTrim = newTipoCamionOtro.trim();
-      if (inserted?.id) {
-        for (const date of days) {
-          if (isPast(date)) continue;
-          await upsertDay(inserted.id, date, {
-            estado: "disponible",
-            tipo_camion_id:
-              newTipoCamionId && newTipoCamionId !== "__otro" ? newTipoCamionId : null,
-            tipo_camion_otro: newTipoCamionId === "__otro" ? otroTrim || null : null,
-            lugar_ciudad_id: newLugarId,
-            lugar_texto: newLugarTexto,
-            destino_ciudad_id: newDestinoId,
-            destino_texto: newDestinoTexto,
-          });
-        }
+      if (inserted?.id && selected >= todayISO) {
+        const otroTrim = newTipoCamionOtro.trim();
+        const { error: rpcErr } = await supabase.rpc("upsert_disponibilidad_dia", {
+          _driver_id: inserted.id,
+          _fecha: selected,
+          _estado: "disponible",
+          _lugar_ciudad_id: newLugarId,
+          _lugar_texto: newLugarTexto,
+          _destino_ciudad_id: newDestinoId,
+          _destino_texto: newDestinoTexto,
+          _modalidad: null,
+          _tipo_camion_id:
+            newTipoCamionId && newTipoCamionId !== "__otro" ? newTipoCamionId : null,
+          _tipo_camion_otro: newTipoCamionId === "__otro" ? otroTrim || null : null,
+          _fuente: "operaciones",
+        } as any);
+        if (rpcErr) throw rpcErr;
       }
-
 
       toast.success(`Chofer "${nombre}" agregado`);
       setNewNombre("");
@@ -390,8 +207,7 @@ function OpsWeekPage() {
       setNewLugarTexto(null);
       setNewDestinoId(null);
       setNewDestinoTexto(null);
-      driversQ.refetch();
-      dispQ.refetch();
+      monthQ.refetch();
     } catch (e: any) {
       toast.error(`Error al agregar chofer: ${e.message ?? e}`);
     } finally {
@@ -399,236 +215,64 @@ function OpsWeekPage() {
     }
   };
 
-  // ---------- Render ----------
-
-
-  const loading = driversQ.isLoading || trucksQ.isLoading || dispQ.isLoading;
+  const selectedData = dataByDate.get(selected);
 
   return (
     <div className="space-y-4 pb-24">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-primary-dark">
-            <CalendarDays className="h-6 w-6" /> Disponibilidad semanal
+            <CalendarDays className="h-6 w-6" /> Disponibilidad
           </h1>
           <p className="text-sm text-muted-foreground">
-            Semana del {days[0]} al {days[6]} · vista de operaciones. Cada
-            click cicla el día: sin confirmar → disponible → no disponible.
+            Calendario mensual de operaciones. El número en cada día indica los
+            choferes marcados como disponibles; los días apagados aún no tienen
+            datos cargados.
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          <LegendDot color="bg-muted" label="Sin confirmar" />
-          <LegendDot color="bg-emerald-500" label="Disponible" />
-          <LegendDot color="bg-red-500" label="No disponible" />
+        <div className="text-xs text-muted-foreground">
+          {monthTotals.dias} día(s) con disponibilidad · {monthTotals.cupos} registro(s)
         </div>
       </header>
 
-      {/* Today banner */}
-      <section
-        aria-label="Choferes disponibles hoy"
-        className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30"
-      >
-        <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-          <Users className="h-4 w-4" /> Hoy disponibles: {todayAvailables.length}
-        </div>
-        {todayAvailables.length > 0 ? (
-          <ul className="mt-2 grid gap-1 text-xs sm:grid-cols-2 md:grid-cols-3">
-            {todayAvailables.map((a) => (
-              <li key={a.id} className="text-emerald-900/90 dark:text-emerald-100/90">
-                <span className="font-medium">{a.nombre}</span>
-                {a.tipo ? <> · <span className="font-semibold">{a.tipo}</span></> : ""}
-                {a.patentes ? <span className="opacity-70"> ({a.patentes})</span> : ""}
-                {a.lugar ? ` · ${a.lugar}` : ""}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-1 text-xs text-emerald-900/70 dark:text-emerald-100/70">
-            Ningún chofer marcado como disponible para hoy.
-          </p>
-        )}
-      </section>
+      <MonthCalendar
+        year={year}
+        month={month}
+        selected={selected}
+        today={todayISO}
+        dataByDate={dataByDate}
+        onSelect={selectDay}
+        onMonthChange={(y, m) => {
+          setYear(y);
+          setMonth(m);
+        }}
+        onToday={goToday}
+      />
 
-      {/* Truck-type chips */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Truck className="h-4 w-4 text-muted-foreground" />
-        <Chip
-          active={truckFilter === "all"}
-          onClick={() => setTruckFilter("all")}
-          label={`Todos · ${drivers.length}`}
-        />
-        {typeChips.map(([tipo, count]) => (
-          <Chip
-            key={tipo}
-            active={truckFilter === tipo}
-            onClick={() => setTruckFilter(tipo)}
-            label={`${tipo === "sin_camion" ? "Sin camión" : tipo} · ${count}`}
-          />
-        ))}
-      </div>
-
-      {loading && <p className="text-sm text-muted-foreground">Cargando…</p>}
-
-      {!loading && (
-        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-                <th className="sticky left-0 z-10 bg-muted/50 px-3 py-2">Chofer</th>
-                <th className="px-2 py-2">Camión</th>
-                <th className="px-2 py-2">Lugar actual</th>
-                <th className="px-2 py-2">Destino</th>
-                <th className="px-2 py-2">Tipo carga</th>
-                {days.map((d, i) => (
-                  <th
-                    key={d}
-                    className={`px-1 py-2 text-center ${
-                      d === todayISO ? "bg-primary/10 text-primary-dark" : ""
-                    }`}
-                  >
-                    <div className="text-[10px]">{DAY_LABELS[i]}</div>
-                    <div className="text-[10px] font-normal">
-                      {d.slice(8, 10)}/{d.slice(5, 7)}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDrivers.map((d) => {
-                const meta = metaByDriver.get(d.id)!;
-                const byDate = rowsByDriverDate.get(d.id);
-                return (
-                  <tr key={d.id} className="border-t align-top">
-                    <td className="sticky left-0 z-10 bg-card px-3 py-2 font-medium">
-                      <div>{d.nombre_completo}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {d.origen_registro === "operaciones" ? "Ocasional" : "Proveedor"}
-                        {d.clase_licencia ? ` · Lic. ${d.clase_licencia}` : ""}
-                      </div>
-                    </td>
-                    <td className="px-2 py-2 min-w-[160px]">
-                      <div className="flex items-start justify-between gap-2">
-                        <CamionLabel truck={truckForDriver(d)} />
-                        {canAssign(d) && (
-                          <button
-                            type="button"
-                            onClick={() => setAssignFor(d)}
-                            title="Cambiar camión asignado"
-                            aria-label={`Cambiar camión asignado de ${d.nombre_completo}`}
-                            className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-primary"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-2 py-2 min-w-[160px]">
-                      <CityCombobox
-                        value={meta.lugar_ciudad_id}
-                        freeText={meta.lugar_texto}
-                        onChange={(id, txt) =>
-                          setRowMeta(d.id, {
-                            lugar_ciudad_id: id,
-                            lugar_texto: txt,
-                          })
-                        }
-                        placeholder="Lugar"
-                      />
-                    </td>
-                    <td className="px-2 py-2 min-w-[160px]">
-                      <CityCombobox
-                        value={meta.destino_ciudad_id}
-                        freeText={meta.destino_texto}
-                        onChange={(id, txt) =>
-                          setRowMeta(d.id, {
-                            destino_ciudad_id: id,
-                            destino_texto: txt,
-                          })
-                        }
-                        placeholder="Destino"
-                      />
-                    </td>
-                    <td className="px-2 py-2 min-w-[130px]">
-                      <select
-                        value={meta.modalidad ?? ""}
-                        onChange={(e) =>
-                          setRowMeta(d.id, {
-                            modalidad: (e.target.value || null) as Modalidad,
-                          })
-                        }
-                        className="w-full rounded border border-input bg-background px-2 py-1 text-xs"
-                      >
-                        <option value="">sin especificar</option>
-                        <option value="consolidado">Consolidando</option>
-                        <option value="rampla_completa">Rampla completa</option>
-                      </select>
-                    </td>
-                    {days.map((iso) => {
-                      const r = byDate?.get(iso);
-                      const state: "sin" | Estado = r
-                        ? (r.estado as Estado)
-                        : "sin";
-                      const cls =
-                        state === "disponible"
-                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                          : state === "no_disponible"
-                            ? "bg-red-500 text-white hover:bg-red-600"
-                            : "bg-muted text-muted-foreground hover:bg-muted/70";
-                      const label =
-                        state === "disponible"
-                          ? "✓"
-                          : state === "no_disponible"
-                            ? "✕"
-                            : "·";
-                      return (
-                        <td
-                          key={iso}
-                          className={`px-1 py-2 text-center ${
-                            iso === todayISO ? "bg-primary/5" : ""
-                          }`}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => cycleDay(d.id, iso)}
-                            aria-label={`${d.nombre_completo} ${iso}: ${state}`}
-                            className={`min-h-[36px] min-w-[36px] rounded-md text-sm font-semibold transition ${cls}`}
-                          >
-                            {label}
-                          </button>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-              {filteredDrivers.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5 + 7}
-                    className="px-3 py-8 text-center text-sm text-muted-foreground"
-                  >
-                    Sin choferes para este filtro.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {monthQ.isLoading && (
+        <p className="text-sm text-muted-foreground">Cargando calendario…</p>
       )}
 
+      {/* Selected day — the detail panel will be mounted right below this heading */}
+      <section aria-label="Día seleccionado" className="rounded-xl border bg-card p-4 shadow-sm">
+        <h2 className="text-lg font-bold text-primary-dark">
+          {capitalize(LONG_DATE.format(fromISO(selected)))}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {selectedData?.disponibles.length
+            ? `${selectedData.disponibles.length} chofer(es) disponible(s).`
+            : "Sin choferes disponibles cargados para este día."}
+        </p>
+      </section>
+
       {/* Agregar chofer ocasional */}
-      <section
-        aria-label="Agregar chofer"
-        className="rounded-xl border bg-card p-4 shadow-sm"
-      >
+      <section aria-label="Agregar chofer" className="rounded-xl border bg-card p-4 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-primary-dark">
           Agregar chofer ocasional
         </h2>
         <p className="mb-3 text-xs text-muted-foreground">
-          Los campos opcionales pre-llenan la semana como “disponible”. Si solo
-          ingresas el nombre, el chofer aparecerá con los 7 días en “sin
-          confirmar”.
+          El chofer se marca como “disponible” en el día seleccionado. Los demás
+          campos son opcionales.
         </p>
         <div className="grid gap-3 md:grid-cols-5">
           <input
@@ -690,113 +334,6 @@ function OpsWeekPage() {
           </button>
         </div>
       </section>
-
-      {assignFor && (
-        <AssignTruckModal
-          driver={assignFor}
-          trucks={
-            isAdmin
-              ? trucks
-              : trucks.filter((t: any) => t.user_id === (assignFor.user_id ?? userId))
-          }
-          onClose={() => setAssignFor(null)}
-          onSave={async (truckId) => {
-            const { error } = await supabase
-              .from("drivers")
-              .update({ camion_asignado_id: truckId } as any)
-              .eq("id", assignFor.id);
-            if (error) {
-              toast.error(error.message);
-              return;
-            }
-            toast.success("Camión asignado actualizado");
-            setAssignFor(null);
-            driversQ.refetch();
-            dispQ.refetch();
-          }}
-        />
-      )}
     </div>
-  );
-}
-
-function AssignTruckModal({
-  driver,
-  trucks,
-  onClose,
-  onSave,
-}: {
-  driver: any;
-  trucks: any[];
-  onClose: () => void;
-  onSave: (truckId: string | null) => void | Promise<void>;
-}) {
-  const [sel, setSel] = useState<string>(driver.camion_asignado_id ?? "");
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Cambiar camión asignado</h2>
-          <button onClick={onClose} aria-label="Cerrar"><X className="h-5 w-5" /></button>
-        </div>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Chofer <span className="font-semibold text-foreground">{driver.nombre_completo}</span>.
-          Esta asignación es permanente, no por día.
-        </p>
-        <select
-          value={sel}
-          onChange={(e) => setSel(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-        >
-          <option value="">— Sin camión asignado —</option>
-          {trucks.map((t: any) => (
-            <option key={t.id} value={t.id}>
-              {t.tipo_camion?.nombre ?? t.tipo ?? "Tipo no definido"} · {t.patente}
-            </option>
-          ))}
-        </select>
-        <div className="mt-6 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
-          <button
-            onClick={() => onSave(sel || null)}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            Guardar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <span className={`inline-block h-3 w-3 rounded ${color}`} /> {label}
-    </span>
-  );
-}
-
-function Chip({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-        active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-input bg-background hover:border-primary"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
