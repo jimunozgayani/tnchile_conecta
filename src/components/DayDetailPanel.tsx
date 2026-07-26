@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
 import { CamionLabel } from "@/components/CamionLabel";
+import { Truck } from "lucide-react";
 
 export type DayEstado = "sin_confirmar" | "disponible" | "no_disponible";
 
