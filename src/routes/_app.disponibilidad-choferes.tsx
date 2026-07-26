@@ -53,7 +53,7 @@ function DispChoferesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("disponibilidad_chofer")
-        .select("*, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), truck:truck_id(patente)")
+        .select("*, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), truck:truck_id(patente, tipo, acoplado_a_truck_id, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))")
         .order("fecha_desde", { ascending: false });
       if (error) throw error;
       return data ?? [];
