@@ -95,6 +95,7 @@ export function useDayRows(selected: string) {
         driver_id: d.id,
         nombre: d.nombre_completo ?? "Chofer",
         proveedor: d.user_id ? (provName.get(d.user_id) ?? null) : null,
+        proveedor_id: d.user_id ?? null,
         origen_registro: d.origen_registro ?? null,
         camion: disp?.truck ?? d.camion ?? null,
         disp,
@@ -102,6 +103,7 @@ export function useDayRows(selected: string) {
       };
     });
   }, [driversQ.data, dispQ.data, proveedoresQ.data]);
+
 
 
   return { rows, isLoading: driversQ.isLoading || dispQ.isLoading };
