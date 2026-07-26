@@ -421,9 +421,22 @@ export function DayDetailPanel({
                 <div className="text-xs text-muted-foreground">
                   {row.proveedor ?? (row.origen_registro === "operaciones" ? "Ocasional" : "Sin proveedor")}
                 </div>
-                <div className="mt-1">
+                <div className="mt-1 flex items-start gap-2">
                   <CamionLabel truck={row.camion} />
+                  {canAssign(row) && (
+                    <button
+                      type="button"
+                      data-testid="change-truck"
+                      title="Cambiar camión asignado"
+                      aria-label={`Cambiar camión asignado de ${row.nombre}`}
+                      onClick={() => setPicking(row)}
+                      className="rounded border border-input p-1 text-muted-foreground transition hover:bg-muted"
+                    >
+                      <Truck className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
+
               </div>
               <button
                 type="button"
