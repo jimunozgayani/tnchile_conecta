@@ -690,6 +690,81 @@ function OpsWeekPage() {
           </button>
         </div>
       </section>
+
+      {assignFor && (
+        <AssignTruckModal
+          driver={assignFor}
+          trucks={
+            isAdmin
+              ? trucks
+              : trucks.filter((t: any) => t.user_id === (assignFor.user_id ?? userId))
+          }
+          onClose={() => setAssignFor(null)}
+          onSave={async (truckId) => {
+            const { error } = await supabase
+              .from("drivers")
+              .update({ camion_asignado_id: truckId } as any)
+              .eq("id", assignFor.id);
+            if (error) {
+              toast.error(error.message);
+              return;
+            }
+            toast.success("Camión asignado actualizado");
+            setAssignFor(null);
+            driversQ.refetch();
+            dispQ.refetch();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AssignTruckModal({
+  driver,
+  trucks,
+  onClose,
+  onSave,
+}: {
+  driver: any;
+  trucks: any[];
+  onClose: () => void;
+  onSave: (truckId: string | null) => void | Promise<void>;
+}) {
+  const [sel, setSel] = useState<string>(driver.camion_asignado_id ?? "");
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Cambiar camión asignado</h2>
+          <button onClick={onClose} aria-label="Cerrar"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Chofer <span className="font-semibold text-foreground">{driver.nombre_completo}</span>.
+          Esta asignación es permanente, no por día.
+        </p>
+        <select
+          value={sel}
+          onChange={(e) => setSel(e.target.value)}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="">— Sin camión asignado —</option>
+          {trucks.map((t: any) => (
+            <option key={t.id} value={t.id}>
+              {t.tipo_camion?.nombre ?? t.tipo ?? "Tipo no definido"} · {t.patente}
+            </option>
+          ))}
+        </select>
+        <div className="mt-6 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
+          <button
+            onClick={() => onSave(sel || null)}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
