@@ -420,8 +420,8 @@ function OpsWeekPage() {
             {todayAvailables.map((a) => (
               <li key={a.id} className="text-emerald-900/90 dark:text-emerald-100/90">
                 <span className="font-medium">{a.nombre}</span>
-                {a.patente ? ` · ${a.patente}` : ""}
-                {a.tipo ? ` (${a.tipo})` : ""}
+                {a.tipo ? <> · <span className="font-semibold">{a.tipo}</span></> : ""}
+                {a.patentes ? <span className="opacity-70"> ({a.patentes})</span> : ""}
                 {a.lugar ? ` · ${a.lugar}` : ""}
               </li>
             ))}
