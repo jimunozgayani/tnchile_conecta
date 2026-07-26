@@ -532,7 +532,7 @@ export type Database = {
           origen_registro: string
           rut: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           carnet_vencimiento?: string | null
@@ -550,7 +550,7 @@ export type Database = {
           origen_registro?: string
           rut?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           carnet_vencimiento?: string | null
@@ -568,7 +568,7 @@ export type Database = {
           origen_registro?: string
           rut?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
