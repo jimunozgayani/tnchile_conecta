@@ -338,79 +338,18 @@ export function DayDetailPanel({
     }
   };
 
-  const SIN_TIPO = "__sin_tipo";
-
-  // Truck-type chips: one per type actually present in the day list, with counts.
-  const tipoChips = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const r of rows) {
-      const key = rowTipo(r) ?? SIN_TIPO;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return [...counts.entries()].sort((a, b) =>
-      a[0] === SIN_TIPO ? 1 : b[0] === SIN_TIPO ? -1 : a[0].localeCompare(b[0]),
-    );
-  }, [rows]);
-
-  const visible = rows.filter((r) => {
-    const matchText = filter.trim()
-      ? `${r.nombre} ${r.proveedor ?? ""}`.toLowerCase().includes(filter.trim().toLowerCase())
-      : true;
-    const matchTipo = tipoFilter ? (rowTipo(r) ?? SIN_TIPO) === tipoFilter : true;
-    return matchText && matchTipo;
-  });
+  const visible = rows;
 
   const canAssign = (row: DayRow) =>
     !!viewer?.isAdmin || (!!viewer?.id && viewer.id === row.proveedor_id);
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Buscar chofer o proveedor…"
-          className="min-w-[200px] flex-1 rounded border border-input bg-background px-2 py-2 text-sm"
-        />
-        <span className="text-xs text-muted-foreground">
-          {visible.length} chofer(es)
-        </span>
-      </div>
-
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo de camión">
-        <button
-          type="button"
-          data-testid="tipo-chip"
-          onClick={() => setTipoFilter(null)}
-          className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-            tipoFilter === null
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-input bg-background text-muted-foreground"
-          }`}
-        >
-          Todos ({rows.length})
-        </button>
-        {tipoChips.map(([key, count]) => (
-          <button
-            key={key}
-            type="button"
-            data-testid="tipo-chip"
-            onClick={() => setTipoFilter(tipoFilter === key ? null : key)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-              tipoFilter === key
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-input bg-background text-muted-foreground"
-            }`}
-          >
-            {key === SIN_TIPO ? "Sin tipo" : key} ({count})
-          </button>
-        ))}
-      </div>
-
       {isLoading && <p className="text-sm text-muted-foreground">Cargando choferes…</p>}
       {!isLoading && visible.length === 0 && (
         <p className="text-sm text-muted-foreground">No hay choferes para este filtro.</p>
       )}
+
 
 
       <ul className="space-y-2">
