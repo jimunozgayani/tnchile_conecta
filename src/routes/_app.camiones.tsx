@@ -14,19 +14,22 @@ export const Route = createFileRoute("/_app/camiones")({
 });
 
 const EMPTY = {
-  patente: "", marca: "", modelo: "", anio: "", tipo: "Tracto",
+  patente: "", marca: "", modelo: "", anio: "", tipo_camion_id: "",
+  acoplado_a_truck_id: "",
   capacidad_toneladas: "", numero_ejes: "",
   soap_vencimiento: "", permiso_circulacion_vencimiento: "", revision_tecnica_vencimiento: "",
 };
 
 type Driver = { id: string; nombre_completo: string; clase_licencia: string | null };
 type Asign = { id: string; camion_id: string; chofer_id: string; activa: boolean };
+type TipoCamion = { id: string; nombre: string; orden: number | null; requiere_acople: boolean };
 
 function CamionesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [items, setItems] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [asigns, setAsigns] = useState<Asign[]>([]);
+  const [tipos, setTipos] = useState<TipoCamion[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(EMPTY);
@@ -38,14 +41,16 @@ function CamionesPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setUserId(user.id);
-    const [{ data: ts }, { data: ds }, { data: as }] = await Promise.all([
+    const [{ data: ts }, { data: ds }, { data: as }, { data: tc }] = await Promise.all([
       supabase.from("trucks").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
       supabase.from("drivers").select("id,nombre_completo,clase_licencia").is("deleted_at", null).order("nombre_completo"),
       (supabase as any).from("asignaciones").select("*").eq("activa", true),
+      (supabase as any).from("tipos_camion").select("id,nombre,orden,requiere_acople").order("orden"),
     ]);
     setItems(ts ?? []);
     setDrivers(ds ?? []);
     setAsigns(as ?? []);
+    setTipos((tc ?? []) as TipoCamion[]);
     setLoading(false);
   };
 
