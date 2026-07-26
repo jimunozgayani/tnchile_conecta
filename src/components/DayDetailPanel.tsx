@@ -44,7 +44,7 @@ export function useDayRows(selected: string) {
       const { data, error } = await supabase
         .from("drivers")
         .select(
-          "id, nombre_completo, origen_registro, user_id, proveedor:user_id(razon_social), camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+          "id, nombre_completo, origen_registro, user_id, camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
         )
         .is("deleted_at", null)
         .order("nombre_completo");
@@ -52,6 +52,19 @@ export function useDayRows(selected: string) {
       return data ?? [];
     },
   });
+
+  // No FK between drivers.user_id and profiles, so resolve names separately.
+  const proveedoresQ = useQuery({
+    queryKey: ["ops-day-proveedores"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, razon_social");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
 
   // Availability rows for the selected day only — merged client-side (LEFT JOIN).
   const dispQ = useQuery({
