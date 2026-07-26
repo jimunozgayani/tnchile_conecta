@@ -77,12 +77,14 @@ export const inviteDriver = createServerFn({ method: "POST" })
 
     // Proveedor name (best effort)
     let proveedor: string | null = null;
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("razon_social")
-      .eq("id", driver.user_id)
-      .maybeSingle();
-    proveedor = prof?.razon_social ?? null;
+    if (driver.user_id) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("razon_social")
+        .eq("id", driver.user_id)
+        .maybeSingle();
+      proveedor = prof?.razon_social ?? null;
+    }
 
     const link = `${SITE_URL}/invitacion-chofer/${inv.token}`;
     await sendResend(
