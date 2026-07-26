@@ -1134,6 +1134,47 @@ export type Database = {
       is_email_locked: { Args: { _email: string }; Returns: boolean }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
       process_document_expiries: { Args: never; Returns: undefined }
+      upsert_disponibilidad_dia: {
+        Args: {
+          _destino_ciudad_id?: string
+          _destino_texto?: string
+          _driver_id: string
+          _estado?: string
+          _fecha: string
+          _fuente?: string
+          _lugar_ciudad_id?: string
+          _lugar_texto?: string
+          _modalidad?: string
+          _tipo_camion_id?: string
+          _tipo_camion_otro?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          destino_ciudad_id: string | null
+          destino_texto: string | null
+          driver_id: string
+          estado: string
+          fecha_desde: string
+          fecha_hasta: string
+          fuente: string
+          id: string
+          lugar_ciudad_id: string | null
+          lugar_texto: string | null
+          modalidad: string | null
+          notas: string | null
+          tipo_camion_id: string | null
+          tipo_camion_otro: string | null
+          truck_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "disponibilidad_chofer"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "supplier" | "cliente" | "chofer"
