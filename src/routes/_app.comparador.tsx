@@ -12,6 +12,8 @@ import {
 
 export const Route = createFileRoute("/_app/comparador")({
   head: () => pageHead("/comparador", "Comparador de tarifas · Operaciones TN Chile", "Compara tarifas de proveedores por región, capital y tipo de camión para elegir la mejor opción de transporte en TN Chile."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

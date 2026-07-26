@@ -8,6 +8,7 @@ import { CityCombobox } from "@/components/CityCombobox";
 import { CalendarDays } from "lucide-react";
 import { MonthCalendar, toISODate, type DayData } from "@/components/MonthCalendar";
 import { DayDetailPanel, useDayRows } from "@/components/DayDetailPanel";
+import { requireAdmin } from "@/lib/require-admin";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
@@ -16,20 +17,9 @@ export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")(
       "Calendario de disponibilidad · Operaciones TN Chile",
       "Calendario mensual de operaciones TN Chile: revisa de un vistazo cuántos choferes están disponibles cada día y qué días faltan por cargar.",
     ),
-  beforeLoad: async () => {
-    const { redirect } = await import("@tanstack/react-router");
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw redirect({ to: "/login" });
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-    if (!(roles ?? []).some((r: any) => r.role === "admin")) {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
+  ssr: false,
+  beforeLoad: requireAdmin,
+
   component: OpsAvailabilityPage,
 });
 

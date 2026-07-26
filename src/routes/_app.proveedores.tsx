@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_app/proveedores")({
     "Directorio de proveedores · TN Chile",
     "Explora proveedores de transporte de TN Chile filtrando por región y estado de documentos para elegir el mejor aliado logístico."
   ),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();

@@ -8,6 +8,8 @@ import { validateUpload } from "@/lib/upload-validation";
 
 export const Route = createFileRoute("/_app/cliente")({
   head: () => pageHead("/cliente", "Mis solicitudes · Cliente TN Chile", "Solicita cotizaciones de transporte a TN Chile, adjunta fotos de tu carga y haz seguimiento al estado de cada solicitud enviada."),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
   beforeLoad: async () => {
     const { redirect } = await import("@tanstack/react-router");
     const { data: { user } } = await supabase.auth.getUser();
