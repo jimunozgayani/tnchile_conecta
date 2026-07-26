@@ -237,12 +237,31 @@ function CamionesPage() {
               <Field label="Modelo" value={form.modelo} onChange={(v) => setForm({ ...form, modelo: v })} />
               <Field label="Año" type="number" value={form.anio} onChange={(v) => setForm({ ...form, anio: v })} />
               <div>
-                <label className="block text-sm font-medium">Tipo</label>
-                <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                <label className="block text-sm font-medium">Tipo de camión</label>
+                <select value={form.tipo_camion_id ?? ""} onChange={(e) => setForm({ ...form, tipo_camion_id: e.target.value })}
                   className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {TIPOS_CAMION.map((t) => <option key={t}>{t}</option>)}
+                  <option value="">— Selecciona un tipo —</option>
+                  {tipos.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
                 </select>
               </div>
+              {tipos.find((x) => x.id === form.tipo_camion_id)?.requiere_acople && (
+                <div>
+                  <label className="block text-sm font-medium">¿Con qué unidad va acoplado?</label>
+                  <select value={form.acoplado_a_truck_id ?? ""} onChange={(e) => setForm({ ...form, acoplado_a_truck_id: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">— Sin unidad acoplada (opcional) —</option>
+                    {items
+                      .filter((x) => x.id !== editing)
+                      .filter((x) => !x.acoplado_a_truck_id || x.acoplado_a_truck_id === editing)
+                      .map((x) => (
+                        <option key={x.id} value={x.id}>{x.patente} · {x.tipo}</option>
+                      ))}
+                  </select>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Puedes dejarlo vacío y asignarlo después; se marcará como “Sin unidad acoplada”.
+                  </p>
+                </div>
+              )}
               <Field label="Capacidad (ton)" type="number" value={form.capacidad_toneladas} onChange={(v) => setForm({ ...form, capacidad_toneladas: v })} />
               <Field label="N° ejes" type="number" value={form.numero_ejes} onChange={(v) => setForm({ ...form, numero_ejes: v })} />
               <Field label="Vencimiento SOAP" type="date" value={form.soap_vencimiento} onChange={(v) => setForm({ ...form, soap_vencimiento: v })} />
