@@ -329,31 +329,25 @@ function OpsWeekPage() {
         .single();
       if (error) throw error;
 
-      // Optional pre-fill: only create disp rows if the admin filled any of
-      // truck/lugar/destino. Otherwise leave zero rows so the driver renders
-      // as 7x "sin confirmar".
+      // Pre-fill the current week via the RPC (one call per day, skipping
+      // past dates). Metadata is only sent when the admin filled it in.
       const otroTrim = newTipoCamionOtro.trim();
-      const hasTipo = !!newTipoCamionId || (newTipoCamionId === "__otro" && !!otroTrim);
-      const hasMeta =
-        hasTipo || !!newLugarId || !!newLugarTexto || !!newDestinoId || !!newDestinoTexto;
-      if (hasMeta && inserted?.id) {
+      if (inserted?.id) {
         for (const date of days) {
-          await upsertDay(
-            inserted.id,
-            date,
-            {
-              estado: "disponible",
-              tipo_camion_id: newTipoCamionId && newTipoCamionId !== "__otro" ? newTipoCamionId : null,
-              tipo_camion_otro: newTipoCamionId === "__otro" ? (otroTrim || null) : null,
-              lugar_ciudad_id: newLugarId,
-              lugar_texto: newLugarTexto,
-              destino_ciudad_id: newDestinoId,
-              destino_texto: newDestinoTexto,
-            },
-            null,
-          );
+          if (isPast(date)) continue;
+          await upsertDay(inserted.id, date, {
+            estado: "disponible",
+            tipo_camion_id:
+              newTipoCamionId && newTipoCamionId !== "__otro" ? newTipoCamionId : null,
+            tipo_camion_otro: newTipoCamionId === "__otro" ? otroTrim || null : null,
+            lugar_ciudad_id: newLugarId,
+            lugar_texto: newLugarTexto,
+            destino_ciudad_id: newDestinoId,
+            destino_texto: newDestinoTexto,
+          });
         }
       }
+
 
       toast.success(`Chofer "${nombre}" agregado`);
       setNewNombre("");
