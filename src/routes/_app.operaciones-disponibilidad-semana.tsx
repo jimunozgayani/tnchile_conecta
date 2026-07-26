@@ -76,14 +76,29 @@ function OpsWeekPage() {
   const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
   const [newDestinoTexto, setNewDestinoTexto] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [assignFor, setAssignFor] = useState<any | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const monday = useMemo(() => startOfWeek(new Date()), []);
   const days = useMemo(() => weekDates(monday), [monday]);
   const todayISO = toISODate(new Date());
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id ?? null;
+      setUserId(uid);
+      if (!uid) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+    })();
   }, []);
+
+  // Admin, or the proveedor that owns the driver record
+  const canAssign = useCallback(
+    (d: any) => isAdmin || (!!userId && d?.user_id === userId),
+    [isAdmin, userId],
+  );
 
   // Drivers (both proveedor and operaciones origin)
   const driversQ = useQuery({
