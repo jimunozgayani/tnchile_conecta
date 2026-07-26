@@ -208,7 +208,9 @@ function OpsAvailabilityPage() {
       setNewLugarTexto(null);
       setNewDestinoId(null);
       setNewDestinoTexto(null);
-      monthQ.refetch();
+      qc.invalidateQueries({ queryKey: ["ops-month-disp"] });
+      qc.invalidateQueries({ queryKey: ["ops-day-drivers"] });
+      qc.invalidateQueries({ queryKey: ["ops-day-disp"] });
     } catch (e: any) {
       toast.error(`Error al agregar chofer: ${e.message ?? e}`);
     } finally {
