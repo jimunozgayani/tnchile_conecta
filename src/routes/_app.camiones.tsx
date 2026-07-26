@@ -57,7 +57,11 @@ function CamionesPage() {
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setForm(EMPTY); setEditing(null); setOpen(true); };
-  const openEdit = (t: any) => { setForm({ ...t }); setEditing(t.id); setOpen(true); };
+  const openEdit = (t: any) => {
+    setForm({ ...t, tipo_camion_id: t.tipo_camion_id ?? "", acoplado_a_truck_id: t.acoplado_a_truck_id ?? "" });
+    setEditing(t.id);
+    setOpen(true);
+  };
 
   const save = async () => {
     if (!userId) return;
@@ -68,6 +72,11 @@ function CamionesPage() {
     ["soap_vencimiento", "permiso_circulacion_vencimiento", "revision_tecnica_vencimiento"].forEach((k) => {
       if (!payload[k]) payload[k] = null;
     });
+    if (!payload.tipo_camion_id) { toast.error("Selecciona el tipo de camión"); return; }
+    if (!payload.acoplado_a_truck_id) payload.acoplado_a_truck_id = null;
+    // trucks.tipo is auto-synced from the catalog by a DB trigger
+    payload.tipo = tipos.find((x) => x.id === payload.tipo_camion_id)?.nombre ?? payload.tipo ?? "";
+
     const res = editing
       ? await supabase.from("trucks").update(payload).eq("id", editing)
       : await supabase.from("trucks").insert(payload);
