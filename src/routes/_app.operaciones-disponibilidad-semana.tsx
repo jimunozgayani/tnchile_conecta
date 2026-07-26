@@ -168,7 +168,6 @@ function OpsWeekPage() {
     const m = new Map<
       string,
       {
-        truck_id: string | null;
         lugar_ciudad_id: string | null;
         lugar_texto: string | null;
         destino_ciudad_id: string | null;
@@ -183,7 +182,6 @@ function OpsWeekPage() {
         days.map((iso) => byDate?.get(iso)).find((r) => r) ??
         null;
       m.set(d.id, {
-        truck_id: preferred?.truck_id ?? null,
         lugar_ciudad_id: preferred?.lugar_ciudad_id ?? null,
         lugar_texto: preferred?.lugar_texto ?? null,
         destino_ciudad_id: preferred?.destino_ciudad_id ?? null,
@@ -200,27 +198,41 @@ function OpsWeekPage() {
     return m;
   }, [trucks]);
 
-  // Truck-type filter chips
+  // Driver-level assigned truck (not per-day), with the coupled unit resolved
+  const truckForDriver = useCallback(
+    (d: any) => {
+      const t = d?.camion_asignado_id ? truckById.get(d.camion_asignado_id) : null;
+      if (!t) return null;
+      return {
+        ...t,
+        acoplado: t.acoplado_a_truck_id ? truckById.get(t.acoplado_a_truck_id) ?? null : null,
+      };
+    },
+    [truckById],
+  );
+
+  const tipoLabelFor = useCallback(
+    (d: any) => {
+      const t = truckForDriver(d);
+      return t?.tipo_camion?.nombre ?? t?.tipo ?? "sin_camion";
+    },
+    [truckForDriver],
+  );
+
+  // Truck-type filter chips (based on the driver's assigned truck type)
   const typeChips = useMemo(() => {
     const counts = new Map<string, number>();
     for (const d of drivers) {
-      const meta = metaByDriver.get(d.id);
-      const t = meta?.truck_id ? truckById.get(meta.truck_id) : null;
-      const tipo = t?.tipo ?? "sin_camion";
+      const tipo = tipoLabelFor(d);
       counts.set(tipo, (counts.get(tipo) ?? 0) + 1);
     }
     return Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [drivers, metaByDriver, truckById]);
+  }, [drivers, tipoLabelFor]);
 
   const filteredDrivers = useMemo(() => {
     if (truckFilter === "all") return drivers;
-    return drivers.filter((d) => {
-      const meta = metaByDriver.get(d.id);
-      const t = meta?.truck_id ? truckById.get(meta.truck_id) : null;
-      const tipo = t?.tipo ?? "sin_camion";
-      return tipo === truckFilter;
-    });
-  }, [drivers, truckFilter, metaByDriver, truckById]);
+    return drivers.filter((d) => tipoLabelFor(d) === truckFilter);
+  }, [drivers, truckFilter, tipoLabelFor]);
 
   // Today's disponibles
   const todayAvailables = useMemo(() => {
@@ -228,23 +240,26 @@ function OpsWeekPage() {
       .map((d) => {
         const r = rowsByDriverDate.get(d.id)?.get(todayISO);
         if (!r || r.estado !== "disponible") return null;
-        const t = r.truck_id ? truckById.get(r.truck_id) : null;
+        const t = truckForDriver(d);
+        const patentes = [t?.patente, t?.tipo_camion?.requiere_acople ? t?.acoplado?.patente : null]
+          .filter(Boolean)
+          .join(" + ");
         return {
           id: d.id,
           nombre: d.nombre_completo,
-          patente: t?.patente ?? null,
-          tipo: t?.tipo ?? null,
+          patentes: patentes || null,
+          tipo: t ? (t.tipo_camion?.nombre ?? t.tipo ?? null) : null,
           lugar: r.lugar?.nombre ?? r.lugar_texto ?? null,
         };
       })
       .filter(Boolean) as Array<{
       id: string;
       nombre: string;
-      patente: string | null;
+      patentes: string | null;
       tipo: string | null;
       lugar: string | null;
     }>;
-  }, [drivers, rowsByDriverDate, todayISO, truckById]);
+  }, [drivers, rowsByDriverDate, todayISO, truckForDriver]);
 
   // ---------- Mutations ----------
 
