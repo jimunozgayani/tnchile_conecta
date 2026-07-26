@@ -51,6 +51,8 @@ function capitalize(s: string) {
 function OpsAvailabilityPage() {
   const today = useMemo(() => new Date(), []);
   const todayISO = toISODate(today);
+  const qc = useQueryClient();
+
 
   const [userId, setUserId] = useState<string | null>(null);
   const [year, setYear] = useState(today.getFullYear());
