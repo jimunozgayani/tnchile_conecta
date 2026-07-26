@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
-import { CalendarDays, Truck, Users } from "lucide-react";
+import { CamionLabel } from "@/components/CamionLabel";
+import { CalendarDays, Pencil, Truck, Users, X } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
