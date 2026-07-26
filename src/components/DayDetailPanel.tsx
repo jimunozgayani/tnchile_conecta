@@ -1,0 +1,265 @@
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { CityCombobox } from "@/components/CityCombobox";
+import { CamionLabel } from "@/components/CamionLabel";
+
+export type DayEstado = "sin_confirmar" | "disponible" | "no_disponible";
+
+/** One merged row: ALWAYS one per driver, with or without availability data. */
+export type DayRow = {
+  driver_id: string;
+  nombre: string;
+  proveedor: string | null;
+  origen_registro: string | null;
+  camion: any | null;
+  disp: any | null;
+  estado: DayEstado;
+};
+
+const NEXT_ESTADO: Record<DayEstado, DayEstado> = {
+  sin_confirmar: "disponible",
+  disponible: "no_disponible",
+  no_disponible: "sin_confirmar",
+};
+
+const ESTADO_LABEL: Record<DayEstado, string> = {
+  sin_confirmar: "Sin confirmar",
+  disponible: "Disponible",
+  no_disponible: "No disponible",
+};
+
+const ESTADO_CLASS: Record<DayEstado, string> = {
+  sin_confirmar: "border-input bg-muted text-muted-foreground",
+  disponible: "border-emerald-600 bg-emerald-600 text-white",
+  no_disponible: "border-red-500 bg-red-500 text-white",
+};
+
+export function useDayRows(selected: string) {
+  // Base list: EVERY driver, independent of the selected date.
+  const driversQ = useQuery({
+    queryKey: ["ops-day-drivers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select(
+          "id, nombre_completo, origen_registro, user_id, proveedor:user_id(razon_social), camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+        )
+        .is("deleted_at", null)
+        .order("nombre_completo");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // Availability rows for the selected day only — merged client-side (LEFT JOIN).
+  const dispQ = useQuery({
+    queryKey: ["ops-day-disp", selected],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("disponibilidad_chofer")
+        .select(
+          "*, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), tipo_camion:tipo_camion_id(nombre), truck:truck_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+        )
+        .eq("fecha_desde", selected)
+        .eq("fecha_hasta", selected);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const rows: DayRow[] = useMemo(() => {
+    const byDriver = new Map<string, any>();
+    for (const r of dispQ.data ?? []) byDriver.set(r.driver_id, r);
+    return ((driversQ.data ?? []) as any[]).map((d) => {
+      const disp = byDriver.get(d.id) ?? null;
+      return {
+        driver_id: d.id,
+        nombre: d.nombre_completo ?? "Chofer",
+        proveedor: d.proveedor?.razon_social ?? null,
+        origen_registro: d.origen_registro ?? null,
+        camion: disp?.truck ?? d.camion ?? null,
+        disp,
+        estado: (disp?.estado as DayEstado) ?? "sin_confirmar",
+      };
+    });
+  }, [driversQ.data, dispQ.data]);
+
+  return { rows, isLoading: driversQ.isLoading || dispQ.isLoading };
+}
+
+export function DayDetailPanel({
+  selected,
+  readOnly,
+  rows,
+  isLoading,
+}: {
+  selected: string;
+  readOnly: boolean;
+  rows: DayRow[];
+  isLoading: boolean;
+}) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["ops-day-disp"] });
+    qc.invalidateQueries({ queryKey: ["ops-day-drivers"] });
+    qc.invalidateQueries({ queryKey: ["ops-month-disp"] });
+  };
+
+  const save = async (row: DayRow, patch: Record<string, any>) => {
+    if (readOnly) {
+      toast.error("No se puede modificar una fecha pasada");
+      return;
+    }
+    setBusy(row.driver_id);
+    try {
+      const { error } = await supabase.rpc("upsert_disponibilidad_dia", {
+        _driver_id: row.driver_id,
+        _fecha: selected,
+        _estado: patch.estado ?? (row.estado === "sin_confirmar" ? "disponible" : row.estado),
+        _lugar_ciudad_id: patch.lugar_ciudad_id ?? null,
+        _lugar_texto: patch.lugar_texto ?? null,
+        _destino_ciudad_id: patch.destino_ciudad_id ?? null,
+        _destino_texto: patch.destino_texto ?? null,
+        _modalidad: patch.modalidad ?? null,
+        _tipo_camion_id: null,
+        _tipo_camion_otro: null,
+        _fuente: "operaciones",
+      } as any);
+      if (error) throw error;
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message ?? String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const cycle = async (row: DayRow) => {
+    if (readOnly) {
+      toast.error("No se puede modificar una fecha pasada");
+      return;
+    }
+    const next = NEXT_ESTADO[row.estado];
+    setBusy(row.driver_id);
+    try {
+      if (next === "sin_confirmar") {
+        if (row.disp?.id) {
+          const { error } = await supabase
+            .from("disponibilidad_chofer")
+            .delete()
+            .eq("id", row.disp.id);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase.rpc("upsert_disponibilidad_dia", {
+          _driver_id: row.driver_id,
+          _fecha: selected,
+          _estado: next,
+          _fuente: "operaciones",
+        } as any);
+        if (error) throw error;
+      }
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message ?? String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const visible = rows.filter((r) =>
+    filter.trim()
+      ? `${r.nombre} ${r.proveedor ?? ""}`.toLowerCase().includes(filter.trim().toLowerCase())
+      : true,
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Buscar chofer o proveedor…"
+          className="min-w-[200px] flex-1 rounded border border-input bg-background px-2 py-2 text-sm"
+        />
+        <span className="text-xs text-muted-foreground">
+          {visible.length} chofer(es)
+        </span>
+      </div>
+
+      {isLoading && <p className="text-sm text-muted-foreground">Cargando choferes…</p>}
+      {!isLoading && visible.length === 0 && (
+        <p className="text-sm text-muted-foreground">No hay choferes registrados.</p>
+      )}
+
+      <ul className="space-y-2">
+        {visible.map((row) => (
+          <li
+            key={row.driver_id}
+            className="rounded-lg border bg-card p-3 shadow-sm"
+            data-testid="day-row"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-[160px]">
+                <div className="text-sm font-semibold text-foreground">{row.nombre}</div>
+                <div className="text-xs text-muted-foreground">
+                  {row.proveedor ?? (row.origen_registro === "operaciones" ? "Ocasional" : "Sin proveedor")}
+                </div>
+                <div className="mt-1">
+                  <CamionLabel truck={row.camion} />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => cycle(row)}
+                disabled={readOnly || busy === row.driver_id}
+                className={`min-h-[44px] rounded-md border px-4 py-2 text-sm font-semibold transition disabled:opacity-60 ${ESTADO_CLASS[row.estado]}`}
+              >
+                {busy === row.driver_id ? "…" : ESTADO_LABEL[row.estado]}
+              </button>
+            </div>
+
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <CityCombobox
+                value={row.disp?.lugar_ciudad_id ?? null}
+                freeText={row.disp?.lugar_texto ?? null}
+                onChange={(id, txt) =>
+                  save(row, { estado: row.estado === "sin_confirmar" ? "disponible" : row.estado, lugar_ciudad_id: id, lugar_texto: txt })
+                }
+                placeholder="Lugar"
+              />
+              <CityCombobox
+                value={row.disp?.destino_ciudad_id ?? null}
+                freeText={row.disp?.destino_texto ?? null}
+                onChange={(id, txt) =>
+                  save(row, { estado: row.estado === "sin_confirmar" ? "disponible" : row.estado, destino_ciudad_id: id, destino_texto: txt })
+                }
+                placeholder="Destino"
+              />
+              <select
+                value={row.disp?.modalidad ?? ""}
+                disabled={readOnly || busy === row.driver_id}
+                onChange={(e) =>
+                  save(row, {
+                    estado: row.estado === "sin_confirmar" ? "disponible" : row.estado,
+                    modalidad: e.target.value || null,
+                  })
+                }
+                className="rounded border border-input bg-background px-2 py-2 text-sm"
+              >
+                <option value="">Modalidad</option>
+                <option value="consolidado">Consolidado</option>
+                <option value="rampla_completa">Rampla completa</option>
+              </select>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

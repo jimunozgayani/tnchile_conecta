@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
 import { CalendarDays } from "lucide-react";
 import { MonthCalendar, toISODate, type DayData } from "@/components/MonthCalendar";
+import { DayDetailPanel, useDayRows } from "@/components/DayDetailPanel";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
@@ -50,6 +51,8 @@ function capitalize(s: string) {
 function OpsAvailabilityPage() {
   const today = useMemo(() => new Date(), []);
   const todayISO = toISODate(today);
+  const qc = useQueryClient();
+
 
   const [userId, setUserId] = useState<string | null>(null);
   const [year, setYear] = useState(today.getFullYear());
@@ -207,7 +210,9 @@ function OpsAvailabilityPage() {
       setNewLugarTexto(null);
       setNewDestinoId(null);
       setNewDestinoTexto(null);
-      monthQ.refetch();
+      qc.invalidateQueries({ queryKey: ["ops-month-disp"] });
+      qc.invalidateQueries({ queryKey: ["ops-day-drivers"] });
+      qc.invalidateQueries({ queryKey: ["ops-day-disp"] });
     } catch (e: any) {
       toast.error(`Error al agregar chofer: ${e.message ?? e}`);
     } finally {
@@ -215,7 +220,7 @@ function OpsAvailabilityPage() {
     }
   };
 
-  const selectedData = dataByDate.get(selected);
+  const dayRows = useDayRows(selected);
 
   return (
     <div className="space-y-4 pb-24">
@@ -253,17 +258,24 @@ function OpsAvailabilityPage() {
         <p className="text-sm text-muted-foreground">Cargando calendario…</p>
       )}
 
-      {/* Selected day — the detail panel will be mounted right below this heading */}
+      {/* Selected day — detail panel: EVERY driver, with or without data */}
       <section aria-label="Día seleccionado" className="rounded-xl border bg-card p-4 shadow-sm">
         <h2 className="text-lg font-bold text-primary-dark">
           {capitalize(LONG_DATE.format(fromISO(selected)))}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {selectedData?.disponibles.length
-            ? `${selectedData.disponibles.length} chofer(es) disponible(s).`
-            : "Sin choferes disponibles cargados para este día."}
+        <p className="mt-1 mb-3 text-sm text-muted-foreground">
+          {dayRows.rows.filter((r) => r.estado === "disponible").length} disponible(s) ·{" "}
+          {dayRows.rows.filter((r) => r.estado === "sin_confirmar").length} sin confirmar
+          {selected < todayISO ? " · fecha pasada (solo lectura)" : ""}
         </p>
+        <DayDetailPanel
+          selected={selected}
+          readOnly={selected < todayISO}
+          rows={dayRows.rows}
+          isLoading={dayRows.isLoading}
+        />
       </section>
+
 
       {/* Agregar chofer ocasional */}
       <section aria-label="Agregar chofer" className="rounded-xl border bg-card p-4 shadow-sm">
