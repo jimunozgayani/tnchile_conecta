@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
 import { CalendarDays } from "lucide-react";
 import { MonthCalendar, toISODate, type DayData } from "@/components/MonthCalendar";
+import { DayDetailPanel, useDayRows } from "@/components/DayDetailPanel";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
