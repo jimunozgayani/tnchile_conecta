@@ -90,7 +90,7 @@ function OpsWeekPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, nombre_completo, user_id, origen_registro, clase_licencia")
+        .select("id, nombre_completo, user_id, origen_registro, clase_licencia, camion_asignado_id")
         .is("deleted_at", null)
         .in("origen_registro", ["proveedor", "operaciones"])
         .order("nombre_completo");
@@ -99,13 +99,15 @@ function OpsWeekPage() {
     },
   });
 
-  // Trucks (for the row-level camión dropdown + tipo lookup)
+  // Trucks (for the driver-level "camión asignado" picker + type display)
   const trucksQ = useQuery({
     queryKey: ["ops-week-trucks"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trucks")
-        .select("id, patente, tipo, user_id")
+        .select(
+          "id, patente, tipo, user_id, tipo_camion_id, acoplado_a_truck_id, tipo_camion:tipo_camion_id(nombre, requiere_acople)",
+        )
         .is("deleted_at", null)
         .order("patente");
       if (error) throw error;
