@@ -85,19 +85,22 @@ export function useDayRows(selected: string) {
   const rows: DayRow[] = useMemo(() => {
     const byDriver = new Map<string, any>();
     for (const r of dispQ.data ?? []) byDriver.set(r.driver_id, r);
+    const provName = new Map<string, string | null>();
+    for (const p of (proveedoresQ.data ?? []) as any[]) provName.set(p.id, p.razon_social ?? null);
     return ((driversQ.data ?? []) as any[]).map((d) => {
       const disp = byDriver.get(d.id) ?? null;
       return {
         driver_id: d.id,
         nombre: d.nombre_completo ?? "Chofer",
-        proveedor: d.proveedor?.razon_social ?? null,
+        proveedor: d.user_id ? (provName.get(d.user_id) ?? null) : null,
         origen_registro: d.origen_registro ?? null,
         camion: disp?.truck ?? d.camion ?? null,
         disp,
         estado: (disp?.estado as DayEstado) ?? "sin_confirmar",
       };
     });
-  }, [driversQ.data, dispQ.data]);
+  }, [driversQ.data, dispQ.data, proveedoresQ.data]);
+
 
   return { rows, isLoading: driversQ.isLoading || dispQ.isLoading };
 }
