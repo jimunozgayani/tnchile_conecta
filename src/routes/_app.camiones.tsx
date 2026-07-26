@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, X, UserPlus, AlertTriangle, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { TIPOS_CAMION } from "@/lib/regions";
+
 import { StatusBadge } from "@/components/StatusBadge";
 import { ESTADOS_OPERATIVOS, estadoMeta, licenseCovers, type EstadoOperativo } from "@/lib/fleet";
 
