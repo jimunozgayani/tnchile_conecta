@@ -44,7 +44,7 @@ export function useDayRows(selected: string) {
       const { data, error } = await supabase
         .from("drivers")
         .select(
-          "id, nombre_completo, origen_registro, user_id, proveedor:user_id(razon_social), camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+          "id, nombre_completo, origen_registro, user_id, camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
         )
         .is("deleted_at", null)
         .order("nombre_completo");
@@ -52,6 +52,19 @@ export function useDayRows(selected: string) {
       return data ?? [];
     },
   });
+
+  // No FK between drivers.user_id and profiles, so resolve names separately.
+  const proveedoresQ = useQuery({
+    queryKey: ["ops-day-proveedores"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, razon_social");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
 
   // Availability rows for the selected day only — merged client-side (LEFT JOIN).
   const dispQ = useQuery({
@@ -72,19 +85,22 @@ export function useDayRows(selected: string) {
   const rows: DayRow[] = useMemo(() => {
     const byDriver = new Map<string, any>();
     for (const r of dispQ.data ?? []) byDriver.set(r.driver_id, r);
+    const provName = new Map<string, string | null>();
+    for (const p of (proveedoresQ.data ?? []) as any[]) provName.set(p.id, p.razon_social ?? null);
     return ((driversQ.data ?? []) as any[]).map((d) => {
       const disp = byDriver.get(d.id) ?? null;
       return {
         driver_id: d.id,
         nombre: d.nombre_completo ?? "Chofer",
-        proveedor: d.proveedor?.razon_social ?? null,
+        proveedor: d.user_id ? (provName.get(d.user_id) ?? null) : null,
         origen_registro: d.origen_registro ?? null,
         camion: disp?.truck ?? d.camion ?? null,
         disp,
         estado: (disp?.estado as DayEstado) ?? "sin_confirmar",
       };
     });
-  }, [driversQ.data, dispQ.data]);
+  }, [driversQ.data, dispQ.data, proveedoresQ.data]);
+
 
   return { rows, isLoading: driversQ.isLoading || dispQ.isLoading };
 }
