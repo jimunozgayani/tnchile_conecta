@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, X, UserPlus, AlertTriangle, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { TIPOS_CAMION } from "@/lib/regions";
+
 import { StatusBadge } from "@/components/StatusBadge";
 import { ESTADOS_OPERATIVOS, estadoMeta, licenseCovers, type EstadoOperativo } from "@/lib/fleet";
 
@@ -14,19 +14,22 @@ export const Route = createFileRoute("/_app/camiones")({
 });
 
 const EMPTY = {
-  patente: "", marca: "", modelo: "", anio: "", tipo: "Tracto",
+  patente: "", marca: "", modelo: "", anio: "", tipo_camion_id: "",
+  acoplado_a_truck_id: "",
   capacidad_toneladas: "", numero_ejes: "",
   soap_vencimiento: "", permiso_circulacion_vencimiento: "", revision_tecnica_vencimiento: "",
 };
 
 type Driver = { id: string; nombre_completo: string; clase_licencia: string | null };
 type Asign = { id: string; camion_id: string; chofer_id: string; activa: boolean };
+type TipoCamion = { id: string; nombre: string; orden: number | null; requiere_acople: boolean };
 
 function CamionesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [items, setItems] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [asigns, setAsigns] = useState<Asign[]>([]);
+  const [tipos, setTipos] = useState<TipoCamion[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(EMPTY);
@@ -38,21 +41,27 @@ function CamionesPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setUserId(user.id);
-    const [{ data: ts }, { data: ds }, { data: as }] = await Promise.all([
+    const [{ data: ts }, { data: ds }, { data: as }, { data: tc }] = await Promise.all([
       supabase.from("trucks").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
       supabase.from("drivers").select("id,nombre_completo,clase_licencia").is("deleted_at", null).order("nombre_completo"),
       (supabase as any).from("asignaciones").select("*").eq("activa", true),
+      (supabase as any).from("tipos_camion").select("id,nombre,orden,requiere_acople").order("orden"),
     ]);
     setItems(ts ?? []);
     setDrivers(ds ?? []);
     setAsigns(as ?? []);
+    setTipos((tc ?? []) as TipoCamion[]);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setForm(EMPTY); setEditing(null); setOpen(true); };
-  const openEdit = (t: any) => { setForm({ ...t }); setEditing(t.id); setOpen(true); };
+  const openEdit = (t: any) => {
+    setForm({ ...t, tipo_camion_id: t.tipo_camion_id ?? "", acoplado_a_truck_id: t.acoplado_a_truck_id ?? "" });
+    setEditing(t.id);
+    setOpen(true);
+  };
 
   const save = async () => {
     if (!userId) return;
@@ -63,6 +72,11 @@ function CamionesPage() {
     ["soap_vencimiento", "permiso_circulacion_vencimiento", "revision_tecnica_vencimiento"].forEach((k) => {
       if (!payload[k]) payload[k] = null;
     });
+    if (!payload.tipo_camion_id) { toast.error("Selecciona el tipo de camión"); return; }
+    if (!payload.acoplado_a_truck_id) payload.acoplado_a_truck_id = null;
+    // trucks.tipo is auto-synced from the catalog by a DB trigger
+    payload.tipo = tipos.find((x) => x.id === payload.tipo_camion_id)?.nombre ?? payload.tipo ?? "";
+
     const res = editing
       ? await supabase.from("trucks").update(payload).eq("id", editing)
       : await supabase.from("trucks").insert(payload);
@@ -134,11 +148,26 @@ function CamionesPage() {
                   const drv = assignedDriverFor(t.id);
                   const meta = estadoMeta(t.estado_operativo);
                   const warn = drv && !licenseCovers(drv.clase_licencia, t.tipo);
+                  const tipoCat = tipos.find((x) => x.id === t.tipo_camion_id) ?? null;
+                  const acoplado = items.find((x) => x.id === t.acoplado_a_truck_id) ?? null;
+                  const faltaAcople = !!tipoCat?.requiere_acople && !t.acoplado_a_truck_id;
                   return (
                   <tr key={t.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-semibold">{t.patente}</td>
                     <td className="px-4 py-3">{t.marca} {t.modelo} {t.anio && `(${t.anio})`}</td>
-                    <td className="px-4 py-3">{t.tipo}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1">
+                        <span>{tipoCat?.nombre ?? t.tipo}</span>
+                        {acoplado && (
+                          <span className="text-[11px] text-muted-foreground">Acoplado a {acoplado.patente}</span>
+                        )}
+                        {faltaAcople && (
+                          <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+                            <AlertTriangle className="h-3 w-3" /> Sin unidad acoplada
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <select
                         value={t.estado_operativo ?? "disponible"}
@@ -208,12 +237,31 @@ function CamionesPage() {
               <Field label="Modelo" value={form.modelo} onChange={(v) => setForm({ ...form, modelo: v })} />
               <Field label="Año" type="number" value={form.anio} onChange={(v) => setForm({ ...form, anio: v })} />
               <div>
-                <label className="block text-sm font-medium">Tipo</label>
-                <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                <label className="block text-sm font-medium">Tipo de camión</label>
+                <select value={form.tipo_camion_id ?? ""} onChange={(e) => setForm({ ...form, tipo_camion_id: e.target.value })}
                   className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {TIPOS_CAMION.map((t) => <option key={t}>{t}</option>)}
+                  <option value="">— Selecciona un tipo —</option>
+                  {tipos.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
                 </select>
               </div>
+              {tipos.find((x) => x.id === form.tipo_camion_id)?.requiere_acople && (
+                <div>
+                  <label className="block text-sm font-medium">¿Con qué unidad va acoplado?</label>
+                  <select value={form.acoplado_a_truck_id ?? ""} onChange={(e) => setForm({ ...form, acoplado_a_truck_id: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">— Sin unidad acoplada (opcional) —</option>
+                    {items
+                      .filter((x) => x.id !== editing)
+                      .filter((x) => !x.acoplado_a_truck_id || x.acoplado_a_truck_id === editing)
+                      .map((x) => (
+                        <option key={x.id} value={x.id}>{x.patente} · {x.tipo}</option>
+                      ))}
+                  </select>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Puedes dejarlo vacío y asignarlo después; se marcará como “Sin unidad acoplada”.
+                  </p>
+                </div>
+              )}
               <Field label="Capacidad (ton)" type="number" value={form.capacidad_toneladas} onChange={(v) => setForm({ ...form, capacidad_toneladas: v })} />
               <Field label="N° ejes" type="number" value={form.numero_ejes} onChange={(v) => setForm({ ...form, numero_ejes: v })} />
               <Field label="Vencimiento SOAP" type="date" value={form.soap_vencimiento} onChange={(v) => setForm({ ...form, soap_vencimiento: v })} />

@@ -988,23 +988,27 @@ export type Database = {
           id: string
           nombre: string
           orden: number | null
+          requiere_acople: boolean
         }
         Insert: {
           activo?: boolean
           id?: string
           nombre: string
           orden?: number | null
+          requiere_acople?: boolean
         }
         Update: {
           activo?: boolean
           id?: string
           nombre?: string
           orden?: number | null
+          requiere_acople?: boolean
         }
         Relationships: []
       }
       trucks: {
         Row: {
+          acoplado_a_truck_id: string | null
           anio: number | null
           capacidad_toneladas: number | null
           created_at: string
@@ -1021,10 +1025,12 @@ export type Database = {
           revision_tecnica_vencimiento: string | null
           soap_vencimiento: string | null
           tipo: string | null
+          tipo_camion_id: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          acoplado_a_truck_id?: string | null
           anio?: number | null
           capacidad_toneladas?: number | null
           created_at?: string
@@ -1041,10 +1047,12 @@ export type Database = {
           revision_tecnica_vencimiento?: string | null
           soap_vencimiento?: string | null
           tipo?: string | null
+          tipo_camion_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          acoplado_a_truck_id?: string | null
           anio?: number | null
           capacidad_toneladas?: number | null
           created_at?: string
@@ -1061,10 +1069,26 @@ export type Database = {
           revision_tecnica_vencimiento?: string | null
           soap_vencimiento?: string | null
           tipo?: string | null
+          tipo_camion_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trucks_acoplado_a_truck_id_fkey"
+            columns: ["acoplado_a_truck_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trucks_tipo_camion_id_fkey"
+            columns: ["tipo_camion_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_camion"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_preferences: {
         Row: {
