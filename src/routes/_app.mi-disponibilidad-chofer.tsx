@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DisponibilidadChoferForm, type DispChoferRow } from "@/components/DisponibilidadChoferForm";
 import { CalendarDays, Lock, Pencil, Trash2, Plus, MapPin } from "lucide-react";
+import { CamionLabel } from "@/components/CamionLabel";
 
 export const Route = createFileRoute("/_app/mi-disponibilidad-chofer")({
   head: () => pageHead("/mi-disponibilidad-chofer", "Mi disponibilidad · Portal Choferes TN Chile", "Marca los días que estás disponible o no, tu lugar actual, destino, modalidad y camión para recibir asignaciones de TN Chile."),

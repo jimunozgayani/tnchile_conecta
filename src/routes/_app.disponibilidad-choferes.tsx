@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DisponibilidadChoferForm, type DispChoferRow } from "@/components/DisponibilidadChoferForm";
 import { Users, Plus, Pencil, Trash2, CalendarDays, MapPin, ChevronDown, ChevronRight } from "lucide-react";
+import { CamionLabel } from "@/components/CamionLabel";
 
 export const Route = createFileRoute("/_app/disponibilidad-choferes")({
   head: () => pageHead("/disponibilidad-choferes", "Disponibilidad de mis choferes · Proveedor TN Chile", "Carga y edita la disponibilidad diaria de todos los choferes de tu empresa proveedora de transporte TN Chile."),
