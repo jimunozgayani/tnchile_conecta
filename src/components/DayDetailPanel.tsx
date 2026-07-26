@@ -104,10 +104,147 @@ export function useDayRows(selected: string) {
     });
   }, [driversQ.data, dispQ.data, proveedoresQ.data]);
 
-
-
   return { rows, isLoading: driversQ.isLoading || dispQ.isLoading };
 }
+
+/** Effective truck type shown for a row (day entry wins over driver assignment). */
+export function rowTipo(row: DayRow): string | null {
+  return (
+    row.disp?.tipo_camion?.nombre ??
+    row.disp?.tipo_camion_otro ??
+    row.camion?.tipo_camion?.nombre ??
+    row.camion?.tipo ??
+    null
+  );
+}
+
+/** Current viewer: id + admin flag, used to gate "Cambiar camión asignado". */
+function useViewer() {
+  return useQuery({
+    queryKey: ["ops-viewer"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return { id: null as string | null, isAdmin: false };
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      return {
+        id: user.id,
+        isAdmin: (roles ?? []).some((r: any) => r.role === "admin"),
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Modal picker that updates drivers.camion_asignado_id. */
+function CamionPicker({
+  row,
+  isAdmin,
+  onClose,
+  onSaved,
+}: {
+  row: DayRow;
+  isAdmin: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  const trucksQ = useQuery({
+    queryKey: ["ops-picker-trucks", row.proveedor_id, isAdmin],
+    queryFn: async () => {
+      let q = supabase
+        .from("trucks")
+        .select("id, patente, tipo, user_id, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente)")
+        .is("deleted_at", null)
+        .order("patente");
+      if (!isAdmin && row.proveedor_id) q = q.eq("user_id", row.proveedor_id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const assign = async (truckId: string | null) => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("drivers")
+        .update({ camion_asignado_id: truckId })
+        .eq("id", row.driver_id);
+      if (error) throw error;
+      toast.success(truckId ? "Camión asignado actualizado" : "Camión desasignado");
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message ?? String(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      role="dialog"
+      aria-label="Cambiar camión asignado"
+    >
+      <div className="max-h-[80vh] w-full max-w-lg overflow-auto rounded-t-xl bg-card p-4 shadow-lg sm:rounded-xl">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-primary-dark">
+            Camión asignado · {row.nombre}
+          </h3>
+          <button type="button" onClick={onClose} className="text-sm text-muted-foreground">
+            Cerrar
+          </button>
+        </div>
+
+        {trucksQ.isLoading && <p className="text-sm text-muted-foreground">Cargando camiones…</p>}
+        {!trucksQ.isLoading && (trucksQ.data ?? []).length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No hay camiones disponibles para este chofer.
+          </p>
+        )}
+
+        <ul className="space-y-2">
+          {((trucksQ.data ?? []) as any[]).map((t) => (
+            <li key={t.id}>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => assign(t.id)}
+                data-testid="picker-truck"
+                className="flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition hover:bg-muted disabled:opacity-60"
+              >
+                <CamionLabel truck={t} />
+                {row.camion?.patente === t.patente && (
+                  <span className="text-[11px] font-semibold text-primary">Actual</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {row.camion && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => assign(null)}
+            className="mt-3 w-full rounded-md border px-3 py-2 text-sm text-muted-foreground"
+          >
+            Quitar camión asignado
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 
 export function DayDetailPanel({
   selected,
