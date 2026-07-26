@@ -12,11 +12,13 @@ export type DayRow = {
   driver_id: string;
   nombre: string;
   proveedor: string | null;
+  proveedor_id: string | null;
   origen_registro: string | null;
   camion: any | null;
   disp: any | null;
   estado: DayEstado;
 };
+
 
 const NEXT_ESTADO: Record<DayEstado, DayEstado> = {
   sin_confirmar: "disponible",
