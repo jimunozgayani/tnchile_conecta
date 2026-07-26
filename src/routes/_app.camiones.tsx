@@ -148,11 +148,26 @@ function CamionesPage() {
                   const drv = assignedDriverFor(t.id);
                   const meta = estadoMeta(t.estado_operativo);
                   const warn = drv && !licenseCovers(drv.clase_licencia, t.tipo);
+                  const tipoCat = tipos.find((x) => x.id === t.tipo_camion_id) ?? null;
+                  const acoplado = items.find((x) => x.id === t.acoplado_a_truck_id) ?? null;
+                  const faltaAcople = !!tipoCat?.requiere_acople && !t.acoplado_a_truck_id;
                   return (
                   <tr key={t.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-semibold">{t.patente}</td>
                     <td className="px-4 py-3">{t.marca} {t.modelo} {t.anio && `(${t.anio})`}</td>
-                    <td className="px-4 py-3">{t.tipo}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1">
+                        <span>{tipoCat?.nombre ?? t.tipo}</span>
+                        {acoplado && (
+                          <span className="text-[11px] text-muted-foreground">Acoplado a {acoplado.patente}</span>
+                        )}
+                        {faltaAcople && (
+                          <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+                            <AlertTriangle className="h-3 w-3" /> Sin unidad acoplada
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <select
                         value={t.estado_operativo ?? "disponible"}
