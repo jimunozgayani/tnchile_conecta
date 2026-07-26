@@ -78,7 +78,7 @@ export const activateDriverInvitation = createServerFn({ method: "POST" })
     const { data: perfiles } = await supabaseAdmin
       .from("chofer_perfiles")
       .select("user_id,rut,proveedor_id")
-      .eq("proveedor_id", drv.user_id);
+      .eq("proveedor_id", drv.user_id ?? "00000000-0000-0000-0000-000000000000");
     const already = (perfiles ?? []).find(
       (p) => (p.rut ?? "").replace(/[^0-9kK]/g, "").toLowerCase() === rutNorm,
     );
