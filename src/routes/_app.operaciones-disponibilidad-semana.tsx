@@ -8,6 +8,7 @@ import { CityCombobox } from "@/components/CityCombobox";
 import { CalendarDays } from "lucide-react";
 import { MonthCalendar, toISODate, type DayData } from "@/components/MonthCalendar";
 import { DayDetailPanel, useDayRows } from "@/components/DayDetailPanel";
+import { requireAdmin } from "@/lib/require-admin";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
