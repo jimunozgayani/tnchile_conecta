@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DisponibilidadChoferForm, type DispChoferRow } from "@/components/DisponibilidadChoferForm";
 import { Users, Plus, Pencil, Trash2, CalendarDays, MapPin, ChevronDown, ChevronRight } from "lucide-react";
+import { CamionLabel } from "@/components/CamionLabel";
 
 export const Route = createFileRoute("/_app/disponibilidad-choferes")({
   head: () => pageHead("/disponibilidad-choferes", "Disponibilidad de mis choferes · Proveedor TN Chile", "Carga y edita la disponibilidad diaria de todos los choferes de tu empresa proveedora de transporte TN Chile."),
@@ -53,7 +54,7 @@ function DispChoferesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("disponibilidad_chofer")
-        .select("*, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), truck:truck_id(patente)")
+        .select("*, lugar:lugar_ciudad_id(nombre), destino:destino_ciudad_id(nombre), truck:truck_id(patente, tipo, acoplado_a_truck_id, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))")
         .order("fecha_desde", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -193,7 +194,12 @@ function DriverCard({ driver, rows, proveedorUserId, showProveedor, onChanged }:
                   <p><span className="text-muted-foreground">Tipo:</span>{" "}
                     {r.modalidad === "consolidado" ? "Consolidado" : "Rampla completa"}</p>
                 )}
-                {r.truck?.patente && <p><span className="text-muted-foreground">Camión:</span> {r.truck.patente}</p>}
+                {r.truck && (
+                  <div className="flex items-start gap-1">
+                    <span className="text-muted-foreground">Camión:</span>
+                    <CamionLabel truck={r.truck} />
+                  </div>
+                )}
               </div>
               {r.notas && <p className="mt-1 text-xs text-muted-foreground">{r.notas}</p>}
               <div className="mt-2 flex gap-2">

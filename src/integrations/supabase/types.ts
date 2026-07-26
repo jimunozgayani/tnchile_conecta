@@ -517,6 +517,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          camion_asignado_id: string | null
           carnet_vencimiento: string | null
           celular: string | null
           clase_licencia: string | null
@@ -535,6 +536,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          camion_asignado_id?: string | null
           carnet_vencimiento?: string | null
           celular?: string | null
           clase_licencia?: string | null
@@ -553,6 +555,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          camion_asignado_id?: string | null
           carnet_vencimiento?: string | null
           celular?: string | null
           clase_licencia?: string | null
@@ -570,7 +573,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drivers_camion_asignado_id_fkey"
+            columns: ["camion_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eventos_viaje: {
         Row: {

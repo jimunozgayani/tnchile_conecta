@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
-import { CalendarDays, Truck, Users } from "lucide-react";
+import { CamionLabel } from "@/components/CamionLabel";
+import { CalendarDays, Pencil, Truck, Users, X } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad-semana")({
   head: () =>
@@ -75,14 +76,29 @@ function OpsWeekPage() {
   const [newDestinoId, setNewDestinoId] = useState<string | null>(null);
   const [newDestinoTexto, setNewDestinoTexto] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [assignFor, setAssignFor] = useState<any | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const monday = useMemo(() => startOfWeek(new Date()), []);
   const days = useMemo(() => weekDates(monday), [monday]);
   const todayISO = toISODate(new Date());
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id ?? null;
+      setUserId(uid);
+      if (!uid) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+    })();
   }, []);
+
+  // Admin, or the proveedor that owns the driver record
+  const canAssign = useCallback(
+    (d: any) => isAdmin || (!!userId && d?.user_id === userId),
+    [isAdmin, userId],
+  );
 
   // Drivers (both proveedor and operaciones origin)
   const driversQ = useQuery({
@@ -90,7 +106,7 @@ function OpsWeekPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, nombre_completo, user_id, origen_registro, clase_licencia")
+        .select("id, nombre_completo, user_id, origen_registro, clase_licencia, camion_asignado_id")
         .is("deleted_at", null)
         .in("origen_registro", ["proveedor", "operaciones"])
         .order("nombre_completo");
@@ -99,13 +115,15 @@ function OpsWeekPage() {
     },
   });
 
-  // Trucks (for the row-level camión dropdown + tipo lookup)
+  // Trucks (for the driver-level "camión asignado" picker + type display)
   const trucksQ = useQuery({
     queryKey: ["ops-week-trucks"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trucks")
-        .select("id, patente, tipo, user_id")
+        .select(
+          "id, patente, tipo, user_id, tipo_camion_id, acoplado_a_truck_id, tipo_camion:tipo_camion_id(nombre, requiere_acople)",
+        )
         .is("deleted_at", null)
         .order("patente");
       if (error) throw error;
@@ -166,7 +184,6 @@ function OpsWeekPage() {
     const m = new Map<
       string,
       {
-        truck_id: string | null;
         lugar_ciudad_id: string | null;
         lugar_texto: string | null;
         destino_ciudad_id: string | null;
@@ -181,7 +198,6 @@ function OpsWeekPage() {
         days.map((iso) => byDate?.get(iso)).find((r) => r) ??
         null;
       m.set(d.id, {
-        truck_id: preferred?.truck_id ?? null,
         lugar_ciudad_id: preferred?.lugar_ciudad_id ?? null,
         lugar_texto: preferred?.lugar_texto ?? null,
         destino_ciudad_id: preferred?.destino_ciudad_id ?? null,
@@ -198,27 +214,41 @@ function OpsWeekPage() {
     return m;
   }, [trucks]);
 
-  // Truck-type filter chips
+  // Driver-level assigned truck (not per-day), with the coupled unit resolved
+  const truckForDriver = useCallback(
+    (d: any) => {
+      const t = d?.camion_asignado_id ? truckById.get(d.camion_asignado_id) : null;
+      if (!t) return null;
+      return {
+        ...t,
+        acoplado: t.acoplado_a_truck_id ? truckById.get(t.acoplado_a_truck_id) ?? null : null,
+      };
+    },
+    [truckById],
+  );
+
+  const tipoLabelFor = useCallback(
+    (d: any) => {
+      const t = truckForDriver(d);
+      return t?.tipo_camion?.nombre ?? t?.tipo ?? "sin_camion";
+    },
+    [truckForDriver],
+  );
+
+  // Truck-type filter chips (based on the driver's assigned truck type)
   const typeChips = useMemo(() => {
     const counts = new Map<string, number>();
     for (const d of drivers) {
-      const meta = metaByDriver.get(d.id);
-      const t = meta?.truck_id ? truckById.get(meta.truck_id) : null;
-      const tipo = t?.tipo ?? "sin_camion";
+      const tipo = tipoLabelFor(d);
       counts.set(tipo, (counts.get(tipo) ?? 0) + 1);
     }
     return Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [drivers, metaByDriver, truckById]);
+  }, [drivers, tipoLabelFor]);
 
   const filteredDrivers = useMemo(() => {
     if (truckFilter === "all") return drivers;
-    return drivers.filter((d) => {
-      const meta = metaByDriver.get(d.id);
-      const t = meta?.truck_id ? truckById.get(meta.truck_id) : null;
-      const tipo = t?.tipo ?? "sin_camion";
-      return tipo === truckFilter;
-    });
-  }, [drivers, truckFilter, metaByDriver, truckById]);
+    return drivers.filter((d) => tipoLabelFor(d) === truckFilter);
+  }, [drivers, truckFilter, tipoLabelFor]);
 
   // Today's disponibles
   const todayAvailables = useMemo(() => {
@@ -226,23 +256,26 @@ function OpsWeekPage() {
       .map((d) => {
         const r = rowsByDriverDate.get(d.id)?.get(todayISO);
         if (!r || r.estado !== "disponible") return null;
-        const t = r.truck_id ? truckById.get(r.truck_id) : null;
+        const t = truckForDriver(d);
+        const patentes = [t?.patente, t?.tipo_camion?.requiere_acople ? t?.acoplado?.patente : null]
+          .filter(Boolean)
+          .join(" + ");
         return {
           id: d.id,
           nombre: d.nombre_completo,
-          patente: t?.patente ?? null,
-          tipo: t?.tipo ?? null,
+          patentes: patentes || null,
+          tipo: t ? (t.tipo_camion?.nombre ?? t.tipo ?? null) : null,
           lugar: r.lugar?.nombre ?? r.lugar_texto ?? null,
         };
       })
       .filter(Boolean) as Array<{
       id: string;
       nombre: string;
-      patente: string | null;
+      patentes: string | null;
       tipo: string | null;
       lugar: string | null;
     }>;
-  }, [drivers, rowsByDriverDate, todayISO, truckById]);
+  }, [drivers, rowsByDriverDate, todayISO, truckForDriver]);
 
   // ---------- Mutations ----------
 
@@ -403,8 +436,8 @@ function OpsWeekPage() {
             {todayAvailables.map((a) => (
               <li key={a.id} className="text-emerald-900/90 dark:text-emerald-100/90">
                 <span className="font-medium">{a.nombre}</span>
-                {a.patente ? ` · ${a.patente}` : ""}
-                {a.tipo ? ` (${a.tipo})` : ""}
+                {a.tipo ? <> · <span className="font-semibold">{a.tipo}</span></> : ""}
+                {a.patentes ? <span className="opacity-70"> ({a.patentes})</span> : ""}
                 {a.lugar ? ` · ${a.lugar}` : ""}
               </li>
             ))}
@@ -474,22 +507,21 @@ function OpsWeekPage() {
                         {d.clase_licencia ? ` · Lic. ${d.clase_licencia}` : ""}
                       </div>
                     </td>
-                    <td className="px-2 py-2 min-w-[140px]">
-                      <select
-                        value={meta.truck_id ?? ""}
-                        onChange={(e) =>
-                          setRowMeta(d.id, { truck_id: e.target.value || null })
-                        }
-                        className="w-full rounded border border-input bg-background px-2 py-1 text-xs"
-                      >
-                        <option value="">— sin camión —</option>
-                        {trucks.map((t: any) => (
-                          <option key={t.id} value={t.id}>
-                            {t.patente}
-                            {t.tipo ? ` · ${t.tipo}` : ""}
-                          </option>
-                        ))}
-                      </select>
+                    <td className="px-2 py-2 min-w-[160px]">
+                      <div className="flex items-start justify-between gap-2">
+                        <CamionLabel truck={truckForDriver(d)} />
+                        {canAssign(d) && (
+                          <button
+                            type="button"
+                            onClick={() => setAssignFor(d)}
+                            title="Cambiar camión asignado"
+                            aria-label={`Cambiar camión asignado de ${d.nombre_completo}`}
+                            className="rounded p-1 text-muted-foreground transition hover:bg-muted hover:text-primary"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-2 min-w-[160px]">
                       <CityCombobox
@@ -658,6 +690,81 @@ function OpsWeekPage() {
           </button>
         </div>
       </section>
+
+      {assignFor && (
+        <AssignTruckModal
+          driver={assignFor}
+          trucks={
+            isAdmin
+              ? trucks
+              : trucks.filter((t: any) => t.user_id === (assignFor.user_id ?? userId))
+          }
+          onClose={() => setAssignFor(null)}
+          onSave={async (truckId) => {
+            const { error } = await supabase
+              .from("drivers")
+              .update({ camion_asignado_id: truckId } as any)
+              .eq("id", assignFor.id);
+            if (error) {
+              toast.error(error.message);
+              return;
+            }
+            toast.success("Camión asignado actualizado");
+            setAssignFor(null);
+            driversQ.refetch();
+            dispQ.refetch();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AssignTruckModal({
+  driver,
+  trucks,
+  onClose,
+  onSave,
+}: {
+  driver: any;
+  trucks: any[];
+  onClose: () => void;
+  onSave: (truckId: string | null) => void | Promise<void>;
+}) {
+  const [sel, setSel] = useState<string>(driver.camion_asignado_id ?? "");
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Cambiar camión asignado</h2>
+          <button onClick={onClose} aria-label="Cerrar"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Chofer <span className="font-semibold text-foreground">{driver.nombre_completo}</span>.
+          Esta asignación es permanente, no por día.
+        </p>
+        <select
+          value={sel}
+          onChange={(e) => setSel(e.target.value)}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="">— Sin camión asignado —</option>
+          {trucks.map((t: any) => (
+            <option key={t.id} value={t.id}>
+              {t.tipo_camion?.nombre ?? t.tipo ?? "Tipo no definido"} · {t.patente}
+            </option>
+          ))}
+        </select>
+        <div className="mt-6 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md border px-4 py-2 text-sm">Cancelar</button>
+          <button
+            onClick={() => onSave(sel || null)}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
