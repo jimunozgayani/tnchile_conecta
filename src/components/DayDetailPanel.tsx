@@ -356,12 +356,19 @@ export function DayDetailPanel({
         {visible.map((row) => (
           <li
             key={row.driver_id}
-            className="rounded-lg border bg-card p-3 shadow-sm"
+            id={`day-row-${row.driver_id}`}
+            onClick={() => onSelectDriver?.(row.driver_id)}
+            className={`rounded-lg border bg-card p-3 shadow-sm transition ${
+              selectedDriverId === row.driver_id
+                ? "border-primary ring-2 ring-primary/40"
+                : ""
+            }`}
             data-testid="day-row"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-[160px]">
                 <div className="text-sm font-semibold text-foreground">{row.nombre}</div>
+
                 <div className="text-xs text-muted-foreground">
                   {row.proveedor ?? (row.origen_registro === "operaciones" ? "Ocasional" : "Sin proveedor")}
                 </div>
