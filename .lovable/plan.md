@@ -1,28 +1,42 @@
-## Problema detectado
+## Objetivo
 
-Ninguna tabla del esquema `public` tiene permisos (`GRANT`) otorgados a los roles `authenticated`, `anon` o `service_role`. Por eso la Data API (PostgREST) responde "permission denied" y la app no muestra **camiones, choferes ni proveedores** — ni como admin ni como proveedor — aunque las políticas RLS están bien definidas y hay datos en la base (2 camiones, 5 perfiles).
+Dejar **un solo espacio de disponibilidad** en Operaciones: calendario mensual + panel del día + mapa al final, todo en la misma página y con el mapa reflejando exactamente lo que muestra la lista (mismo día, mismos filtros, misma selección).
 
-Esto suele pasar tras un remix o cuando se crearon tablas sin el bloque `GRANT` obligatorio. Las políticas RLS por sí solas no bastan: Supabase requiere `GRANT` explícitos.
+## Estado actual (verificado)
 
-## Solución (una sola migración)
+- `/operaciones-disponibilidad-semana` = calendario mensual + panel del día editable (`MonthCalendar` + `DayDetailPanel`).
+- `/operaciones-disponibilidad-mapa` = página aparte, con su propio selector de día y sus propios filtros (estado, modalidad, proveedor), su propia consulta a `disponibilidad_chofer` y su propio mapa Leaflet.
+- Enlaces que apuntan a las rutas: dos tarjetas en `/operaciones` y un redirect de admin en `_app.mi-disponibilidad.tsx`.
+- El panel del día ya trae los datos de cada chofer, pero su consulta **solo pide `nombre` de ciudad**, no `lat`/`lng`, así que hoy no alcanza para dibujar pines.
 
-Otorgar permisos a las 13 tablas de `public` siguiendo estas reglas:
+## Qué se hará
 
-- **`service_role`** → `ALL` en todas (necesario para edge/admin code).
-- **`authenticated`** → `SELECT, INSERT, UPDATE, DELETE` en todas las tablas con políticas para usuarios logueados.
-- **`anon`** → **ninguno**. Todas las políticas se basan en `auth.uid()` o `has_role`, así que no debe haber acceso anónimo.
+1. **Una sola ruta**
+   - La página unificada queda en `/operaciones-disponibilidad` (nombre limpio, sin "semana" ni "mapa").
+   - `/operaciones-disponibilidad-semana` y `/operaciones-disponibilidad-mapa` pasan a redirigir a la nueva ruta, para no romper enlaces guardados.
+   - En `/operaciones` queda **una sola tarjeta**: "Disponibilidad". Se actualiza también el redirect de admin en `mi-disponibilidad`.
 
-Tablas cubiertas:
-`profiles`, `trucks`, `drivers`, `documents`, `tarifas`, `rates`, `asignaciones`, `mensajes`, `notificaciones`, `supplier_invitations`, `user_roles`, `login_attempts`, `audit_log`.
+2. **Datos compartidos**
+   - Se agregan `lat`/`lng` de lugar y destino a la consulta del día (`useDayRows`), para que lista y mapa se alimenten de la **misma** consulta. No hay una segunda consulta ni un segundo selector de fecha.
 
-Notas:
-- `user_roles`: ya restringe escritura por política a admins, así que dar `INSERT/UPDATE/DELETE` a `authenticated` es seguro (RLS bloquea a no-admins).
-- `audit_log` / `login_attempts`: solo `SELECT` para `authenticated` (la escritura la hacen triggers como `service_role`).
+3. **Mapa al final, sincronizado**
+   - El mapa se mueve al final de la página, bajo el panel del día.
+   - Muestra pines solo de los choferes **visibles en la lista** en ese momento: mismo día seleccionado en el calendario y mismos filtros aplicados (búsqueda por nombre/proveedor y chips de tipo de camión). Si se filtra por "Rampla Plana", el mapa queda con esos pines.
+   - Color del pin por estado (verde disponible / rojo no disponible); los "sin confirmar" no se dibujan. Línea punteada origen → destino cuando hay destino.
+   - Los filtros de estado, modalidad y proveedor que hoy vivían solo en la página del mapa se suman a la barra de filtros de la lista, para que ambos los compartan.
 
-## Verificación post-fix
+4. **Selección cruzada**
+   - Al hacer clic en una fila de la lista, el mapa centra y abre el popup de ese chofer; la fila queda resaltada.
+   - Al hacer clic en un pin, se resalta la fila correspondiente y se hace scroll hasta ella.
+   - Debajo del mapa: lista compacta "Sin ubicación en el mapa (N)" con los choferes visibles que no tienen ciudad con coordenadas.
 
-1. Recargar `/admin` → deben aparecer proveedores y stats.
-2. Entrar como proveedor → `/camiones`, `/choferes`, `/perfil` deben listar datos.
-3. Confirmar consola del navegador sin errores `permission denied`.
+5. **Formulario "Agregar chofer ocasional"** se mantiene tal cual, sobre el mapa.
 
-No hay cambios de código frontend — el bug es 100% de permisos de base de datos.
+## Detalles técnicos
+
+- Nuevo archivo `src/routes/_app.operaciones-disponibilidad.tsx` con el contenido de la página actual del calendario, más una sección de mapa al final.
+- Los filtros (texto, chips de tipo, estado, modalidad, proveedor) suben desde `DayDetailPanel` al contenedor de la página, que calcula `visibleRows` y lo pasa tanto a la lista como al mapa — una sola fuente de verdad, sin duplicar la lógica de filtrado.
+- Nuevo componente `src/components/DisponibilidadMap.tsx`: recibe `rows`, `selectedDriverId` y `onSelectDriver`; reutiliza `pinIcon`, `MapAutoFit`, `MapContainer`/`TileLayer`/`Marker`/`Polyline` del archivo del mapa actual.
+- Leaflet sigue montándose solo en cliente (la ruta ya usa `ssr: false` y `beforeLoad: requireAdmin`).
+- Las rutas viejas quedan como archivos mínimos con `beforeLoad` que hace `redirect` a la nueva ruta.
+- Sin cambios de base de datos.
