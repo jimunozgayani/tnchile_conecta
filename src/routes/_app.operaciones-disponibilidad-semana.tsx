@@ -246,57 +246,44 @@ function OpsWeekPage() {
 
   // ---------- Mutations ----------
 
+  // All writes go through the RPC: PostgREST cannot express the partial
+  // unique index (WHERE fecha_desde = fecha_hasta) in an upsert.
   const upsertDay = useCallback(
-    async (
-      driverId: string,
-      date: string,
-      patch: Record<string, any>,
-      existing: any | null,
-    ) => {
-      const base = existing ?? {
-        driver_id: driverId,
-        fecha_desde: date,
-        fecha_hasta: date,
-        estado: "disponible" as Estado,
-        fuente: "operaciones",
-        created_by: userId,
-      };
-      const payload = {
-        driver_id: driverId,
-        fecha_desde: date,
-        fecha_hasta: date,
-        estado: base.estado,
-        lugar_ciudad_id: base.lugar_ciudad_id ?? null,
-        lugar_texto: base.lugar_texto ?? null,
-        destino_ciudad_id: base.destino_ciudad_id ?? null,
-        destino_texto: base.destino_texto ?? null,
-        modalidad: base.modalidad ?? null,
-        truck_id: base.truck_id ?? null,
-        fuente: "operaciones",
-        created_by: userId,
-        ...patch,
-      };
-      const { error } = await supabase
-        .from("disponibilidad_chofer")
-        .upsert(payload, { onConflict: "driver_id,fecha_desde" });
+    async (driverId: string, date: string, patch: Record<string, any>) => {
+      const { error } = await supabase.rpc("upsert_disponibilidad_dia", {
+        _driver_id: driverId,
+        _fecha: date,
+        _estado: patch.estado ?? null,
+        _lugar_ciudad_id: patch.lugar_ciudad_id ?? null,
+        _lugar_texto: patch.lugar_texto ?? null,
+        _destino_ciudad_id: patch.destino_ciudad_id ?? null,
+        _destino_texto: patch.destino_texto ?? null,
+        _modalidad: patch.modalidad ?? null,
+        _tipo_camion_id: patch.tipo_camion_id ?? null,
+        _tipo_camion_otro: patch.tipo_camion_otro ?? null,
+        _fuente: "operaciones",
+      } as any);
       if (error) throw error;
     },
-    [userId],
+    [],
   );
+
+  const isPast = (date: string) => date < todayISO;
 
   const cycleDay = async (driverId: string, date: string) => {
     const existing = rowsByDriverDate.get(driverId)?.get(date) ?? null;
+    if (isPast(date)) {
+      toast.error("No se puede modificar una fecha pasada");
+      return;
+    }
     try {
-      // 3-state initial (sin_confirmar -> disponible on first click), then toggle
-      // disponible <-> no_disponible. We never delete rows here to preserve
-      // historical availability data.
-      if (!existing) {
-        await upsertDay(driverId, date, { estado: "disponible" }, null);
-      } else if (existing.estado === "disponible") {
-        await upsertDay(driverId, date, { estado: "no_disponible" }, existing);
-      } else {
-        await upsertDay(driverId, date, { estado: "disponible" }, existing);
-      }
+      // 3-state: sin_confirmar -> disponible on first click, then toggle
+      // disponible <-> no_disponible. Rows are never deleted here.
+      const estado =
+        !existing || existing.estado !== "disponible"
+          ? "disponible"
+          : "no_disponible";
+      await upsertDay(driverId, date, { estado });
       dispQ.refetch();
     } catch (e: any) {
       toast.error(e.message ?? "Error al actualizar");
@@ -308,16 +295,16 @@ function OpsWeekPage() {
     patch: Record<string, any>,
   ) => {
     try {
-      const byDate = rowsByDriverDate.get(driverId);
-      // Update all 7 days. Preserve estado for existing rows; default 'disponible' for new.
+      // One RPC call per visible day; past dates are skipped server-side rules.
       for (const date of days) {
-        const existing = byDate?.get(date) ?? null;
-        await upsertDay(driverId, date, patch, existing);
+        if (isPast(date)) continue;
+        await upsertDay(driverId, date, patch);
       }
       dispQ.refetch();
     } catch (e: any) {
       toast.error(e.message ?? "Error al guardar");
     }
+
   };
 
   // ---------- Add occasional driver ----------
