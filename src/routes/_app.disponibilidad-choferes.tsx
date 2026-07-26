@@ -193,7 +193,12 @@ function DriverCard({ driver, rows, proveedorUserId, showProveedor, onChanged }:
                   <p><span className="text-muted-foreground">Tipo:</span>{" "}
                     {r.modalidad === "consolidado" ? "Consolidado" : "Rampla completa"}</p>
                 )}
-                {r.truck?.patente && <p><span className="text-muted-foreground">Camión:</span> {r.truck.patente}</p>}
+                {r.truck && (
+                  <div className="flex items-start gap-1">
+                    <span className="text-muted-foreground">Camión:</span>
+                    <CamionLabel truck={r.truck} />
+                  </div>
+                )}
               </div>
               {r.notas && <p className="mt-1 text-xs text-muted-foreground">{r.notas}</p>}
               <div className="mt-2 flex gap-2">
