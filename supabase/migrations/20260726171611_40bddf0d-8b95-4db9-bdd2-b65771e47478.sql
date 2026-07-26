@@ -1,0 +1,1 @@
+ALTER TABLE public.drivers ALTER COLUMN user_id DROP NOT NULL;
