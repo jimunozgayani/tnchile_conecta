@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  * in the browser; otherwise a hard reload renders on the server with no session
  * and bounces the user to /login even when they are signed in.
  */
-export async function requireAdmin() {
+async function myRoles(): Promise<string[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -20,7 +20,18 @@ export async function requireAdmin() {
     .select("role")
     .eq("user_id", user.id);
 
-  if (!(roles ?? []).some((r: { role: string }) => r.role === "admin")) {
+  return (roles ?? []).map((r: { role: string }) => r.role);
+}
+
+export async function requireAdmin() {
+  const roles = await myRoles();
+  if (!roles.includes("admin")) throw redirect({ to: "/dashboard" });
+}
+
+/** Espacio Operaciones: administradores y operadores. */
+export async function requireOperations() {
+  const roles = await myRoles();
+  if (!roles.includes("admin") && !roles.includes("operador")) {
     throw redirect({ to: "/dashboard" });
   }
 }
