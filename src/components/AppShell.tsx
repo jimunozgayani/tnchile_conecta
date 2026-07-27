@@ -33,6 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOperador, setIsOperador] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       const rs = (data ?? []).map((r: any) => r.role);
       setIsAdmin(rs.includes("admin"));
+      setIsOperador(rs.includes("operador"));
       setIsCliente(rs.includes("cliente"));
     })();
   }, []);
@@ -173,7 +175,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             </>
           )}
-          {isAdmin && (
+          {(isAdmin || isOperador) && (
             <>
 
 
@@ -181,6 +183,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
                   Equipo TN Chile
                 </p>
+                {isAdmin && (
                 <Link to="/admin" onClick={() => setOpen(false)}
                   className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     location.pathname.startsWith("/admin") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
@@ -188,6 +191,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <ShieldCheck className="h-4 w-4" />
                   Administración
                 </Link>
+                )}
+                {isAdmin && (
+                <Link to="/admin-usuarios" onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname.startsWith("/admin-usuarios") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Usuarios y roles
+                </Link>
+                )}
+                {isAdmin && (
                 <Link to="/admin-choferes" onClick={() => setOpen(false)}
                   className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     location.pathname.startsWith("/admin-choferes") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
@@ -195,6 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <ShieldCheck className="h-4 w-4" />
                   Invitar choferes
                 </Link>
+                )}
                 <Link to="/operaciones" onClick={() => setOpen(false)}
                   className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     location.pathname.startsWith("/operaciones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
