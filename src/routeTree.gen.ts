@@ -19,6 +19,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NuevaCargaIndexRouteImport } from './routes/nueva-carga.index'
+import { Route as NuevaCargaGraciasRouteImport } from './routes/nueva-carga.gracias'
 import { Route as InvitacionChoferTokenRouteImport } from './routes/invitacion-chofer.$token'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppProveedoresRouteImport } from './routes/_app.proveedores'
@@ -93,6 +94,11 @@ const IndexRoute = IndexRouteImport.update({
 const NuevaCargaIndexRoute = NuevaCargaIndexRouteImport.update({
   id: '/nueva-carga/',
   path: '/nueva-carga/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NuevaCargaGraciasRoute = NuevaCargaGraciasRouteImport.update({
+  id: '/nueva-carga/gracias',
+  path: '/nueva-carga/gracias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvitacionChoferTokenRoute = InvitacionChoferTokenRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
+  '/nueva-carga/gracias': typeof NuevaCargaGraciasRoute
   '/nueva-carga/': typeof NuevaCargaIndexRoute
 }
 export interface FileRoutesByTo {
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
+  '/nueva-carga/gracias': typeof NuevaCargaGraciasRoute
   '/nueva-carga': typeof NuevaCargaIndexRoute
 }
 export interface FileRoutesById {
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/_app/proveedores': typeof AppProveedoresRoute
   '/_app/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
+  '/nueva-carga/gracias': typeof NuevaCargaGraciasRoute
   '/nueva-carga/': typeof NuevaCargaIndexRoute
 }
 export interface FileRouteTypes {
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/proveedores'
     | '/tarifas'
     | '/invitacion-chofer/$token'
+    | '/nueva-carga/gracias'
     | '/nueva-carga/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/proveedores'
     | '/tarifas'
     | '/invitacion-chofer/$token'
+    | '/nueva-carga/gracias'
     | '/nueva-carga'
   id:
     | '__root__'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/_app/proveedores'
     | '/_app/tarifas'
     | '/invitacion-chofer/$token'
+    | '/nueva-carga/gracias'
     | '/nueva-carga/'
   fileRoutesById: FileRoutesById
 }
@@ -472,6 +484,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   InvitacionChoferTokenRoute: typeof InvitacionChoferTokenRoute
+  NuevaCargaGraciasRoute: typeof NuevaCargaGraciasRoute
   NuevaCargaIndexRoute: typeof NuevaCargaIndexRoute
 }
 
@@ -545,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/nueva-carga'
       fullPath: '/nueva-carga/'
       preLoaderRoute: typeof NuevaCargaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nueva-carga/gracias': {
+      id: '/nueva-carga/gracias'
+      path: '/nueva-carga/gracias'
+      fullPath: '/nueva-carga/gracias'
+      preLoaderRoute: typeof NuevaCargaGraciasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invitacion-chofer/$token': {
@@ -802,6 +822,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   InvitacionChoferTokenRoute: InvitacionChoferTokenRoute,
+  NuevaCargaGraciasRoute: NuevaCargaGraciasRoute,
   NuevaCargaIndexRoute: NuevaCargaIndexRoute,
 }
 export const routeTree = rootRouteImport
