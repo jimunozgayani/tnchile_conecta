@@ -41,6 +41,7 @@ import { Route as AppClienteRouteImport } from './routes/_app.cliente'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
 import { Route as AppChoferRouteImport } from './routes/_app.chofer'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
+import { Route as AppAdminUsuariosRouteImport } from './routes/_app.admin-usuarios'
 import { Route as AppAdminChoferesRouteImport } from './routes/_app.admin-choferes'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
@@ -210,6 +211,11 @@ const AppCamionesRoute = AppCamionesRouteImport.update({
   path: '/camiones',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
+  id: '/admin-usuarios',
+  path: '/admin-usuarios',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminChoferesRoute = AppAdminChoferesRouteImport.update({
   id: '/admin-choferes',
   path: '/admin-choferes',
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
   '/admin-choferes': typeof AppAdminChoferesRoute
+  '/admin-usuarios': typeof AppAdminUsuariosRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
   '/admin-choferes': typeof AppAdminChoferesRoute
+  '/admin-usuarios': typeof AppAdminUsuariosRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/admin-choferes': typeof AppAdminChoferesRoute
+  '/_app/admin-usuarios': typeof AppAdminUsuariosRoute
   '/_app/camiones': typeof AppCamionesRoute
   '/_app/chofer': typeof AppChoferRoute
   '/_app/choferes': typeof AppChoferesRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin-choferes'
+    | '/admin-usuarios'
     | '/camiones'
     | '/chofer'
     | '/choferes'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin-choferes'
+    | '/admin-usuarios'
     | '/camiones'
     | '/chofer'
     | '/choferes'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_app/admin'
     | '/_app/admin-choferes'
+    | '/_app/admin-usuarios'
     | '/_app/camiones'
     | '/_app/chofer'
     | '/_app/choferes'
@@ -676,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCamionesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin-usuarios': {
+      id: '/_app/admin-usuarios'
+      path: '/admin-usuarios'
+      fullPath: '/admin-usuarios'
+      preLoaderRoute: typeof AppAdminUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin-choferes': {
       id: '/_app/admin-choferes'
       path: '/admin-choferes'
@@ -696,6 +715,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAdminChoferesRoute: typeof AppAdminChoferesRoute
+  AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
   AppCamionesRoute: typeof AppCamionesRoute
   AppChoferRoute: typeof AppChoferRoute
   AppChoferesRoute: typeof AppChoferesRoute
@@ -723,6 +743,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAdminChoferesRoute: AppAdminChoferesRoute,
+  AppAdminUsuariosRoute: AppAdminUsuariosRoute,
   AppCamionesRoute: AppCamionesRoute,
   AppChoferRoute: AppChoferRoute,
   AppChoferesRoute: AppChoferesRoute,
@@ -765,13 +786,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

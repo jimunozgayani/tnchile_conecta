@@ -1,21 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
-import { supabase } from "@/integrations/supabase/client";
+import { requireOperations } from "@/lib/require-admin";
 import { ClipboardList, Phone, Package, CalendarClock, ArrowRightLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones")({
   head: () => pageHead("/operaciones", "Operaciones · Portal TN Chile", "Espacio operativo TN Chile: cotizaciones, asignaciones de carga, disponibilidad de choferes y camiones, y seguimiento de viajes."),
   // Supabase session lives in localStorage; gate must run client-side only.
   ssr: false,
-  beforeLoad: async () => {
-    const { redirect } = await import("@tanstack/react-router");
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw redirect({ to: "/login" });
-    const { data: roles } = await supabase
-      .from("user_roles").select("role").eq("user_id", user.id);
-    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
-    if (!isAdmin) throw redirect({ to: "/dashboard" });
-  },
+  beforeLoad: requireOperations,
   component: OperacionesPage,
 });
 

@@ -9,7 +9,7 @@ import { CalendarDays } from "lucide-react";
 import { MonthCalendar, toISODate, type DayData } from "@/components/MonthCalendar";
 import { DayDetailPanel, useDayRows, rowTipo, type DayRow } from "@/components/DayDetailPanel";
 import { DisponibilidadMap } from "@/components/DisponibilidadMap";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireOperations } from "@/lib/require-admin";
 
 export const Route = createFileRoute("/_app/operaciones-disponibilidad")({
   head: () =>
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_app/operaciones-disponibilidad")({
       "Espacio único de disponibilidad de TN Chile: calendario mensual, detalle editable del día y mapa sincronizado con la lista de choferes.",
     ),
   ssr: false,
-  beforeLoad: requireAdmin,
+  beforeLoad: requireOperations,
   component: OpsAvailabilityPage,
 });
 
