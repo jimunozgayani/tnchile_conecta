@@ -243,7 +243,7 @@ export type Database = {
         Row: {
           alto_cm: number | null
           ancho_cm: number | null
-          cliente_id: string
+          cliente_id: string | null
           contacto_email: string | null
           contacto_id: string | null
           contacto_nombre: string
@@ -267,6 +267,8 @@ export type Database = {
           sobreestadia_tarifa_dia_clp: number | null
           sobreestadia_tarifa_hora_clp: number | null
           tipo_camion: string | null
+          tipo_camion_id: string | null
+          tipo_camion_otro: string | null
           tipo_pago: string | null
           updated_at: string
           validez_hasta: string | null
@@ -274,7 +276,7 @@ export type Database = {
         Insert: {
           alto_cm?: number | null
           ancho_cm?: number | null
-          cliente_id: string
+          cliente_id?: string | null
           contacto_email?: string | null
           contacto_id?: string | null
           contacto_nombre: string
@@ -298,6 +300,8 @@ export type Database = {
           sobreestadia_tarifa_dia_clp?: number | null
           sobreestadia_tarifa_hora_clp?: number | null
           tipo_camion?: string | null
+          tipo_camion_id?: string | null
+          tipo_camion_otro?: string | null
           tipo_pago?: string | null
           updated_at?: string
           validez_hasta?: string | null
@@ -305,7 +309,7 @@ export type Database = {
         Update: {
           alto_cm?: number | null
           ancho_cm?: number | null
-          cliente_id?: string
+          cliente_id?: string | null
           contacto_email?: string | null
           contacto_id?: string | null
           contacto_nombre?: string
@@ -329,6 +333,8 @@ export type Database = {
           sobreestadia_tarifa_dia_clp?: number | null
           sobreestadia_tarifa_hora_clp?: number | null
           tipo_camion?: string | null
+          tipo_camion_id?: string | null
+          tipo_camion_otro?: string | null
           tipo_pago?: string | null
           updated_at?: string
           validez_hasta?: string | null
@@ -339,6 +345,13 @@ export type Database = {
             columns: ["contacto_id"]
             isOneToOne: false
             referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_tipo_camion_id_fkey"
+            columns: ["tipo_camion_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_camion"
             referencedColumns: ["id"]
           },
         ]
@@ -1366,6 +1379,7 @@ export type Database = {
     }
     Functions: {
       chofer_driver_ids: { Args: { _uid: string }; Returns: string[] }
+      crear_solicitud_carga: { Args: { _payload: Json }; Returns: string }
       get_admin_dashboard_stats: {
         Args: never
         Returns: unknown
