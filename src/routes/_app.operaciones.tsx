@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
-import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, Phone, Package, CalendarClock, ArrowRightLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones")({
