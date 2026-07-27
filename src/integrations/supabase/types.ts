@@ -185,12 +185,67 @@ export type Database = {
         }
         Relationships: []
       }
+      contactos: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          email: string | null
+          empresa: string | null
+          etapa_comercial: string
+          id: string
+          nombre: string
+          notas: string | null
+          origen_contacto: string | null
+          region: string | null
+          responsable_id: string | null
+          rut: string | null
+          telefono: string | null
+          temperatura: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          empresa?: string | null
+          etapa_comercial?: string
+          id?: string
+          nombre: string
+          notas?: string | null
+          origen_contacto?: string | null
+          region?: string | null
+          responsable_id?: string | null
+          rut?: string | null
+          telefono?: string | null
+          temperatura?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          empresa?: string | null
+          etapa_comercial?: string
+          id?: string
+          nombre?: string
+          notas?: string | null
+          origen_contacto?: string | null
+          region?: string | null
+          responsable_id?: string | null
+          rut?: string | null
+          telefono?: string | null
+          temperatura?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cotizaciones: {
         Row: {
           alto_cm: number | null
           ancho_cm: number | null
           cliente_id: string
           contacto_email: string | null
+          contacto_id: string | null
           contacto_nombre: string
           contacto_telefono: string | null
           created_at: string
@@ -200,18 +255,28 @@ export type Database = {
           fotos: Json
           id: string
           largo_cm: number | null
+          lineas_servicio: Json | null
           modalidad: string
           notas_admin: string | null
           origen: string
           peso_kg: number | null
+          precio_maximo_proveedor_clp: number | null
+          precio_ofrecido_cliente_clp: number | null
+          sobreestadia_dias_libres: number | null
+          sobreestadia_horas_libres: number | null
+          sobreestadia_tarifa_dia_clp: number | null
+          sobreestadia_tarifa_hora_clp: number | null
           tipo_camion: string | null
+          tipo_pago: string | null
           updated_at: string
+          validez_hasta: string | null
         }
         Insert: {
           alto_cm?: number | null
           ancho_cm?: number | null
           cliente_id: string
           contacto_email?: string | null
+          contacto_id?: string | null
           contacto_nombre: string
           contacto_telefono?: string | null
           created_at?: string
@@ -221,18 +286,28 @@ export type Database = {
           fotos?: Json
           id?: string
           largo_cm?: number | null
+          lineas_servicio?: Json | null
           modalidad?: string
           notas_admin?: string | null
           origen: string
           peso_kg?: number | null
+          precio_maximo_proveedor_clp?: number | null
+          precio_ofrecido_cliente_clp?: number | null
+          sobreestadia_dias_libres?: number | null
+          sobreestadia_horas_libres?: number | null
+          sobreestadia_tarifa_dia_clp?: number | null
+          sobreestadia_tarifa_hora_clp?: number | null
           tipo_camion?: string | null
+          tipo_pago?: string | null
           updated_at?: string
+          validez_hasta?: string | null
         }
         Update: {
           alto_cm?: number | null
           ancho_cm?: number | null
           cliente_id?: string
           contacto_email?: string | null
+          contacto_id?: string | null
           contacto_nombre?: string
           contacto_telefono?: string | null
           created_at?: string
@@ -242,14 +317,31 @@ export type Database = {
           fotos?: Json
           id?: string
           largo_cm?: number | null
+          lineas_servicio?: Json | null
           modalidad?: string
           notas_admin?: string | null
           origen?: string
           peso_kg?: number | null
+          precio_maximo_proveedor_clp?: number | null
+          precio_ofrecido_cliente_clp?: number | null
+          sobreestadia_dias_libres?: number | null
+          sobreestadia_horas_libres?: number | null
+          sobreestadia_tarifa_dia_clp?: number | null
+          sobreestadia_tarifa_hora_clp?: number | null
           tipo_camion?: string | null
+          tipo_pago?: string | null
           updated_at?: string
+          validez_hasta?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cotizaciones_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       disponibilidad_camion: {
         Row: {
@@ -719,6 +811,131 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      operaciones: {
+        Row: {
+          asignacion_id: string | null
+          contacto_id: string | null
+          cotizacion_id: string | null
+          creado_por: string | null
+          created_at: string
+          deleted_at: string | null
+          descripcion_exacta: string | null
+          destino: string | null
+          dimensiones: string | null
+          estado: string
+          fecha_carga: string | null
+          fecha_probable_texto: string | null
+          fecha_tipo: string
+          foto_guia_url: string | null
+          fotos: Json | null
+          fotos_descarga: Json | null
+          id: string
+          notas_internas: string | null
+          numero_operacion: number
+          origen: string | null
+          peso_kg: number | null
+          precio_maximo_proveedor_clp: number | null
+          precio_ofrecido_cliente_clp: number | null
+          precio_proveedor_confirmado_clp: number | null
+          requerimientos_especiales: string | null
+          tipo_camion_id: string | null
+          tipo_camion_otro: string | null
+          tipo_pago: string | null
+          updated_at: string
+        }
+        Insert: {
+          asignacion_id?: string | null
+          contacto_id?: string | null
+          cotizacion_id?: string | null
+          creado_por?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          descripcion_exacta?: string | null
+          destino?: string | null
+          dimensiones?: string | null
+          estado?: string
+          fecha_carga?: string | null
+          fecha_probable_texto?: string | null
+          fecha_tipo?: string
+          foto_guia_url?: string | null
+          fotos?: Json | null
+          fotos_descarga?: Json | null
+          id?: string
+          notas_internas?: string | null
+          numero_operacion?: number
+          origen?: string | null
+          peso_kg?: number | null
+          precio_maximo_proveedor_clp?: number | null
+          precio_ofrecido_cliente_clp?: number | null
+          precio_proveedor_confirmado_clp?: number | null
+          requerimientos_especiales?: string | null
+          tipo_camion_id?: string | null
+          tipo_camion_otro?: string | null
+          tipo_pago?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asignacion_id?: string | null
+          contacto_id?: string | null
+          cotizacion_id?: string | null
+          creado_por?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          descripcion_exacta?: string | null
+          destino?: string | null
+          dimensiones?: string | null
+          estado?: string
+          fecha_carga?: string | null
+          fecha_probable_texto?: string | null
+          fecha_tipo?: string
+          foto_guia_url?: string | null
+          fotos?: Json | null
+          fotos_descarga?: Json | null
+          id?: string
+          notas_internas?: string | null
+          numero_operacion?: number
+          origen?: string | null
+          peso_kg?: number | null
+          precio_maximo_proveedor_clp?: number | null
+          precio_ofrecido_cliente_clp?: number | null
+          precio_proveedor_confirmado_clp?: number | null
+          requerimientos_especiales?: string | null
+          tipo_camion_id?: string | null
+          tipo_camion_otro?: string | null
+          tipo_pago?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operaciones_asignacion_id_fkey"
+            columns: ["asignacion_id"]
+            isOneToOne: false
+            referencedRelation: "asignaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operaciones_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operaciones_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operaciones_tipo_camion_id_fkey"
+            columns: ["tipo_camion_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_camion"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       polizas: {
         Row: {
