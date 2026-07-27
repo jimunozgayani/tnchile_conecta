@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NuevaCargaIndexRouteImport } from './routes/nueva-carga.index'
 import { Route as InvitacionChoferTokenRouteImport } from './routes/invitacion-chofer.$token'
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppProveedoresRouteImport } from './routes/_app.proveedores'
@@ -87,6 +88,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NuevaCargaIndexRoute = NuevaCargaIndexRouteImport.update({
+  id: '/nueva-carga/',
+  path: '/nueva-carga/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvitacionChoferTokenRoute = InvitacionChoferTokenRouteImport.update({
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
+  '/nueva-carga/': typeof NuevaCargaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
+  '/nueva-carga': typeof NuevaCargaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/_app/proveedores': typeof AppProveedoresRoute
   '/_app/tarifas': typeof AppTarifasRoute
   '/invitacion-chofer/$token': typeof InvitacionChoferTokenRoute
+  '/nueva-carga/': typeof NuevaCargaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/proveedores'
     | '/tarifas'
     | '/invitacion-chofer/$token'
+    | '/nueva-carga/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/proveedores'
     | '/tarifas'
     | '/invitacion-chofer/$token'
+    | '/nueva-carga'
   id:
     | '__root__'
     | '/'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
     | '/_app/proveedores'
     | '/_app/tarifas'
     | '/invitacion-chofer/$token'
+    | '/nueva-carga/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -460,6 +472,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   InvitacionChoferTokenRoute: typeof InvitacionChoferTokenRoute
+  NuevaCargaIndexRoute: typeof NuevaCargaIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nueva-carga/': {
+      id: '/nueva-carga/'
+      path: '/nueva-carga'
+      fullPath: '/nueva-carga/'
+      preLoaderRoute: typeof NuevaCargaIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invitacion-chofer/$token': {
@@ -782,6 +802,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   InvitacionChoferTokenRoute: InvitacionChoferTokenRoute,
+  NuevaCargaIndexRoute: NuevaCargaIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
