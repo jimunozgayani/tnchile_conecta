@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
+import { requireOperations } from "@/lib/require-admin";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ClipboardList, RefreshCw, ExternalLink } from "lucide-react";
@@ -9,15 +10,7 @@ export const Route = createFileRoute("/_app/operaciones-cotizaciones")({
   head: () => pageHead("/operaciones-cotizaciones", "Cotizaciones · Operaciones TN Chile", "Bandeja de cotizaciones enviadas por clientes: revisa carga, fotos, origen y destinos, y actualiza el estado de cada solicitud."),
   // Supabase session lives in localStorage; gate must run client-side only.
   ssr: false,
-  beforeLoad: async () => {
-    const { redirect } = await import("@tanstack/react-router");
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw redirect({ to: "/login" });
-    const { data: roles } = await supabase
-      .from("user_roles").select("role").eq("user_id", user.id);
-    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
-    if (!isAdmin) throw redirect({ to: "/dashboard" });
-  },
+  beforeLoad: requireOperations,
   component: OpsCotizaciones,
 });
 
