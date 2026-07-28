@@ -187,57 +187,96 @@ export type Database = {
       }
       contactos: {
         Row: {
+          banco: string | null
           created_at: string
           deleted_at: string | null
+          driver_id: string | null
           email: string | null
+          email_banco: string | null
           empresa: string | null
           etapa_comercial: string
           id: string
           nombre: string
           notas: string | null
+          numero_cuenta: string | null
           origen_contacto: string | null
+          profile_id: string | null
           region: string | null
           responsable_id: string | null
           rut: string | null
           telefono: string | null
           temperatura: string
+          tipo_cuenta: string | null
+          tipos: string[]
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          banco?: string | null
           created_at?: string
           deleted_at?: string | null
+          driver_id?: string | null
           email?: string | null
+          email_banco?: string | null
           empresa?: string | null
           etapa_comercial?: string
           id?: string
           nombre: string
           notas?: string | null
+          numero_cuenta?: string | null
           origen_contacto?: string | null
+          profile_id?: string | null
           region?: string | null
           responsable_id?: string | null
           rut?: string | null
           telefono?: string | null
           temperatura?: string
+          tipo_cuenta?: string | null
+          tipos?: string[]
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          banco?: string | null
           created_at?: string
           deleted_at?: string | null
+          driver_id?: string | null
           email?: string | null
+          email_banco?: string | null
           empresa?: string | null
           etapa_comercial?: string
           id?: string
           nombre?: string
           notas?: string | null
+          numero_cuenta?: string | null
           origen_contacto?: string | null
+          profile_id?: string | null
           region?: string | null
           responsable_id?: string | null
           rut?: string | null
           telefono?: string | null
           temperatura?: string
+          tipo_cuenta?: string | null
+          tipos?: string[]
           updated_at?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contactos_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cotizaciones: {
         Row: {
@@ -838,15 +877,25 @@ export type Database = {
           dimensiones: string | null
           estado: string
           fecha_carga: string | null
+          fecha_cobro_cliente: string | null
+          fecha_pago_adelanto: string | null
+          fecha_pago_proveedor: string | null
           fecha_probable_texto: string | null
           fecha_tipo: string
+          finalizada_at: string | null
+          finalizada_por: string | null
           foto_guia_url: string | null
           fotos: Json | null
           fotos_descarga: Json | null
           id: string
+          monto_adelanto_clp: number | null
+          monto_cobro_cliente_clp: number | null
+          monto_pago_proveedor_clp: number | null
           notas_internas: string | null
           numero_operacion: number
           origen: string | null
+          pasada_a_operaciones_at: string | null
+          pasada_a_operaciones_por: string | null
           peso_kg: number | null
           precio_maximo_proveedor_clp: number | null
           precio_ofrecido_cliente_clp: number | null
@@ -869,15 +918,25 @@ export type Database = {
           dimensiones?: string | null
           estado?: string
           fecha_carga?: string | null
+          fecha_cobro_cliente?: string | null
+          fecha_pago_adelanto?: string | null
+          fecha_pago_proveedor?: string | null
           fecha_probable_texto?: string | null
           fecha_tipo?: string
+          finalizada_at?: string | null
+          finalizada_por?: string | null
           foto_guia_url?: string | null
           fotos?: Json | null
           fotos_descarga?: Json | null
           id?: string
+          monto_adelanto_clp?: number | null
+          monto_cobro_cliente_clp?: number | null
+          monto_pago_proveedor_clp?: number | null
           notas_internas?: string | null
           numero_operacion?: number
           origen?: string | null
+          pasada_a_operaciones_at?: string | null
+          pasada_a_operaciones_por?: string | null
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
@@ -900,15 +959,25 @@ export type Database = {
           dimensiones?: string | null
           estado?: string
           fecha_carga?: string | null
+          fecha_cobro_cliente?: string | null
+          fecha_pago_adelanto?: string | null
+          fecha_pago_proveedor?: string | null
           fecha_probable_texto?: string | null
           fecha_tipo?: string
+          finalizada_at?: string | null
+          finalizada_por?: string | null
           foto_guia_url?: string | null
           fotos?: Json | null
           fotos_descarga?: Json | null
           id?: string
+          monto_adelanto_clp?: number | null
+          monto_cobro_cliente_clp?: number | null
+          monto_pago_proveedor_clp?: number | null
           notas_internas?: string | null
           numero_operacion?: number
           origen?: string | null
+          pasada_a_operaciones_at?: string | null
+          pasada_a_operaciones_por?: string | null
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
@@ -946,6 +1015,99 @@ export type Database = {
             columns: ["tipo_camion_id"]
             isOneToOne: false
             referencedRelation: "tipos_camion"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagos_proveedor: {
+        Row: {
+          asignacion_id: string | null
+          autorizado_at: string | null
+          autorizado_por: string | null
+          banco: string | null
+          comprobante_path: string | null
+          comprobante_subido_at: string | null
+          comprobante_subido_por: string | null
+          created_at: string
+          deleted_at: string | null
+          email_banco: string | null
+          estado: string
+          fecha_vencimiento: string | null
+          id: string
+          monto_clp: number
+          notas: string | null
+          numero_cuenta: string | null
+          numero_cuota: number
+          operacion_id: string
+          proveedor_nombre: string | null
+          proveedor_rut: string | null
+          tipo_cuenta: string | null
+          tipo_pago: string
+          updated_at: string
+        }
+        Insert: {
+          asignacion_id?: string | null
+          autorizado_at?: string | null
+          autorizado_por?: string | null
+          banco?: string | null
+          comprobante_path?: string | null
+          comprobante_subido_at?: string | null
+          comprobante_subido_por?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          email_banco?: string | null
+          estado?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          monto_clp: number
+          notas?: string | null
+          numero_cuenta?: string | null
+          numero_cuota?: number
+          operacion_id: string
+          proveedor_nombre?: string | null
+          proveedor_rut?: string | null
+          tipo_cuenta?: string | null
+          tipo_pago?: string
+          updated_at?: string
+        }
+        Update: {
+          asignacion_id?: string | null
+          autorizado_at?: string | null
+          autorizado_por?: string | null
+          banco?: string | null
+          comprobante_path?: string | null
+          comprobante_subido_at?: string | null
+          comprobante_subido_por?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          email_banco?: string | null
+          estado?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          monto_clp?: number
+          notas?: string | null
+          numero_cuenta?: string | null
+          numero_cuota?: number
+          operacion_id?: string
+          proveedor_nombre?: string | null
+          proveedor_rut?: string | null
+          tipo_cuenta?: string | null
+          tipo_pago?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_proveedor_asignacion_id_fkey"
+            columns: ["asignacion_id"]
+            isOneToOne: false
+            referencedRelation: "asignaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_operacion_id_fkey"
+            columns: ["operacion_id"]
+            isOneToOne: false
+            referencedRelation: "operaciones"
             referencedColumns: ["id"]
           },
         ]
@@ -1443,7 +1605,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "supplier" | "cliente" | "chofer" | "operador"
+      app_role:
+        | "admin"
+        | "supplier"
+        | "cliente"
+        | "chofer"
+        | "operador"
+        | "comercial"
       disponibilidad_estado: "disponible" | "no_disponible" | "sin_confirmar"
       evento_viaje_tipo:
         | "cambio_estado"
@@ -1579,7 +1747,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "supplier", "cliente", "chofer", "operador"],
+      app_role: [
+        "admin",
+        "supplier",
+        "cliente",
+        "chofer",
+        "operador",
+        "comercial",
+      ],
       disponibilidad_estado: ["disponible", "no_disponible", "sin_confirmar"],
       evento_viaje_tipo: [
         "cambio_estado",

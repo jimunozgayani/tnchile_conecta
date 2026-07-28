@@ -3,7 +3,7 @@ import { pageHead } from "@/lib/page-head";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2 } from "lucide-react";
+import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2, Handshake } from "lucide-react";
 import { requireAdmin } from "@/lib/require-admin";
 import {
   listAppUsers,
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_app/admin-usuarios")({
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
   operador: "Operador",
+  comercial: "Comercial",
   supplier: "Proveedor",
   cliente: "Cliente",
   chofer: "Chofer",
@@ -38,7 +39,7 @@ function RoleChip({ role }: { role: string }) {
   const tone =
     role === "admin"
       ? "bg-primary text-primary-foreground"
-      : role === "operador"
+      : role === "operador" || role === "comercial"
         ? "bg-primary-soft text-primary-dark"
         : "bg-muted text-muted-foreground";
   return (
@@ -72,7 +73,7 @@ function AdminUsuariosPage() {
   }, [users, q]);
 
   const staffCount = (users ?? []).filter((u) =>
-    u.roles.some((r) => r === "admin" || r === "operador"),
+    u.roles.some((r) => r === "admin" || r === "operador" || r === "comercial"),
   ).length;
 
   async function toggle(u: AppUser, r: StaffRole) {
@@ -145,6 +146,7 @@ function AdminUsuariosPage() {
               className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="operador">Operador</option>
+              <option value="comercial">Comercial</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -159,8 +161,9 @@ function AdminUsuariosPage() {
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
           Si el correo ya tiene cuenta, no se envía invitación: solo se le asigna el rol.
-          El <strong>operador</strong> accede al espacio Operaciones (cotizaciones, asignaciones,
-          disponibilidad) pero no a Administración ni a esta pantalla.
+          El <strong>operador</strong> accede al espacio Operaciones (disponibilidad, asignaciones).
+          El <strong>comercial</strong> accede al espacio Comercial (agenda, pipeline, solicitudes,
+          cotizaciones). Un usuario puede tener ambos roles simultáneamente.
         </p>
       </section>
 
@@ -204,9 +207,9 @@ function AdminUsuariosPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {(["operador", "admin"] as StaffRole[]).map((r) => {
+                  {(["operador", "comercial", "admin"] as StaffRole[]).map((r) => {
                     const active = u.roles.includes(r);
-                    const Icon = r === "admin" ? ShieldCheck : Briefcase;
+                    const Icon = r === "admin" ? ShieldCheck : r === "comercial" ? Handshake : Briefcase;
                     return (
                       <button
                         key={r}
