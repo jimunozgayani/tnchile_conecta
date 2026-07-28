@@ -3,7 +3,7 @@ import { pageHead } from "@/lib/page-head";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2 } from "lucide-react";
+import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2, Handshake } from "lucide-react";
 import { requireAdmin } from "@/lib/require-admin";
 import {
   listAppUsers,
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_app/admin-usuarios")({
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
   operador: "Operador",
+  comercial: "Comercial",
   supplier: "Proveedor",
   cliente: "Cliente",
   chofer: "Chofer",
@@ -38,7 +39,7 @@ function RoleChip({ role }: { role: string }) {
   const tone =
     role === "admin"
       ? "bg-primary text-primary-foreground"
-      : role === "operador"
+      : role === "operador" || role === "comercial"
         ? "bg-primary-soft text-primary-dark"
         : "bg-muted text-muted-foreground";
   return (
