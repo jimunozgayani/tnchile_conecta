@@ -306,33 +306,23 @@ export function DayDetailPanel({
   };
 
   /**
-   * Notas are scoped to the selected day. The existing RPC guarantees the row
-   * exists (and enforces the operaciones role check + past-date rule); the note
-   * text itself is written straight to the freshly upserted row.
+   * Notas are scoped to the selected day. The RPC creates the row when missing
+   * and writes the note in the same call (empty text clears it).
    */
   const saveNotas = async (row: DayRow, notas: string) => {
     if (readOnly) {
       toast.error("No se puede modificar una fecha pasada");
       return;
     }
-    const { data, error } = await supabase.rpc("upsert_disponibilidad_dia", {
+    const { error } = await supabase.rpc("upsert_disponibilidad_dia", {
       _driver_id: row.driver_id,
       _fecha: selected,
       _estado: row.estado === "sin_confirmar" ? "disponible" : row.estado,
       _fuente: "operaciones",
+      _notas: notas.trim(),
     } as any);
     if (error) {
       toast.error(error.message);
-      return;
-    }
-    const id = (data as any)?.id ?? row.disp?.id;
-    if (!id) return;
-    const { error: upErr } = await supabase
-      .from("disponibilidad_chofer")
-      .update({ notas: notas.trim() || null })
-      .eq("id", id);
-    if (upErr) {
-      toast.error(upErr.message);
       return;
     }
     refresh();
