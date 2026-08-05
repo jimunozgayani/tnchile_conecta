@@ -684,6 +684,16 @@ export function DayDetailPanel({
           onSaved={refresh}
         />
       )}
+
+      {editingChofer && (
+        <ChoferOcasionalEditor
+          row={editingChofer}
+          isAdmin={!!viewer?.isAdmin}
+          onClose={() => setEditingChofer(null)}
+          onSaved={refresh}
+        />
+      )}
+
     </div>
   );
 
