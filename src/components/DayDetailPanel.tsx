@@ -4,7 +4,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
 import { CamionLabel } from "@/components/CamionLabel";
-import { Truck, StickyNote } from "lucide-react";
+import { Truck, StickyNote, Pencil, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { editarChoferOcasional, eliminarChoferOcasional } from "@/lib/chofer.functions";
+
 
 export type DayEstado = "sin_confirmar" | "disponible" | "no_disponible";
 
@@ -15,10 +18,15 @@ export type DayRow = {
   proveedor: string | null;
   proveedor_id: string | null;
   origen_registro: string | null;
+  creado_por: string | null;
+  celular: string | null;
+  clase_licencia: string | null;
+  camion_asignado_id: string | null;
   camion: any | null;
   disp: any | null;
   estado: DayEstado;
 };
+
 
 
 const NEXT_ESTADO: Record<DayEstado, DayEstado> = {
@@ -47,7 +55,7 @@ export function useDayRows(selected: string) {
       const { data, error } = await supabase
         .from("drivers")
         .select(
-          "id, nombre_completo, origen_registro, user_id, camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+          "id, nombre_completo, origen_registro, user_id, creado_por, celular, clase_licencia, camion_asignado_id, camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
         )
         .is("deleted_at", null)
         .order("nombre_completo");
@@ -98,6 +106,11 @@ export function useDayRows(selected: string) {
         proveedor: d.user_id ? (provName.get(d.user_id) ?? null) : null,
         proveedor_id: d.user_id ?? null,
         origen_registro: d.origen_registro ?? null,
+        creado_por: d.creado_por ?? null,
+        celular: d.celular ?? null,
+        clase_licencia: d.clase_licencia ?? null,
+        camion_asignado_id: d.camion_asignado_id ?? null,
+
         camion: disp?.truck ?? d.camion ?? null,
         disp,
         estado: (disp?.estado as DayEstado) ?? "sin_confirmar",
@@ -127,7 +140,7 @@ function useViewer() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return { id: null as string | null, isAdmin: false };
+      if (!user) return { id: null as string | null, isAdmin: false, isJefe: false };
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -135,7 +148,9 @@ function useViewer() {
       return {
         id: user.id,
         isAdmin: (roles ?? []).some((r: any) => r.role === "admin"),
+        isJefe: (roles ?? []).some((r: any) => r.role === "jefe_operaciones"),
       };
+
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -245,6 +260,142 @@ function CamionPicker({
   );
 }
 
+/** Inline modal to edit an occasional driver (origen_registro = 'operaciones'). */
+function ChoferOcasionalEditor({
+  row,
+  isAdmin,
+  onClose,
+  onSaved,
+}: {
+  row: DayRow;
+  isAdmin: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const editar = useServerFn(editarChoferOcasional);
+  const [nombre, setNombre] = useState(row.nombre);
+  const [celular, setCelular] = useState(row.celular ?? "");
+  const [clase, setClase] = useState(row.clase_licencia ?? "");
+  const [camionId, setCamionId] = useState(row.camion_asignado_id ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const trucksQ = useQuery({
+    queryKey: ["ops-editor-trucks", row.proveedor_id, isAdmin],
+    queryFn: async () => {
+      let q = supabase
+        .from("trucks")
+        .select("id, patente, tipo, user_id")
+        .is("deleted_at", null)
+        .order("patente");
+      if (!isAdmin && row.proveedor_id) q = q.eq("user_id", row.proveedor_id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nombre.trim()) return;
+    setSaving(true);
+    try {
+      await editar({
+        data: {
+          driver_id: row.driver_id,
+          nombre_completo: nombre.trim(),
+          celular: celular.trim() || null,
+          clase_licencia: clase || null,
+          camion_asignado_id: camionId || null,
+        },
+      });
+      toast.success("Chofer actualizado");
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message ?? String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      role="dialog"
+      aria-label="Editar chofer ocasional"
+    >
+      <form
+        onSubmit={submit}
+        className="max-h-[85vh] w-full max-w-md space-y-3 overflow-auto rounded-t-xl bg-card p-4 shadow-lg sm:rounded-xl"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-primary-dark">Editar chofer ocasional</h3>
+          <button type="button" onClick={onClose} className="text-sm text-muted-foreground">
+            Cerrar
+          </button>
+        </div>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Nombre completo
+          <input
+            required
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          />
+        </label>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Celular
+          <input
+            value={celular}
+            onChange={(e) => setCelular(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          />
+        </label>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Clase de licencia
+          <select
+            value={clase}
+            onChange={(e) => setClase(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">Sin especificar</option>
+            {["A1", "A2", "A3", "A4", "B"].map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Camión asignado
+          <select
+            value={camionId}
+            onChange={(e) => setCamionId(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">Sin camión</option>
+            {((trucksQ.data ?? []) as any[]).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.patente}
+                {t.tipo ? ` · ${t.tipo}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="min-h-[44px] w-full rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {saving ? "Guardando…" : "Guardar cambios"}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 
 export function DayDetailPanel({
@@ -266,7 +417,34 @@ export function DayDetailPanel({
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [picking, setPicking] = useState<DayRow | null>(null);
+  const [editingChofer, setEditingChofer] = useState<DayRow | null>(null);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const eliminar = useServerFn(eliminarChoferOcasional);
   const viewer = useViewer().data;
+
+  /** Occasional drivers only, restricted to their creator plus admin/jefe. */
+  const canManageOcasional = (row: DayRow) =>
+    row.origen_registro === "operaciones" &&
+    (!!viewer?.isAdmin || !!viewer?.isJefe || (!!viewer?.id && viewer.id === row.creado_por));
+
+  const removeOcasional = async (row: DayRow) => {
+    if (
+      !window.confirm(
+        `¿Eliminar a ${row.nombre} del tablero? Esta acción es reversible desde Administración.`,
+      )
+    )
+      return;
+    setRemoved((prev) => [...prev, row.driver_id]); // optimistic
+    try {
+      await eliminar({ data: { driver_id: row.driver_id } });
+      toast.success("Chofer eliminado del tablero");
+      refresh();
+    } catch (e: any) {
+      setRemoved((prev) => prev.filter((id) => id !== row.driver_id));
+      toast.error(e?.message ?? String(e));
+    }
+  };
+
 
 
 
@@ -361,7 +539,7 @@ export function DayDetailPanel({
     }
   };
 
-  const visible = rows;
+  const visible = rows.filter((r) => !removed.includes(r.driver_id));
 
   const canAssign = (row: DayRow) =>
     !!viewer?.isAdmin || (!!viewer?.id && viewer.id === row.proveedor_id);
@@ -409,9 +587,40 @@ export function DayDetailPanel({
                       <Truck className="h-4 w-4" />
                     </button>
                   )}
+                  {canManageOcasional(row) && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="edit-ocasional"
+                        title="Editar chofer"
+                        aria-label={`Editar a ${row.nombre}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingChofer(row);
+                        }}
+                        className="rounded border border-input p-1 text-muted-foreground transition hover:bg-muted"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="delete-ocasional"
+                        title="Eliminar chofer"
+                        aria-label={`Eliminar a ${row.nombre}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeOcasional(row);
+                        }}
+                        className="rounded border border-input p-1 text-red-600 transition hover:bg-muted"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
                 </div>
 
               </div>
+
               <button
                 type="button"
                 onClick={() => cycle(row)}
@@ -475,6 +684,16 @@ export function DayDetailPanel({
           onSaved={refresh}
         />
       )}
+
+      {editingChofer && (
+        <ChoferOcasionalEditor
+          row={editingChofer}
+          isAdmin={!!viewer?.isAdmin}
+          onClose={() => setEditingChofer(null)}
+          onSaved={refresh}
+        />
+      )}
+
     </div>
   );
 
