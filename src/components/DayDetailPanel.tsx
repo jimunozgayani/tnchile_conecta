@@ -587,9 +587,40 @@ export function DayDetailPanel({
                       <Truck className="h-4 w-4" />
                     </button>
                   )}
+                  {canManageOcasional(row) && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="edit-ocasional"
+                        title="Editar chofer"
+                        aria-label={`Editar a ${row.nombre}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingChofer(row);
+                        }}
+                        className="rounded border border-input p-1 text-muted-foreground transition hover:bg-muted"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="delete-ocasional"
+                        title="Eliminar chofer"
+                        aria-label={`Eliminar a ${row.nombre}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeOcasional(row);
+                        }}
+                        className="rounded border border-input p-1 text-red-600 transition hover:bg-muted"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
                 </div>
 
               </div>
+
               <button
                 type="button"
                 onClick={() => cycle(row)}
