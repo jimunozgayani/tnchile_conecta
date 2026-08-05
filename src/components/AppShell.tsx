@@ -46,6 +46,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOperador, setIsOperador] = useState(false);
+  const [isJefeOps, setIsJefeOps] = useState(false);
+  const [isLiderCuenta, setIsLiderCuenta] = useState(false);
+  const [isComercial, setIsComercial] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
