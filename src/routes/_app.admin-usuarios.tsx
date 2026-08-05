@@ -3,7 +3,8 @@ import { pageHead } from "@/lib/page-head";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2, Handshake } from "lucide-react";
+import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2, Handshake, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { requireAdmin } from "@/lib/require-admin";
 import {
   listAppUsers,
@@ -48,6 +49,76 @@ function RoleChip({ role }: { role: string }) {
     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone}`}>
       {ROLE_LABEL[role] ?? role}
     </span>
+  );
+}
+
+function SubirDocumentoPrivado({ users }: { users: AppUser[] }) {
+  const [target, setTarget] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function subir(e: React.FormEvent) {
+    e.preventDefault();
+    if (!target || !file) return;
+    setUploading(true);
+    try {
+      const { error } = await supabase.storage
+        .from("documentos-privados")
+        .upload(`${target}/${file.name}`, file, { upsert: true });
+      if (error) throw new Error(error.message);
+      toast.success("Documento subido al espacio privado del usuario.");
+      setFile(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo subir el documento.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <section className="rounded-xl border bg-card p-4 shadow-sm">
+      <h2 className="flex items-center gap-2 text-sm font-semibold">
+        <Upload className="h-4 w-4 text-primary" /> Subir documento privado
+      </h2>
+      <form onSubmit={subir} className="mt-3 flex flex-wrap items-end gap-3">
+        <div className="min-w-[240px] flex-1">
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Usuario</label>
+          <select
+            required
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Selecciona un usuario…</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.email}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Archivo</label>
+          <input
+            required
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="block rounded-md border bg-background px-3 py-1.5 text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={uploading || !target || !file}
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-dark disabled:opacity-60"
+        >
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          Subir documento
+        </button>
+      </form>
+      <p className="mt-2 text-xs text-muted-foreground">
+        El archivo queda en la carpeta privada del usuario y solo él (y Administración) puede verlo.
+      </p>
+    </section>
   );
 }
 
@@ -170,6 +241,10 @@ function AdminUsuariosPage() {
           cotizaciones). Un usuario puede tener ambos roles simultáneamente.
         </p>
       </section>
+
+      <SubirDocumentoPrivado users={users ?? []} />
+
+
 
       <section className="rounded-xl border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">

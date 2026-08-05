@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, FileText, Target } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ChevronDown, Download, FileText, Target } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getSignedUrl } from "@/lib/signed-url";
 import { cn } from "@/lib/utils";
 
 /** Etiquetas y color por estado de cotización (paleta corporativa TN Chile). */
@@ -134,8 +138,49 @@ export function MetasCard() {
   );
 }
 
+const DOCS_BUCKET = "documentos-privados";
+
+function formatBytes(bytes: number | null | undefined): string {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function MisDocumentos() {
   const [open, setOpen] = useState(false);
+
+  const { data: files, isLoading } = useQuery({
+    enabled: open,
+    queryKey: ["documentos-privados"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data, error } = await supabase.storage.from(DOCS_BUCKET).list(user.id, {
+        sortBy: { column: "created_at", order: "desc" },
+      });
+      if (error) throw new Error(error.message);
+      return (data ?? [])
+        .filter((f) => f.id !== null)
+        .map((f) => ({
+          name: f.name,
+          path: `${user.id}/${f.name}`,
+          size: (f.metadata as { size?: number } | null)?.size ?? null,
+        }));
+    },
+  });
+
+  async function descargar(path: string) {
+    const url = await getSignedUrl(DOCS_BUCKET, path);
+    if (!url) {
+      toast.error("No se pudo generar el enlace de descarga.");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <section className="rounded-xl border bg-card shadow-sm">
       <button
@@ -153,9 +198,31 @@ export function MisDocumentos() {
         />
       </button>
       {open && (
-        <p className="px-5 pb-5 text-sm text-muted-foreground">
-          Los documentos privados compartidos por Administración aparecerán aquí.
-        </p>
+        <div className="px-5 pb-5">
+          {isLoading && <p className="text-sm text-muted-foreground">Cargando documentos…</p>}
+          {!isLoading && (files ?? []).length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Administración aún no ha compartido documentos privados contigo.
+            </p>
+          )}
+          <ul className="divide-y">
+            {(files ?? []).map((f) => (
+              <li key={f.path} className="flex items-center justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm">{f.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatBytes(f.size)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => descargar(f.path)}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                >
+                  <Download className="h-3.5 w-3.5" /> Descargar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );
