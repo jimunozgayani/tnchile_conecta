@@ -790,6 +790,45 @@ export type Database = {
         }
         Relationships: []
       }
+      metas: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          descripcion: string
+          id: string
+          periodo: string
+          rol: string
+          unidad: string | null
+          updated_at: string
+          valor_actual: number | null
+          valor_objetivo: number | null
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          descripcion: string
+          id?: string
+          periodo: string
+          rol: string
+          unidad?: string | null
+          updated_at?: string
+          valor_actual?: number | null
+          valor_objetivo?: number | null
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          descripcion?: string
+          id?: string
+          periodo?: string
+          rol?: string
+          unidad?: string | null
+          updated_at?: string
+          valor_actual?: number | null
+          valor_objetivo?: number | null
+        }
+        Relationships: []
+      }
       notificaciones: {
         Row: {
           created_at: string
