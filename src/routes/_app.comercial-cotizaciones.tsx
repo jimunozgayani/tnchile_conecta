@@ -1,13 +1,21 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
-import { createCotizacion } from "@/lib/cotizaciones.functions";
+import {
+  createCotizacion,
+  actualizarEstadoCotizacion,
+  asignarCotizacion,
+  obtenerAsignables,
+  type Asignable,
+} from "@/lib/cotizaciones.functions";
+import { nombresAsignados } from "@/lib/solicitudes.functions";
+import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
-import { FileText, Plus, X, Search, AlertTriangle } from "lucide-react";
+import { FileText, Plus, X, Search, AlertTriangle, MoreHorizontal, UserCircle2 } from "lucide-react";
 
 /** Comercial gestiona; operaciones solo lectura. */
 async function guard() {
@@ -81,6 +89,9 @@ type Cotizacion = {
   fecha_despacho: string | null;
   precio_ofrecido_cliente_clp: number | null;
   created_at: string;
+  revision_count: number | null;
+  comentarios_revision: string | null;
+  asignado_a: string | null;
 };
 
 const primerDestino = (destinos: unknown): string => {
@@ -122,16 +133,19 @@ export default function ComercialCotizacionesPage() {
   });
   const roles = rolesQuery.data ?? [];
   const puedeCrear = ["admin", "lider_cuenta", "comercial"].some((r) => roles.includes(r));
+  const puedeAsignar = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
+
+  const queryClient = useQueryClient();
+  const listKey = ["cotizaciones-pipeline", q, desde, hasta] as const;
 
   const listQuery = useQuery({
-    queryKey: ["cotizaciones-pipeline", q, desde, hasta],
+    queryKey: listKey,
     queryFn: async () => {
-      // TODO: cuando exista cotizaciones.asignado_a, filtrar por
-      // asignado_a = auth.uid() para el rol `comercial`. Por ahora ve todas.
+      // TODO: filtrar por asignado_a = auth.uid() para el rol `comercial`.
       let query = supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, created_at",
+          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, created_at, revision_count, comentarios_revision, asignado_a",
         )
         .order("created_at", { ascending: false })
         .limit(500);
@@ -146,6 +160,32 @@ export default function ComercialCotizacionesPage() {
   });
 
   const rows = listQuery.data ?? [];
+
+  /** Actualiza la tarjeta en su lugar; la columna se recalcula sin recargar todo. */
+  const patchRow = (id: string, patch: Partial<Cotizacion>) =>
+    queryClient.setQueryData<Cotizacion[]>(listKey, (old) =>
+      (old ?? []).map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    );
+
+  const asignadosIds = useMemo(
+    () => [...new Set(rows.map((r) => r.asignado_a).filter((v): v is string => !!v))],
+    [rows],
+  );
+  const nombresFn = useServerFn(nombresAsignados);
+  const nombresQuery = useQuery({
+    queryKey: ["cotizaciones-asignados", asignadosIds],
+    queryFn: () => nombresFn({ data: { ids: asignadosIds } }),
+    enabled: asignadosIds.length > 0,
+  });
+  const nombres = nombresQuery.data ?? {};
+
+  const asignablesFn = useServerFn(obtenerAsignables);
+  const asignablesQuery = useQuery({
+    queryKey: ["cotizaciones-asignables"],
+    queryFn: () => asignablesFn(),
+    enabled: puedeAsignar,
+  });
+
   const rechazadas = useMemo(() => rows.filter((r) => r.estado === "rechazada"), [rows]);
   const porColumna = useMemo(
     () => COLUMNAS.map((c) => ({ col: c, cards: rows.filter((r) => c.estados.includes(r.estado)) })),
@@ -279,7 +319,9 @@ export default function ComercialCotizacionesPage() {
                   {cards.length === 0 ? (
                     <p className="px-1 py-4 text-center text-xs text-muted-foreground">Sin cotizaciones</p>
                   ) : (
-                    cards.map((c) => <Card key={c.id} c={c} />)
+                    cards.map((c) => (
+                      <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} />
+                    ))
                   )}
                 </div>
               </section>
@@ -297,7 +339,7 @@ export default function ComercialCotizacionesPage() {
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {rechazadas.map((c) => (
-                <Card key={c.id} c={c} />
+                <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} />
               ))}
             </div>
           )}
@@ -309,17 +351,137 @@ export default function ComercialCotizacionesPage() {
   );
 }
 
-function Card({ c }: { c: Cotizacion }) {
+type CardProps = {
+  c: Cotizacion;
+  puedeActuar: boolean;
+  puedeAsignar: boolean;
+  asignables: Asignable[];
+  nombres: Record<string, string>;
+  onPatch: (id: string, patch: Partial<Cotizacion>) => void;
+};
+
+const ACCIONES: Record<string, { estado: string; label: string }[]> = {
+  nueva: [{ estado: "cotizada", label: "Marcar como cotizada" }],
+  pendiente: [{ estado: "cotizada", label: "Marcar como cotizada" }],
+  cotizada: [
+    { estado: "aceptada", label: "Marcar como aceptada" },
+    { estado: "en_revision", label: "Poner en revisión" },
+    { estado: "rechazada", label: "Rechazar" },
+  ],
+  aceptada: [{ estado: "lista_para_operar", label: "Sellar cierre" }],
+  cobro_pendiente: [{ estado: "cerrada", label: "Marcar como cerrada" }],
+};
+
+function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: CardProps) {
+  const actualizar = useServerFn(actualizarEstadoCotizacion);
+  const asignar = useServerFn(asignarCotizacion);
+  const [menu, setMenu] = useState(false);
+  const [chip, setChip] = useState(false);
+  const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const revCount = c.revision_count ?? 0;
+  const enRevision = c.estado === "en_revision" || (revCount > 0 && c.estado === "cotizada");
+  const acciones = puedeActuar ? (ACCIONES[c.estado] ?? []) : [];
+  const esDeOperaciones = ESTADOS_OPERACIONES.includes(c.estado);
+
+  const aplicar = async (estado: string, comentario?: string) => {
+    setBusy(true);
+    try {
+      const res = await actualizar({ data: { id: c.id, estado, comentario: comentario ?? null } });
+      onPatch(c.id, {
+        estado: res.estado,
+        revision_count: res.revision_count,
+        ...(estado === "en_revision" ? { comentarios_revision: comentario ?? null } : {}),
+      });
+      if (estado === "lista_para_operar") {
+        toast.success("Cierre sellado. Los documentos se generarán próximamente.");
+      } else {
+        toast.success("Estado actualizado");
+      }
+      setMenu(false);
+      setComentarioPara(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo actualizar el estado");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onAccion = (estado: string) => {
+    if (estado === "en_revision" || estado === "rechazada") {
+      setComentarioPara(estado);
+      setMenu(false);
+      return;
+    }
+    if (estado === "lista_para_operar") {
+      if (
+        !window.confirm(
+          "¿Confirmas el cierre? Se generarán la OC y la Orden de Venta automáticamente al completar este paso.",
+        )
+      )
+        return;
+    }
+    if (estado === "cerrada") {
+      if (!window.confirm("¿Confirmar cierre final de la operación?")) return;
+    }
+    void aplicar(estado);
+  };
+
+  const reasignar = async (uid: string) => {
+    setBusy(true);
+    try {
+      await asignar({ data: { id: c.id, asignado_a: uid } });
+      onPatch(c.id, { asignado_a: uid });
+      toast.success("Cotización reasignada");
+      setChip(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo reasignar");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <article className="rounded-md border bg-card p-2.5 text-xs shadow-sm">
+    <article className="relative rounded-md border bg-card p-2.5 text-xs shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <p className="font-bold leading-tight">{c.contacto_nombre ?? "Sin contacto"}</p>
+        {acciones.length > 0 && (
+          <div className="relative">
+            <button
+              type="button"
+              aria-label="Acciones"
+              onClick={() => setMenu((v) => !v)}
+              className="rounded p-1 text-muted-foreground hover:bg-muted"
+            >
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            </button>
+            {menu && (
+              <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-md border bg-popover shadow-lg">
+                {acciones.map((a) => (
+                  <button
+                    key={a.estado}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onAccion(a.estado)}
+                    className="block w-full px-3 py-2 text-left text-xs hover:bg-muted disabled:opacity-60"
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      {c.estado === "en_revision" && (
-        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 ring-1 ring-amber-200">
+
+      {enRevision && (
+        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900">
           <AlertTriangle className="h-3 w-3" aria-hidden="true" /> En revisión
+          {revCount > 1 ? ` (×${revCount})` : ""}
         </span>
       )}
+
       <p className="mt-1.5 text-muted-foreground">
         {c.origen ?? "—"} → {primerDestino(c.destinos)}
       </p>
@@ -328,7 +490,120 @@ function Card({ c }: { c: Cotizacion }) {
         <span className="text-muted-foreground">{fmtFecha(c.fecha_despacho)}</span>
         <span className="font-semibold text-foreground">{fmtCLP(c.precio_ofrecido_cliente_clp)}</span>
       </div>
+
+      {esDeOperaciones && (
+        <p className="mt-1.5 text-[10px] italic text-muted-foreground">En manos de Operaciones</p>
+      )}
+
+      {/* Chip de asignación */}
+      <div className="relative mt-2 border-t pt-1.5">
+        <button
+          type="button"
+          disabled={!puedeAsignar || busy}
+          onClick={() => setChip((v) => !v)}
+          className={`inline-flex max-w-full items-center gap-1 truncate rounded-full px-1.5 py-0.5 text-[10px] ${
+            c.asignado_a ? "text-foreground" : "text-muted-foreground"
+          } ${puedeAsignar ? "hover:bg-muted" : "cursor-default"}`}
+        >
+          <UserCircle2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">
+            {c.asignado_a ? nombres[c.asignado_a] || "Asignada" : "Sin asignar"}
+          </span>
+        </button>
+        {chip && puedeAsignar && (
+          <div className="absolute left-0 z-20 mt-1 max-h-48 w-52 overflow-y-auto rounded-md border bg-popover shadow-lg">
+            {asignables.length === 0 ? (
+              <p className="px-3 py-2 text-[11px] text-muted-foreground">Sin usuarios asignables</p>
+            ) : (
+              asignables.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void reasignar(a.id)}
+                  className="block w-full truncate px-3 py-2 text-left text-xs hover:bg-muted disabled:opacity-60"
+                >
+                  {a.nombre}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {comentarioPara && (
+        <ComentarioModal
+          modo={comentarioPara}
+          revisionCount={revCount}
+          busy={busy}
+          onCancel={() => setComentarioPara(null)}
+          onSubmit={(txt) => void aplicar(comentarioPara, txt)}
+        />
+      )}
     </article>
+  );
+}
+
+function ComentarioModal({
+  modo,
+  revisionCount,
+  busy,
+  onCancel,
+  onSubmit,
+}: {
+  modo: "en_revision" | "rechazada";
+  revisionCount: number;
+  busy: boolean;
+  onCancel: () => void;
+  onSubmit: (comentario: string) => void;
+}) {
+  const [txt, setTxt] = useState("");
+  const valido = txt.trim().length >= 10;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (valido) onSubmit(txt.trim());
+        }}
+        className="w-full max-w-md space-y-3 rounded-lg border bg-card p-5 text-sm shadow-xl"
+      >
+        <h2 className="text-base font-bold">
+          {modo === "en_revision" ? "Poner en revisión" : "Rechazar cotización"}
+        </h2>
+        {revisionCount > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Esta cotización ha vuelto al ciclo {revisionCount}{" "}
+            {revisionCount === 1 ? "vez" : "veces"}
+          </p>
+        )}
+        <div>
+          <label className="mb-1 block text-xs font-medium" htmlFor="cmt">
+            Comentario * (mínimo 10 caracteres)
+          </label>
+          <textarea
+            id="cmt"
+            rows={4}
+            required
+            value={txt}
+            onChange={(e) => setTxt(e.target.value)}
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onCancel} className="rounded-md border px-4 py-2 text-sm">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={!valido || busy}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            Confirmar
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
