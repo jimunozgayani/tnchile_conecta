@@ -14,8 +14,19 @@ import {
 } from "@/lib/cotizaciones.functions";
 import { nombresAsignados } from "@/lib/solicitudes.functions";
 import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
+import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
-import { FileText, Plus, X, Search, AlertTriangle, MoreHorizontal, UserCircle2 } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  X,
+  Search,
+  AlertTriangle,
+  MoreHorizontal,
+  UserCircle2,
+  Download,
+  Loader2,
+} from "lucide-react";
 
 /** Comercial gestiona; operaciones solo lectura. */
 async function guard() {
@@ -379,11 +390,26 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
   const [chip, setChip] = useState(false);
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const revCount = c.revision_count ?? 0;
   const enRevision = c.estado === "en_revision" || (revCount > 0 && c.estado === "cotizada");
   const acciones = puedeActuar ? (ACCIONES[c.estado] ?? []) : [];
   const esDeOperaciones = ESTADOS_OPERACIONES.includes(c.estado);
+  const puedePDF = c.estado === "cotizada" || c.estado === "aceptada";
+
+  const generarPDF = async () => {
+    setPdfBusy(true);
+    try {
+      await descargarCotizacionPDF(c.id);
+      toast.success("PDF generado correctamente");
+      setMenu(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo generar el PDF");
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   const aplicar = async (estado: string, comentario?: string) => {
     setBusy(true);
@@ -446,7 +472,7 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
     <article className="relative rounded-md border bg-card p-2.5 text-xs shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <p className="font-bold leading-tight">{c.contacto_nombre ?? "Sin contacto"}</p>
-        {acciones.length > 0 && (
+        {(acciones.length > 0 || puedePDF) && (
           <div className="relative">
             <button
               type="button"
@@ -457,7 +483,7 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
               <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
             </button>
             {menu && (
-              <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-md border bg-popover shadow-lg">
+              <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-md border bg-popover shadow-lg">
                 {acciones.map((a) => (
                   <button
                     key={a.estado}
@@ -469,6 +495,21 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
                     {a.label}
                   </button>
                 ))}
+                {puedePDF && (
+                  <button
+                    type="button"
+                    disabled={pdfBusy}
+                    onClick={() => void generarPDF()}
+                    className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-xs hover:bg-muted disabled:opacity-60"
+                  >
+                    {pdfBusy ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+                    {pdfBusy ? "Generando PDF…" : "Descargar cotización PDF"}
+                  </button>
+                )}
               </div>
             )}
           </div>
