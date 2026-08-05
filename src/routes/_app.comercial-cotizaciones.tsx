@@ -81,6 +81,9 @@ type Cotizacion = {
   fecha_despacho: string | null;
   precio_ofrecido_cliente_clp: number | null;
   created_at: string;
+  revision_count: number | null;
+  comentarios_revision: string | null;
+  asignado_a: string | null;
 };
 
 const primerDestino = (destinos: unknown): string => {
