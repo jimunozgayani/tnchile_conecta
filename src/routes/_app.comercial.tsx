@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { pageHead } from "@/lib/page-head";
 import { requireCommercial } from "@/lib/require-admin";
 import { supabase } from "@/integrations/supabase/client";
+import { obtenerEquipoComercial, type MiembroComercial } from "@/lib/liderazgo.functions";
+import { MetasEquipo, SinAsignarAlert, TeamTable } from "@/components/leader-dashboard";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import {
   EstadoBadge,
