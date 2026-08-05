@@ -39,6 +39,7 @@ import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
+import { Route as AppComercialContactosRouteImport } from './routes/_app.comercial-contactos'
 import { Route as AppComercialRouteImport } from './routes/_app.comercial'
 import { Route as AppClienteRouteImport } from './routes/_app.cliente'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
@@ -204,6 +205,11 @@ const AppComparadorRoute = AppComparadorRouteImport.update({
   path: '/comparador',
   getParentRoute: () => AppRoute,
 } as any)
+const AppComercialContactosRoute = AppComercialContactosRouteImport.update({
+  id: '/comercial-contactos',
+  path: '/comercial-contactos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppComercialRoute = AppComercialRouteImport.update({
   id: '/comercial',
   path: '/comercial',
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/choferes': typeof AppChoferesRoute
   '/cliente': typeof AppClienteRoute
   '/comercial': typeof AppComercialRoute
+  '/comercial-contactos': typeof AppComercialContactosRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByTo {
   '/choferes': typeof AppChoferesRoute
   '/cliente': typeof AppClienteRoute
   '/comercial': typeof AppComercialRoute
+  '/comercial-contactos': typeof AppComercialContactosRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/_app/choferes': typeof AppChoferesRoute
   '/_app/cliente': typeof AppClienteRoute
   '/_app/comercial': typeof AppComercialRoute
+  '/_app/comercial-contactos': typeof AppComercialContactosRoute
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/choferes'
     | '/cliente'
     | '/comercial'
+    | '/comercial-contactos'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-choferes'
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/choferes'
     | '/cliente'
     | '/comercial'
+    | '/comercial-contactos'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-choferes'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/_app/choferes'
     | '/_app/cliente'
     | '/_app/comercial'
+    | '/_app/comercial-contactos'
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad-choferes'
@@ -712,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComparadorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/comercial-contactos': {
+      id: '/_app/comercial-contactos'
+      path: '/comercial-contactos'
+      fullPath: '/comercial-contactos'
+      preLoaderRoute: typeof AppComercialContactosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/comercial': {
       id: '/_app/comercial'
       path: '/comercial'
@@ -780,6 +799,7 @@ interface AppRouteChildren {
   AppChoferesRoute: typeof AppChoferesRoute
   AppClienteRoute: typeof AppClienteRoute
   AppComercialRoute: typeof AppComercialRoute
+  AppComercialContactosRoute: typeof AppComercialContactosRoute
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
@@ -809,6 +829,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChoferesRoute: AppChoferesRoute,
   AppClienteRoute: AppClienteRoute,
   AppComercialRoute: AppComercialRoute,
+  AppComercialContactosRoute: AppComercialContactosRoute,
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
