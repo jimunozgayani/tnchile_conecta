@@ -33,8 +33,8 @@ const ACTIVAS = ["lista_para_operar", "confirmada", "en_operacion"];
 
 function OperacionesPage() {
   const { data: me } = useStaffIdentity();
-  const listarActivas = useServerFn(listarOperacionesActivas);
   const roles = me?.roles ?? [];
+  const isLeader = roles.includes("admin") || roles.includes("jefe_operaciones");
   const rolLabel = !me
     ? "…"
     : roles.includes("jefe_operaciones")
@@ -42,6 +42,70 @@ function OperacionesPage() {
       : roles.includes("admin")
         ? "Administrador"
         : "Operador";
+
+  if (isLeader) return <JefeOperacionesView nombre={me?.nombre ?? "…"} rolLabel={rolLabel} />;
+  return <OperadorPersonalView nombre={me?.nombre ?? "…"} userId={me?.userId ?? null} rolLabel={rolLabel} />;
+}
+
+function JefeOperacionesView({ nombre, rolLabel }: { nombre: string; rolLabel: string }) {
+  const listarEquipo = useServerFn(obtenerEquipoOperaciones);
+  const listarActividad = useServerFn(obtenerActividadOperaciones);
+
+  const { data: equipo, isLoading } = useQuery({
+    queryKey: ["equipo-operaciones"],
+    queryFn: () => listarEquipo({ data: {} as never }),
+  });
+  const { data: actividad, isLoading: loadingAct } = useQuery({
+    queryKey: ["actividad-operaciones"],
+    queryFn: () => listarActividad({ data: {} as never }),
+  });
+
+  return (
+    <div className="space-y-6">
+      <UserCard nombre={nombre} rolLabel={rolLabel} />
+
+      <TeamTable
+        titulo="Mi equipo de operaciones"
+        cargando={isLoading}
+        filas={equipo ?? []}
+        columnas={[
+          { label: "Activas", get: (r: MiembroOperaciones) => r.operaciones_activas },
+          { label: "Finalizadas (mes)", get: (r: MiembroOperaciones) => r.finalizadas_mes },
+        ]}
+      />
+
+      <MetasEquipo rol="operador" puedeCrear />
+
+      <ActividadEquipoCard filas={actividad ?? []} cargando={loadingAct} />
+
+      <MisDocumentos />
+
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        <Link to="/operaciones-cotizaciones" className="text-primary hover:underline">
+          Cotizaciones
+        </Link>
+        <Link to="/operaciones-disponibilidad" className="text-primary hover:underline">
+          Disponibilidad
+        </Link>
+        <Link to="/operaciones-asignaciones" className="text-primary hover:underline">
+          Asignaciones
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function OperadorPersonalView({
+  nombre,
+  userId,
+  rolLabel,
+}: {
+  nombre: string;
+  userId: string | null;
+  rolLabel: string;
+}) {
+  const me = { userId, nombre };
+  const listarActivas = useServerFn(listarOperacionesActivas);
 
   const { data } = useQuery({
     enabled: !!me?.userId,
