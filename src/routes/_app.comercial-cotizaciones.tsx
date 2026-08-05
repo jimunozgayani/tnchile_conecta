@@ -1,13 +1,21 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
-import { createCotizacion } from "@/lib/cotizaciones.functions";
+import {
+  createCotizacion,
+  actualizarEstadoCotizacion,
+  asignarCotizacion,
+  obtenerAsignables,
+  type Asignable,
+} from "@/lib/cotizaciones.functions";
+import { nombresAsignados } from "@/lib/solicitudes.functions";
+import { TRANSICIONES, ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
-import { FileText, Plus, X, Search, AlertTriangle } from "lucide-react";
+import { FileText, Plus, X, Search, AlertTriangle, MoreHorizontal, UserCircle2 } from "lucide-react";
 
 /** Comercial gestiona; operaciones solo lectura. */
 async function guard() {
