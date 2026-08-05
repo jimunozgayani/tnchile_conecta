@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, FileText, Target } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ChevronDown, Download, FileText, Target } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getSignedUrl } from "@/lib/signed-url";
 import { cn } from "@/lib/utils";
 
 /** Etiquetas y color por estado de cotización (paleta corporativa TN Chile). */
