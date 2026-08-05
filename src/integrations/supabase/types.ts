@@ -282,7 +282,10 @@ export type Database = {
         Row: {
           alto_cm: number | null
           ancho_cm: number | null
+          asignado_a: string | null
           cliente_id: string | null
+          comentarios_rechazo: string | null
+          comentarios_revision: string | null
           contacto_email: string | null
           contacto_id: string | null
           contacto_nombre: string
@@ -301,6 +304,8 @@ export type Database = {
           peso_kg: number | null
           precio_maximo_proveedor_clp: number | null
           precio_ofrecido_cliente_clp: number | null
+          rechazada_at: string | null
+          revision_count: number
           sobreestadia_dias_libres: number | null
           sobreestadia_horas_libres: number | null
           sobreestadia_tarifa_dia_clp: number | null
@@ -315,7 +320,10 @@ export type Database = {
         Insert: {
           alto_cm?: number | null
           ancho_cm?: number | null
+          asignado_a?: string | null
           cliente_id?: string | null
+          comentarios_rechazo?: string | null
+          comentarios_revision?: string | null
           contacto_email?: string | null
           contacto_id?: string | null
           contacto_nombre: string
@@ -334,6 +342,8 @@ export type Database = {
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
+          rechazada_at?: string | null
+          revision_count?: number
           sobreestadia_dias_libres?: number | null
           sobreestadia_horas_libres?: number | null
           sobreestadia_tarifa_dia_clp?: number | null
@@ -348,7 +358,10 @@ export type Database = {
         Update: {
           alto_cm?: number | null
           ancho_cm?: number | null
+          asignado_a?: string | null
           cliente_id?: string | null
+          comentarios_rechazo?: string | null
+          comentarios_revision?: string | null
           contacto_email?: string | null
           contacto_id?: string | null
           contacto_nombre?: string
@@ -367,6 +380,8 @@ export type Database = {
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
+          rechazada_at?: string | null
+          revision_count?: number
           sobreestadia_dias_libres?: number | null
           sobreestadia_horas_libres?: number | null
           sobreestadia_tarifa_dia_clp?: number | null
