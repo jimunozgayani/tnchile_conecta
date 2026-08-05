@@ -41,7 +41,7 @@ function RoleChip({ role }: { role: string }) {
   const tone =
     role === "admin"
       ? "bg-primary text-primary-foreground"
-      : role === "operador" || role === "comercial"
+      : role === "operador" || role === "comercial" || role === "lider_cuenta" || role === "jefe_operaciones"
         ? "bg-primary-soft text-primary-dark"
         : "bg-muted text-muted-foreground";
   return (
