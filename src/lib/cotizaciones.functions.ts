@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  TRANSICIONES,
+  COMERCIALISH,
+  ADMINISH,
+  rolesDe,
+} from "@/lib/cotizaciones-transiciones";
 
 const cotizacionSchema = z.object({
   contacto_id: z.string().uuid("Selecciona un contacto"),
