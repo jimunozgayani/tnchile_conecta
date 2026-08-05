@@ -211,9 +211,14 @@ function AdminUsuariosPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {(["operador", "comercial", "admin"] as StaffRole[]).map((r) => {
+                  {(["operador", "comercial", "lider_cuenta", "jefe_operaciones", "admin"] as StaffRole[]).map((r) => {
                     const active = u.roles.includes(r);
-                    const Icon = r === "admin" ? ShieldCheck : r === "comercial" ? Handshake : Briefcase;
+                    const Icon =
+                      r === "admin"
+                        ? ShieldCheck
+                        : r === "comercial" || r === "lider_cuenta"
+                          ? Handshake
+                          : Briefcase;
                     return (
                       <button
                         key={r}
