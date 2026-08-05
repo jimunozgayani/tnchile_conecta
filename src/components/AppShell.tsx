@@ -65,6 +65,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showChoferNav = view === "chofer";
   const showProveedorNav = view === "proveedor";
   const showClienteNav = view === "cliente";
+  const showOperacionesNav = isAdmin || isJefeOps || isOperador;
+  const showComercialNav = isAdmin || isLiderCuenta || isComercial;
 
   useEffect(() => {
     (async () => {
@@ -75,6 +77,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const rs = (data ?? []).map((r: any) => r.role);
       setIsAdmin(rs.includes("admin"));
       setIsOperador(rs.includes("operador"));
+      setIsJefeOps(rs.includes("jefe_operaciones"));
+      setIsLiderCuenta(rs.includes("lider_cuenta"));
+      setIsComercial(rs.includes("comercial"));
       setIsCliente(rs.includes("cliente"));
     })();
   }, []);
