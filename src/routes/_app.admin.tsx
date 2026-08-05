@@ -876,7 +876,7 @@ function DocBadge({ status }: { status: "ok" | "warning" | "expired" }) {
     ok: { label: "OK", cls: "bg-success/15 text-success" },
     warning: { label: "Por vencer", cls: "bg-warning/30 text-warning-foreground" },
     expired: { label: "Vencido", cls: "bg-destructive/15 text-destructive" },
-  }[status];
+  }[status] ?? { label: String(status ?? "—"), cls: FALLBACK_BADGE.cls };
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
 }
 
