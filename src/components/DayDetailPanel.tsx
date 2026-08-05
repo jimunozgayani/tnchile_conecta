@@ -465,7 +465,15 @@ export function DayDetailPanel({
                 <option value="rampla_completa">Rampla completa</option>
               </select>
             </div>
+
+            <NotaInline
+              key={`${row.driver_id}-${selected}`}
+              value={row.disp?.notas ?? null}
+              readOnly={readOnly}
+              onSave={(txt) => saveNotas(row, txt)}
+            />
           </li>
+
         ))}
       </ul>
 
