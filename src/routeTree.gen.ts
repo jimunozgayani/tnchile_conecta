@@ -39,6 +39,7 @@ import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
+import { Route as AppComercialRouteImport } from './routes/_app.comercial'
 import { Route as AppClienteRouteImport } from './routes/_app.cliente'
 import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
 import { Route as AppChoferRouteImport } from './routes/_app.chofer'
@@ -203,6 +204,11 @@ const AppComparadorRoute = AppComparadorRouteImport.update({
   path: '/comparador',
   getParentRoute: () => AppRoute,
 } as any)
+const AppComercialRoute = AppComercialRouteImport.update({
+  id: '/comercial',
+  path: '/comercial',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppClienteRoute = AppClienteRouteImport.update({
   id: '/cliente',
   path: '/cliente',
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
   '/cliente': typeof AppClienteRoute
+  '/comercial': typeof AppComercialRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/chofer': typeof AppChoferRoute
   '/choferes': typeof AppChoferesRoute
   '/cliente': typeof AppClienteRoute
+  '/comercial': typeof AppComercialRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/_app/chofer': typeof AppChoferRoute
   '/_app/choferes': typeof AppChoferesRoute
   '/_app/cliente': typeof AppClienteRoute
+  '/_app/comercial': typeof AppComercialRoute
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
     | '/chofer'
     | '/choferes'
     | '/cliente'
+    | '/comercial'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-choferes'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/chofer'
     | '/choferes'
     | '/cliente'
+    | '/comercial'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-choferes'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/_app/chofer'
     | '/_app/choferes'
     | '/_app/cliente'
+    | '/_app/comercial'
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad-choferes'
@@ -700,6 +712,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComparadorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/comercial': {
+      id: '/_app/comercial'
+      path: '/comercial'
+      fullPath: '/comercial'
+      preLoaderRoute: typeof AppComercialRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/cliente': {
       id: '/_app/cliente'
       path: '/cliente'
@@ -760,6 +779,7 @@ interface AppRouteChildren {
   AppChoferRoute: typeof AppChoferRoute
   AppChoferesRoute: typeof AppChoferesRoute
   AppClienteRoute: typeof AppClienteRoute
+  AppComercialRoute: typeof AppComercialRoute
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
@@ -788,6 +808,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChoferRoute: AppChoferRoute,
   AppChoferesRoute: AppChoferesRoute,
   AppClienteRoute: AppClienteRoute,
+  AppComercialRoute: AppComercialRoute,
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
@@ -828,3 +849,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

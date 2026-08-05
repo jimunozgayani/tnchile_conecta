@@ -28,10 +28,18 @@ export async function requireAdmin() {
   if (!roles.includes("admin")) throw redirect({ to: "/dashboard" });
 }
 
-/** Espacio Operaciones: administradores y operadores. */
+/** Espacio Operaciones: administradores, jefes de operaciones y operadores. */
 export async function requireOperations() {
   const roles = await myRoles();
-  if (!roles.includes("admin") && !roles.includes("operador")) {
+  if (!["admin", "jefe_operaciones", "operador"].some((r) => roles.includes(r))) {
+    throw redirect({ to: "/dashboard" });
+  }
+}
+
+/** Espacio Comercial: administradores, líderes de cuenta y comerciales. */
+export async function requireCommercial() {
+  const roles = await myRoles();
+  if (!["admin", "lider_cuenta", "comercial"].some((r) => roles.includes(r))) {
     throw redirect({ to: "/dashboard" });
   }
 }
