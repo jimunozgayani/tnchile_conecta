@@ -78,7 +78,7 @@ export const setStaffRole = createServerFn({ method: "POST" })
     z
       .object({
         user_id: z.string().uuid(),
-        role: z.enum(["admin", "operador", "comercial"]),
+        role: z.enum(["admin", "operador", "comercial", "lider_cuenta", "jefe_operaciones"]),
         grant: z.boolean(),
       })
       .parse(d),
@@ -114,7 +114,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
     z
       .object({
         email: z.string().email().max(255),
-        role: z.enum(["admin", "operador", "comercial"]),
+        role: z.enum(["admin", "operador", "comercial", "lider_cuenta", "jefe_operaciones"]),
       })
       .parse(d),
   )
