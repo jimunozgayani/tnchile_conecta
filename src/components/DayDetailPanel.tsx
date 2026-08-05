@@ -417,7 +417,34 @@ export function DayDetailPanel({
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [picking, setPicking] = useState<DayRow | null>(null);
+  const [editingChofer, setEditingChofer] = useState<DayRow | null>(null);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const eliminar = useServerFn(eliminarChoferOcasional);
   const viewer = useViewer().data;
+
+  /** Occasional drivers only, restricted to their creator plus admin/jefe. */
+  const canManageOcasional = (row: DayRow) =>
+    row.origen_registro === "operaciones" &&
+    (!!viewer?.isAdmin || !!viewer?.isJefe || (!!viewer?.id && viewer.id === row.creado_por));
+
+  const removeOcasional = async (row: DayRow) => {
+    if (
+      !window.confirm(
+        `¿Eliminar a ${row.nombre} del tablero? Esta acción es reversible desde Administración.`,
+      )
+    )
+      return;
+    setRemoved((prev) => [...prev, row.driver_id]); // optimistic
+    try {
+      await eliminar({ data: { driver_id: row.driver_id } });
+      toast.success("Chofer eliminado del tablero");
+      refresh();
+    } catch (e: any) {
+      setRemoved((prev) => prev.filter((id) => id !== row.driver_id));
+      toast.error(e?.message ?? String(e));
+    }
+  };
+
 
 
 
