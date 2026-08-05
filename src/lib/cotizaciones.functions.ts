@@ -71,26 +71,6 @@ export const createCotizacion = createServerFn({ method: "POST" })
 // Transiciones de estado del pipeline comercial
 // ─────────────────────────────────────────────────────────────
 
-type Sb = { from: (t: string) => any };
-
-async function rolesDe(supabase: Sb, userId: string): Promise<string[]> {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-  return ((data ?? []) as { role: string }[]).map((r) => r.role);
-}
-
-const COMERCIALISH = ["admin", "lider_cuenta", "comercial"];
-const ADMINISH = ["admin", "lider_cuenta"];
-
-/** Transiciones permitidas por estado actual (el destino puede ser virtual). */
-export const TRANSICIONES: Record<string, string[]> = {
-  nueva: ["cotizada"],
-  pendiente: ["cotizada"],
-  cotizada: ["aceptada", "en_revision", "rechazada"],
-  en_revision: ["aceptada", "en_revision", "rechazada"],
-  aceptada: ["lista_para_operar"],
-  cobro_pendiente: ["cerrada"],
-};
-
 const estadoSchema = z.object({
   id: z.string().uuid(),
   estado: z.enum([
