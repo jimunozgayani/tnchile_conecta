@@ -410,50 +410,6 @@ export type Database = {
           },
         ]
       }
-      disponibilidad_camion: {
-        Row: {
-          camion_id: string
-          created_at: string
-          destino: string | null
-          estado: Database["public"]["Enums"]["disponibilidad_estado"]
-          fecha: string
-          id: string
-          lugar: string | null
-          tipo_carga: string | null
-          updated_at: string
-        }
-        Insert: {
-          camion_id: string
-          created_at?: string
-          destino?: string | null
-          estado?: Database["public"]["Enums"]["disponibilidad_estado"]
-          fecha: string
-          id?: string
-          lugar?: string | null
-          tipo_carga?: string | null
-          updated_at?: string
-        }
-        Update: {
-          camion_id?: string
-          created_at?: string
-          destino?: string | null
-          estado?: Database["public"]["Enums"]["disponibilidad_estado"]
-          fecha?: string
-          id?: string
-          lugar?: string | null
-          tipo_carga?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "disponibilidad_camion_camion_id_fkey"
-            columns: ["camion_id"]
-            isOneToOne: false
-            referencedRelation: "trucks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       disponibilidad_chofer: {
         Row: {
           created_at: string
