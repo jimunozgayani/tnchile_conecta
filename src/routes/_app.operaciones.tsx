@@ -87,9 +87,6 @@ function JefeOperacionesView({ nombre, rolLabel }: { nombre: string; rolLabel: s
       <MisDocumentos />
 
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <Link to="/operaciones-cotizaciones" className="text-primary hover:underline">
-          Cotizaciones
-        </Link>
         <Link to="/operaciones-disponibilidad" className="text-primary hover:underline">
           Disponibilidad
         </Link>
