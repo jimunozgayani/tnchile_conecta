@@ -24,6 +24,8 @@ function MiDisponibilidadChofer() {
   const [userId, setUserId] = useState<string | null>(null);
   const [perfil, setPerfil] = useState<any>(null);
   const [driverId, setDriverId] = useState<string | null>(null);
+  const [proveedorUserId, setProveedorUserId] = useState<string | null>(null);
+  const [misChoferes, setMisChoferes] = useState<any[] | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Partial<DispChoferRow> | null>(null);
 
@@ -35,15 +37,35 @@ function MiDisponibilidadChofer() {
       const { data: cp } = await supabase
         .from("chofer_perfiles").select("*").eq("user_id", user.id).maybeSingle();
       setPerfil(cp);
-      if (cp?.estado_validacion === "aprobado" && cp.proveedor_id && cp.rut) {
-        // match a drivers row by rut (normalized) + proveedor
-        const norm = cp.rut.replace(/[^0-9kK]/g, "").toLowerCase();
-        const { data: drs } = await supabase
-          .from("drivers").select("id, rut").eq("user_id", cp.proveedor_id).is("deleted_at", null);
-        const match = (drs ?? []).find(
-          (d: any) => (d.rut ?? "").replace(/[^0-9kK]/g, "").toLowerCase() === norm
-        );
-        setDriverId(match?.id ?? null);
+
+      // BUG-02: drivers of a provider may carry their OWN user_id (set when a
+      // driver claims an invitation) or NULL, so never filter by a single
+      // user_id. RLS already scopes `drivers` to the rows the caller may see
+      // (same pattern as /choferes).
+      const { data: drs } = await supabase
+        .from("drivers")
+        .select("id, nombre_completo, rut, user_id")
+        .is("deleted_at", null)
+        .order("nombre_completo");
+      const drivers = drs ?? [];
+
+      if (cp) {
+        setProveedorUserId(cp.proveedor_id ?? null);
+        if (cp.estado_validacion === "aprobado") {
+          // Prefer the row explicitly linked to this auth user, fall back to RUT.
+          const norm = (cp.rut ?? "").replace(/[^0-9kK]/g, "").toLowerCase();
+          const match =
+            drivers.find((d: any) => d.user_id === user.id) ??
+            drivers.find(
+              (d: any) => norm && (d.rut ?? "").replace(/[^0-9kK]/g, "").toLowerCase() === norm,
+            );
+          setDriverId(match?.id ?? null);
+        }
+      } else {
+        // Provider (or staff) view: pick which of my drivers to manage.
+        setProveedorUserId(user.id);
+        setMisChoferes(drivers);
+        setDriverId(drivers[0]?.id ?? null);
       }
     })();
   }, []);
@@ -64,7 +86,9 @@ function MiDisponibilidadChofer() {
 
   if (!userId) return <div className="text-center text-muted-foreground">Cargando…</div>;
 
-  if (!perfil || perfil.estado_validacion !== "aprobado") {
+  const esProveedor = !perfil;
+
+  if (perfil && perfil.estado_validacion !== "aprobado") {
     return (
       <div className="mx-auto max-w-xl rounded-xl border-2 border-amber-300 bg-amber-50 p-6 text-amber-900">
         <div className="flex items-center gap-3">
@@ -80,23 +104,39 @@ function MiDisponibilidadChofer() {
   if (!driverId) {
     return (
       <div className="mx-auto max-w-xl rounded-xl border p-6">
-        <p className="text-base font-semibold text-foreground">Mi disponibilidad</p>
+        <p className="text-base font-semibold text-foreground">
+          {esProveedor ? "Disponibilidad de mis choferes" : "Mi disponibilidad"}
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Tu proveedor todavía no te ha registrado en su listado de choferes. Pídele que
-          te agregue con el mismo RUT que registraste ({perfil.rut}) para poder cargar
-          tu disponibilidad aquí.
+          {esProveedor ? (
+            <>
+              Todavía no tienes choferes registrados. Agrégalos primero en{" "}
+              <Link to="/choferes" className="text-primary hover:underline">Mis choferes</Link>.
+            </>
+          ) : (
+            <>
+              Tu proveedor todavía no te ha registrado en su listado de choferes. Pídele que
+              te agregue con el mismo RUT que registraste ({perfil.rut}) para poder cargar
+              tu disponibilidad aquí.
+            </>
+          )}
         </p>
       </div>
     );
   }
 
+
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-24">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-primary-dark">Mi disponibilidad</h1>
+          <h1 className="text-2xl font-bold text-primary-dark">
+            {esProveedor ? "Disponibilidad de mis choferes" : "Mi disponibilidad"}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Indica cuándo estás disponible, dónde estás y hacia dónde te mueves.
+            {esProveedor
+              ? "Selecciona un chofer e indica cuándo está disponible, dónde está y hacia dónde se mueve."
+              : "Indica cuándo estás disponible, dónde estás y hacia dónde te mueves."}
           </p>
         </div>
         {!showForm && (
@@ -107,10 +147,28 @@ function MiDisponibilidadChofer() {
         )}
       </div>
 
+      {esProveedor && misChoferes && misChoferes.length > 0 && (
+        <label className="block text-sm">
+          <span className="font-medium">Chofer</span>
+          <select
+            value={driverId ?? ""}
+            onChange={(e) => { setDriverId(e.target.value); setShowForm(false); setEditing(null); }}
+            className="min-h-[44px] w-full rounded-md border bg-background px-2 text-sm"
+          >
+            {misChoferes.map((d: any) => (
+              <option key={d.id} value={d.id}>
+                {d.nombre_completo}{d.rut ? ` · ${d.rut}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       {showForm && (
         <DisponibilidadChoferForm
           driverId={driverId}
-          proveedorUserId={perfil.proveedor_id}
+          proveedorUserId={proveedorUserId}
+
           initial={editing ?? undefined}
           onSaved={() => { setShowForm(false); setEditing(null); dispQuery.refetch(); }}
           onCancel={() => { setShowForm(false); setEditing(null); }}
