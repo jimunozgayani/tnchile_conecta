@@ -103,6 +103,11 @@ export function useDayRows(selected: string) {
         proveedor: d.user_id ? (provName.get(d.user_id) ?? null) : null,
         proveedor_id: d.user_id ?? null,
         origen_registro: d.origen_registro ?? null,
+        creado_por: d.creado_por ?? null,
+        celular: d.celular ?? null,
+        clase_licencia: d.clase_licencia ?? null,
+        camion_asignado_id: d.camion_asignado_id ?? null,
+
         camion: disp?.truck ?? d.camion ?? null,
         disp,
         estado: (disp?.estado as DayEstado) ?? "sin_confirmar",
