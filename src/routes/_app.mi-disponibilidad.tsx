@@ -14,11 +14,12 @@ export const Route = createFileRoute("/_app/mi-disponibilidad")({
 });
 
 /**
- * Legacy route. The old fleet-based availability screen (disponibilidad_camion)
- * is deprecated; everything now lives in /mi-disponibilidad-chofer, which reads
- * from disponibilidad_chofer. Kept only as an immediate redirect so old links
+ * Legacy route. The old fleet-based availability screen is deprecated;
+ * everything now lives in /mi-disponibilidad-chofer, which reads from
+ * disponibilidad_chofer. Kept only as an immediate redirect so old links
  * and bookmarks never land on the removed page.
  */
+
 function MiDisponibilidadRedirect() {
   const navigate = useNavigate();
 
