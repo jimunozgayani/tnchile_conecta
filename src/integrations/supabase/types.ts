@@ -1583,6 +1583,7 @@ export type Database = {
           _lugar_ciudad_id?: string
           _lugar_texto?: string
           _modalidad?: string
+          _notas?: string
           _tipo_camion_id?: string
           _tipo_camion_otro?: string
         }
