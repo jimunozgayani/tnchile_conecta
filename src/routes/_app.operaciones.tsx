@@ -42,11 +42,13 @@ type Row = {
 function OperacionesPage() {
   const { data: me } = useStaffIdentity();
   const roles = me?.roles ?? [];
-  const rolLabel = roles.includes("jefe_operaciones")
-    ? "Jefe de Operaciones"
-    : roles.includes("admin")
-      ? "Administrador"
-      : "Operador";
+  const rolLabel = !me
+    ? "…"
+    : roles.includes("jefe_operaciones")
+      ? "Jefe de Operaciones"
+      : roles.includes("admin")
+        ? "Administrador"
+        : "Operador";
 
   const { data } = useQuery({
     enabled: !!me?.userId,

@@ -47,11 +47,13 @@ function ComercialPage() {
   const roles = me?.roles ?? [];
   const isLeader = roles.includes("admin") || roles.includes("lider_cuenta");
   const userId = me?.userId ?? null;
-  const rolLabel = roles.includes("lider_cuenta")
-    ? "Líder de Cuenta"
-    : roles.includes("admin")
-      ? "Administrador"
-      : "Ejecutivo Comercial";
+  const rolLabel = !me
+    ? "…"
+    : roles.includes("lider_cuenta")
+      ? "Líder de Cuenta"
+      : roles.includes("admin")
+        ? "Administrador"
+        : "Ejecutivo Comercial";
 
   const { data } = useQuery({
     enabled: !!userId,
