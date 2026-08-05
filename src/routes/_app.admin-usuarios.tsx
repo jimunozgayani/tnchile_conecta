@@ -30,6 +30,8 @@ const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
   operador: "Operador",
   comercial: "Comercial",
+  lider_cuenta: "Líder de Cuenta",
+  jefe_operaciones: "Jefe de Operaciones",
   supplier: "Proveedor",
   cliente: "Cliente",
   chofer: "Chofer",
