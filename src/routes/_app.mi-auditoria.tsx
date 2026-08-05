@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-head";
+import { requireAdmin } from "@/lib/require-admin";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { History as HistoryIcon, RefreshCw, ArrowRightLeft, Plus, XCircle, MousePointerClick, Link as LinkIcon, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,11 +14,15 @@ export const Route = createFileRoute("/_app/mi-auditoria")({
   head: () =>
     pageHead(
       "/mi-auditoria",
-      "Mi auditoría de acceso · Portal TN Chile",
-      "Registro personal de ajustes automáticos a tu espacio activo por cambios de roles, para depurar problemas de acceso.",
+      "Auditoría de acceso · Portal TN Chile",
+      "Registro de ajustes automáticos de espacio activo por cambios de roles, disponible solo para administradores TN Chile.",
     ),
+  // Supabase session lives in localStorage; gate must run client-side only.
+  ssr: false,
+  beforeLoad: requireAdmin,
   component: MiAuditoriaPage,
 });
+
 
 type EntryKind = "switched" | "lost-all" | "gained" | "user" | "deep-link";
 type EntrySource = "user" | "deep-link" | "role-change" | "mount" | null;

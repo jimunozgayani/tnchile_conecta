@@ -25,8 +25,8 @@ const NAV = [
   { to: "/tarifas", label: "Tarifas", icon: DollarSign },
   { to: "/documentos", label: "Documentos", icon: FileText },
   { to: "/mensajes", label: "Mensajes", icon: MessageSquare },
-  { to: "/mi-auditoria", label: "Mi auditoría", icon: HistoryIcon },
 ] as const;
+
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -210,6 +210,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   Invitar choferes
                 </Link>
                 )}
+                {isAdmin && (
+                <Link to="/mi-auditoria" onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname.startsWith("/mi-auditoria") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <HistoryIcon className="h-4 w-4" />
+                  Auditoría de acceso
+                </Link>
+                )}
+
                 <Link to="/operaciones" onClick={() => setOpen(false)}
                   className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     location.pathname.startsWith("/operaciones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
