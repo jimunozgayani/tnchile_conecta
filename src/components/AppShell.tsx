@@ -27,6 +27,18 @@ const NAV = [
   { to: "/mensajes", label: "Mensajes", icon: MessageSquare },
 ] as const;
 
+const OPERACIONES_NAV = [
+  { to: "/operaciones", label: "Operaciones", icon: Briefcase },
+  { to: "/operaciones-disponibilidad", label: "Disponibilidad", icon: Truck },
+  { to: "/operaciones-asignaciones", label: "Asignaciones", icon: Users },
+] as const;
+
+const COMERCIAL_NAV = [
+  { to: "/comercial", label: "Comercial", icon: Handshake },
+  { to: "/comercial-contactos", label: "Contactos", icon: Users },
+  { to: "/comercial-cotizaciones", label: "Cotizaciones", icon: FileText },
+] as const;
+
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
