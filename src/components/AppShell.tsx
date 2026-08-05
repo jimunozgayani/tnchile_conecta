@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-sidebar text-sidebar-foreground transition-transform md:relative md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          <Logo variant="with-text" textClassName="text-sidebar-foreground" />
+          <Logo variant="with-text" textClassName="text-sidebar-foreground" subtitle={view === "proveedor" || view === "chofer" ? "Portal de Proveedores" : "TN Chile Conecta"} />
           <button className="md:hidden" onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="space-y-1 p-3">
