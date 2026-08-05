@@ -4,7 +4,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
 import { CamionLabel } from "@/components/CamionLabel";
-import { Truck, StickyNote } from "lucide-react";
+import { Truck, StickyNote, Pencil, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { editarChoferOcasional, eliminarChoferOcasional } from "@/lib/chofer.functions";
+
 
 export type DayEstado = "sin_confirmar" | "disponible" | "no_disponible";
 
