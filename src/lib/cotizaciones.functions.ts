@@ -95,7 +95,7 @@ export const actualizarEstadoCotizacion = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => estadoSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const roles = await rolesDe(supabase as unknown as Sb, userId);
+    const roles = await rolesDe(supabase as never, userId);
     if (!COMERCIALISH.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
 
     const { data: actual, error: rErr } = await supabase
@@ -162,7 +162,7 @@ export const asignarCotizacion = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const roles = await rolesDe(supabase as unknown as Sb, userId);
+    const roles = await rolesDe(supabase as never, userId);
     if (!ADMINISH.some((r) => roles.includes(r))) throw new Error("Solo admin o líder de cuenta.");
 
     const { error } = await supabase
@@ -190,7 +190,7 @@ export const obtenerAsignables = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Asignable[]> => {
     const { supabase, userId } = context;
-    const roles = await rolesDe(supabase as unknown as Sb, userId);
+    const roles = await rolesDe(supabase as never, userId);
     if (!COMERCIALISH.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
