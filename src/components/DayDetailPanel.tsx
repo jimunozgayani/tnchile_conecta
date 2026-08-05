@@ -539,7 +539,7 @@ export function DayDetailPanel({
     }
   };
 
-  const visible = rows;
+  const visible = rows.filter((r) => !removed.includes(r.driver_id));
 
   const canAssign = (row: DayRow) =>
     !!viewer?.isAdmin || (!!viewer?.id && viewer.id === row.proveedor_id);
