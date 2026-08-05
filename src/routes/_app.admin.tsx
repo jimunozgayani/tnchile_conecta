@@ -817,12 +817,14 @@ function SortHeader({ label, active, dir, onClick }: { label: string; active: bo
   );
 }
 
+const FALLBACK_BADGE = { label: "—", cls: "bg-muted text-muted-foreground" };
+
 function ActionBadge({ action }: { action: "INSERT" | "UPDATE" | "DELETE" }) {
   const cfg = {
     INSERT: { label: "Creado", cls: "bg-success/15 text-success" },
     UPDATE: { label: "Editado", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
     DELETE: { label: "Eliminado", cls: "bg-destructive/15 text-destructive" },
-  }[action];
+  }[action] ?? { label: String(action ?? "—"), cls: FALLBACK_BADGE.cls };
   return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}</span>;
 }
 
@@ -832,7 +834,7 @@ function StatusBadge({ status, hoursLeft }: { status: SupplierStatus; hoursLeft?
     nuevo: { label: "Nuevo", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300" },
     activo: { label: "Activo", cls: "bg-success/15 text-success" },
     suspendido: { label: "Suspendido", cls: "bg-destructive/15 text-destructive" },
-  }[status];
+  }[status] ?? { label: String(status ?? "—"), cls: FALLBACK_BADGE.cls };
   const extra = status === "invitado" && hoursLeft != null && hoursLeft > 0 ? ` · ${hoursLeft}h` : "";
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.cls}`}>{cfg.label}{extra}</span>;
 }
