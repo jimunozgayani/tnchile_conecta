@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -386,6 +387,7 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
 function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: CardProps) {
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
+  const sellar = useServerFn(sellarCierreYCrearOperacion);
   const [menu, setMenu] = useState(false);
   const [chip, setChip] = useState(false);
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
@@ -421,7 +423,16 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
         ...(estado === "en_revision" ? { comentarios_revision: comentario ?? null } : {}),
       });
       if (estado === "lista_para_operar") {
-        toast.success("Cierre sellado. Los documentos se generarán próximamente.");
+        try {
+          const op = await sellar({ data: { cotizacion_id: c.id } });
+          toast.success(
+            `Cierre sellado. Operación N° ${op.numero_operacion} creada y enviada a Operaciones.`,
+          );
+        } catch (e) {
+          toast.error(
+            e instanceof Error ? e.message : "Cierre sellado, pero no se pudo crear la operación.",
+          );
+        }
       } else {
         toast.success("Estado actualizado");
       }
