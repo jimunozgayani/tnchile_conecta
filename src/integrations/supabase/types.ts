@@ -1612,6 +1612,8 @@ export type Database = {
         | "chofer"
         | "operador"
         | "comercial"
+        | "lider_cuenta"
+        | "jefe_operaciones"
       disponibilidad_estado: "disponible" | "no_disponible" | "sin_confirmar"
       evento_viaje_tipo:
         | "cambio_estado"
@@ -1754,6 +1756,8 @@ export const Constants = {
         "chofer",
         "operador",
         "comercial",
+        "lider_cuenta",
+        "jefe_operaciones",
       ],
       disponibilidad_estado: ["disponible", "no_disponible", "sin_confirmar"],
       evento_viaje_tipo: [
