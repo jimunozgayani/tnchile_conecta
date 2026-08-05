@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_app/admin-usuarios")({
   head: () =>
     pageHead(
       "/admin-usuarios",
-      "Usuarios y roles · Administración TN Chile",
+      "Usuarios y roles · TN Chile Conecta",
       "Invita miembros del equipo TN Chile y otorga o revoca permisos de administrador y operador desde un solo panel.",
     ),
   ssr: false,

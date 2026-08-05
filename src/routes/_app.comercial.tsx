@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_app/comercial")({
   head: () =>
     pageHead(
       "/comercial",
-      "Inicio Comercial · TN Chile",
+      "Inicio Comercial · TN Chile Conecta",
       "Panel personalizado del equipo comercial de TN Chile: cotizaciones activas, solicitudes sin asignar y metas del período.",
     ),
   // La sesión de Supabase vive en localStorage: el gate corre solo en el cliente.

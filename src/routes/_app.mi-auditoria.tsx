@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_app/mi-auditoria")({
   head: () =>
     pageHead(
       "/mi-auditoria",
-      "Auditoría de acceso · Portal TN Chile",
+      "Auditoría de acceso · TN Chile Conecta",
       "Registro de ajustes automáticos de espacio activo por cambios de roles, disponible solo para administradores TN Chile.",
     ),
   // Supabase session lives in localStorage; gate must run client-side only.

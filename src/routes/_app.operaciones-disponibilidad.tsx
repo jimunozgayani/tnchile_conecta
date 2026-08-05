@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/operaciones-disponibilidad")({
   head: () =>
     pageHead(
       "/operaciones-disponibilidad",
-      "Disponibilidad de choferes · Operaciones TN Chile",
+      "Disponibilidad de choferes · TN Chile Conecta",
       "Espacio único de disponibilidad de TN Chile: calendario mensual, detalle editable del día y mapa sincronizado con la lista de choferes.",
     ),
   ssr: false,

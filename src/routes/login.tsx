@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/login")({
-  head: () => pageHead("/login", "Iniciar sesión · Portal TN Chile", "Ingresa a tu cuenta del Portal TN Chile para gestionar camiones, choferes, documentos, tarifas y asignaciones de carga."),
+  head: () => pageHead("/login", "Iniciar sesión · TN Chile Conecta", "Ingresa a tu cuenta del Portal TN Chile para gestionar camiones, choferes, documentos, tarifas y asignaciones de carga."),
   component: LoginPage,
 });
 

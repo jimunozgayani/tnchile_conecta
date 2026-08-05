@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Truck, User, MapPin, Calendar, Package, Loader2, X, RefreshCw, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones-asignaciones")({
-  head: () => pageHead("/operaciones-asignaciones", "Asignaciones · Operaciones TN Chile", "Asigna cargas pendientes a choferes disponibles con camión compatible, y gestiona reasignaciones y cancelaciones desde operaciones TN Chile."),
+  head: () => pageHead("/operaciones-asignaciones", "Asignaciones · TN Chile Conecta", "Asigna cargas pendientes a choferes disponibles con camión compatible, y gestiona reasignaciones y cancelaciones desde operaciones TN Chile."),
   // Supabase session lives in localStorage; gate must run client-side only.
   ssr: false,
   beforeLoad: requireOperations,

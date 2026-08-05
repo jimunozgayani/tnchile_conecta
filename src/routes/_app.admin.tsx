@@ -40,7 +40,7 @@ function timeAgo(iso: string): string {
 }
 
 export const Route = createFileRoute("/_app/admin")({
-  head: () => pageHead("/admin", "Administración · Portal TN Chile", "Panel de administración TN Chile: proveedores activos, flota total, documentos por vencer, alertas críticas e invitaciones de usuarios."),
+  head: () => pageHead("/admin", "Administración · TN Chile Conecta", "Panel de administración TN Chile: proveedores activos, flota total, documentos por vencer, alertas críticas e invitaciones de usuarios."),
   // Supabase session lives in localStorage; gate must run client-side only.
   ssr: false,
   beforeLoad: async () => {

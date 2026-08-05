@@ -4,7 +4,7 @@ import { Logo } from "@/components/Logo";
 import { Mail } from "lucide-react";
 
 export const Route = createFileRoute("/register")({
-  head: () => pageHead("/register", "Registro de proveedores · Portal TN Chile", "Crea tu cuenta de proveedor de transporte en TN Chile: sube documentos, publica tu flota, define tarifas y recibe asignaciones de carga."),
+  head: () => pageHead("/register", "Registro de proveedores · TN Chile Conecta", "Crea tu cuenta de proveedor de transporte en TN Chile: sube documentos, publica tu flota, define tarifas y recibe asignaciones de carga."),
   component: RegisterPage,
 });
 

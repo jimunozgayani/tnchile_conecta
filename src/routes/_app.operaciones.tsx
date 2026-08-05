@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_app/operaciones")({
   head: () =>
     pageHead(
       "/operaciones",
-      "Inicio Operaciones · TN Chile",
+      "Inicio Operaciones · TN Chile Conecta",
       "Panel personalizado del equipo de operaciones TN Chile: cargas en operación, finalizadas del día y operaciones activas.",
     ),
   // Supabase session lives in localStorage; gate must run client-side only.
