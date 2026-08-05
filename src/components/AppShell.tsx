@@ -220,16 +220,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   Auditoría de acceso
                 </Link>
                 )}
-
-                <Link to="/operaciones" onClick={() => setOpen(false)}
-                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    location.pathname.startsWith("/operaciones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-                  }`}>
-                  <Briefcase className="h-4 w-4" />
-                  Operaciones
-                </Link>
               </div>
             </>
+          )}
+
+          {showOperacionesNav && (
+            <div className="mt-4 border-t border-sidebar-border pt-3">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+                Operaciones
+              </p>
+              {OPERACIONES_NAV.map(({ to, label, icon: Icon }) => (
+                <Link key={to} to={to} onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname === to ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {showComercialNav && (
+            <div className="mt-4 border-t border-sidebar-border pt-3">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+                Comercial
+              </p>
+              {COMERCIAL_NAV.map(({ to, label, icon: Icon }) => (
+                <Link key={to} to={to} onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname === to ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
           )}
 
         </nav>
