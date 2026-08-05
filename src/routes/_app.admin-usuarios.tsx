@@ -3,7 +3,8 @@ import { pageHead } from "@/lib/page-head";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2, Handshake } from "lucide-react";
+import { ShieldCheck, Briefcase, Mail, Search, UserPlus, Loader2, Handshake, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { requireAdmin } from "@/lib/require-admin";
 import {
   listAppUsers,
