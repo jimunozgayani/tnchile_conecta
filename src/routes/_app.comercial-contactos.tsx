@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_app/comercial-contactos")({
   head: () =>
     pageHead(
       "/comercial-contactos",
-      "Contactos · Comercial TN Chile",
+      "Contactos · TN Chile Conecta",
       "Agenda unificada de clientes, proveedores y choferes del equipo comercial de TN Chile.",
     ),
   ssr: false,

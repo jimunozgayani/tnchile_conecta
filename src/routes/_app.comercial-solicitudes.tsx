@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_app/comercial-solicitudes")({
   head: () =>
     pageHead(
       "/comercial-solicitudes",
-      "Solicitudes entrantes · Comercial TN Chile",
+      "Solicitudes entrantes · TN Chile Conecta",
       "Bandeja de solicitudes de carga recibidas desde el formulario público para triaje del equipo comercial de TN Chile.",
     ),
   ssr: false,

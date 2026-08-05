@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { inviteDriver } from "@/lib/driver-invitations.functions";
 
 export const Route = createFileRoute("/_app/admin-choferes")({
-  head: () => pageHead("/admin-choferes", "Invitar choferes · Admin TN Chile", "Panel administrativo para enviar invitaciones a choferes de cualquier proveedor y monitorear el estado de sus cuentas."),
+  head: () => pageHead("/admin-choferes", "Invitar choferes · TN Chile Conecta", "Panel administrativo para enviar invitaciones a choferes de cualquier proveedor y monitorear el estado de sus cuentas."),
   component: AdminChoferesPage,
 });
 

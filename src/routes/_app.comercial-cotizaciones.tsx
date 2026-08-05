@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_app/comercial-cotizaciones")({
   head: () =>
     pageHead(
       "/comercial-cotizaciones",
-      "Cotizaciones · Comercial TN Chile",
+      "Pipeline de Cotizaciones · TN Chile Conecta",
       "Pipeline y seguimiento de cotizaciones por estado para el equipo comercial de TN Chile.",
     ),
   ssr: false,
