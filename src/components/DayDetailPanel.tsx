@@ -257,6 +257,142 @@ function CamionPicker({
   );
 }
 
+/** Inline modal to edit an occasional driver (origen_registro = 'operaciones'). */
+function ChoferOcasionalEditor({
+  row,
+  isAdmin,
+  onClose,
+  onSaved,
+}: {
+  row: DayRow;
+  isAdmin: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const editar = useServerFn(editarChoferOcasional);
+  const [nombre, setNombre] = useState(row.nombre);
+  const [celular, setCelular] = useState(row.celular ?? "");
+  const [clase, setClase] = useState(row.clase_licencia ?? "");
+  const [camionId, setCamionId] = useState(row.camion_asignado_id ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const trucksQ = useQuery({
+    queryKey: ["ops-editor-trucks", row.proveedor_id, isAdmin],
+    queryFn: async () => {
+      let q = supabase
+        .from("trucks")
+        .select("id, patente, tipo, user_id")
+        .is("deleted_at", null)
+        .order("patente");
+      if (!isAdmin && row.proveedor_id) q = q.eq("user_id", row.proveedor_id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nombre.trim()) return;
+    setSaving(true);
+    try {
+      await editar({
+        data: {
+          driver_id: row.driver_id,
+          nombre_completo: nombre.trim(),
+          celular: celular.trim() || null,
+          clase_licencia: clase || null,
+          camion_asignado_id: camionId || null,
+        },
+      });
+      toast.success("Chofer actualizado");
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message ?? String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      role="dialog"
+      aria-label="Editar chofer ocasional"
+    >
+      <form
+        onSubmit={submit}
+        className="max-h-[85vh] w-full max-w-md space-y-3 overflow-auto rounded-t-xl bg-card p-4 shadow-lg sm:rounded-xl"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-primary-dark">Editar chofer ocasional</h3>
+          <button type="button" onClick={onClose} className="text-sm text-muted-foreground">
+            Cerrar
+          </button>
+        </div>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Nombre completo
+          <input
+            required
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          />
+        </label>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Celular
+          <input
+            value={celular}
+            onChange={(e) => setCelular(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          />
+        </label>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Clase de licencia
+          <select
+            value={clase}
+            onChange={(e) => setClase(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">Sin especificar</option>
+            {["A1", "A2", "A3", "A4", "B"].map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block text-xs font-medium text-muted-foreground">
+          Camión asignado
+          <select
+            value={camionId}
+            onChange={(e) => setCamionId(e.target.value)}
+            className="mt-1 min-h-[44px] w-full rounded border border-input bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">Sin camión</option>
+            {((trucksQ.data ?? []) as any[]).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.patente}
+                {t.tipo ? ` · ${t.tipo}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="min-h-[44px] w-full rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {saving ? "Guardando…" : "Guardar cambios"}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 
 export function DayDetailPanel({
