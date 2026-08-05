@@ -137,7 +137,7 @@ function useViewer() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return { id: null as string | null, isAdmin: false };
+      if (!user) return { id: null as string | null, isAdmin: false, isJefe: false };
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -145,7 +145,9 @@ function useViewer() {
       return {
         id: user.id,
         isAdmin: (roles ?? []).some((r: any) => r.role === "admin"),
+        isJefe: (roles ?? []).some((r: any) => r.role === "jefe_operaciones"),
       };
+
     },
     staleTime: 5 * 60 * 1000,
   });
