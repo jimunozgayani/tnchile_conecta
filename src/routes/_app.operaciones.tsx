@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listarOperacionesActivas, type OperacionResumen } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +14,6 @@ import {
   StatCard,
   UserCard,
   formatFecha,
-  primerDestino,
 } from "@/components/staff-home";
 
 export const Route = createFileRoute("/_app/operaciones")({
@@ -30,17 +31,9 @@ export const Route = createFileRoute("/_app/operaciones")({
 
 const ACTIVAS = ["lista_para_operar", "confirmada", "en_operacion"];
 
-type Row = {
-  id: string;
-  contacto_nombre: string | null;
-  origen: string | null;
-  destinos: unknown;
-  estado: string;
-  fecha_despacho: string | null;
-};
-
 function OperacionesPage() {
   const { data: me } = useStaffIdentity();
+  const listarActivas = useServerFn(listarOperacionesActivas);
   const roles = me?.roles ?? [];
   const rolLabel = !me
     ? "…"
@@ -55,29 +48,25 @@ function OperacionesPage() {
     queryKey: ["operaciones-home", me?.userId],
     queryFn: async () => {
       const base = () =>
-        supabase.from("cotizaciones").select("*", { count: "exact", head: true });
+        supabase.from("operaciones").select("*", { count: "exact", head: true }).is("deleted_at", null);
       const hoy = new Date().toISOString().slice(0, 10);
 
-      const [enOperacion, finalizadasHoy, listas, rows] = await Promise.all([
+      const [enOperacion, finalizadasHoy, listas, activas] = await Promise.all([
         base().eq("estado", "en_operacion"),
         base().eq("estado", "finalizada").gte("updated_at", `${hoy}T00:00:00`),
         base().eq("estado", "lista_para_operar"),
-        supabase
-          .from("cotizaciones")
-          .select("id, contacto_nombre, origen, destinos, estado, fecha_despacho")
-          .in("estado", ACTIVAS)
-          .order("fecha_despacho", { ascending: true })
-          .limit(8),
+        listarActivas({}),
       ]);
 
       return {
         enOperacion: enOperacion.count ?? 0,
         finalizadasHoy: finalizadasHoy.count ?? 0,
         listas: listas.count ?? 0,
-        activas: (rows.data ?? []) as Row[],
+        activas: (activas as OperacionResumen[]).filter((o) => ACTIVAS.includes(o.estado)),
       };
     },
   });
+
 
   return (
     <div className="space-y-6">
@@ -97,18 +86,26 @@ function OperacionesPage() {
         linkTo="/operaciones-asignaciones"
         empty={(data?.activas.length ?? 0) === 0}
       >
-        {(data?.activas ?? []).map((r) => (
-          <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{r.contacto_nombre ?? "Sin contacto"}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {r.origen ?? "Sin origen"} → {primerDestino(r.destinos)}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <EstadoBadge estado={r.estado} />
-              <span className="text-xs text-muted-foreground">{formatFecha(r.fecha_despacho)}</span>
-            </div>
+        {(data?.activas ?? []).map((r: OperacionResumen) => (
+          <li key={r.id}>
+            <Link
+              to="/operacion/$id"
+              params={{ id: r.id }}
+              className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-muted/50"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  N° {r.numero_operacion} · {r.contacto_nombre ?? "Sin contacto"}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {r.origen ?? "Sin origen"} → {r.destino ?? "Sin destino"}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <EstadoBadge estado={r.estado} />
+                <span className="text-xs text-muted-foreground">{formatFecha(r.fecha_carga)}</span>
+              </div>
+            </Link>
           </li>
         ))}
       </SectionCard>

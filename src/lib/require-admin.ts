@@ -43,3 +43,15 @@ export async function requireCommercial() {
     throw redirect({ to: "/dashboard" });
   }
 }
+
+/** Cualquier rol interno (comercial u operaciones) — ficha de operación. */
+export async function requireStaffInterno() {
+  const roles = await myRoles();
+  if (
+    !["admin", "lider_cuenta", "jefe_operaciones", "operador", "comercial"].some((r) =>
+      roles.includes(r),
+    )
+  ) {
+    throw redirect({ to: "/dashboard" });
+  }
+}

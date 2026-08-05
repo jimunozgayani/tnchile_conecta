@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { listarOperacionesPorAsignacion } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
 import { useEffect, useMemo, useState } from "react";
@@ -57,9 +59,12 @@ function AsignacionesPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [filterEstado, setFilterEstado] = useState<string>("all");
+  const [fichas, setFichas] = useState<Record<string, { id: string; numero_operacion: number }>>({});
+  const cargarFichas = useServerFn(listarOperacionesPorAsignacion);
 
   async function loadAll() {
     setLoading(true);
+    void cargarFichas({}).then(setFichas).catch(() => setFichas({}));
     const [cotRes, asigRes, drvRes, perfRes, trkRes] = await Promise.all([
       supabase.from("cotizaciones").select("id,origen,destinos,tipo_camion,modalidad,peso_kg,fecha_despacho,estado,contacto_nombre").in("estado", ["pendiente", "cotizada"]).order("fecha_despacho", { ascending: true, nullsFirst: false }),
       supabase.from("asignaciones").select("id,cotizacion_id,chofer_id,camion_id,proveedor_id,estado_viaje,fecha_desde,activa,created_at,cotizaciones(id,origen,destinos,tipo_camion,modalidad,peso_kg,fecha_despacho,estado,contacto_nombre),drivers(nombre_completo),trucks(patente)").order("created_at", { ascending: false }),
@@ -265,6 +270,14 @@ function AsignacionesPage() {
                     {a.activa && a.estado_viaje === "por_iniciar" && (
                       <button onClick={() => reasignar(a)} className="text-xs rounded-md border px-2 py-1 hover:bg-muted">Reasignar</button>
                     )}
+                    {(() => {
+                      const f = fichas[a.id] ?? (a.cotizacion_id ? fichas[`cot:${a.cotizacion_id}`] : undefined);
+                      return f ? (
+                        <Link to="/operacion/$id" params={{ id: f.id }} className="text-xs text-primary hover:underline">
+                          Ver ficha N° {f.numero_operacion}
+                        </Link>
+                      ) : null;
+                    })()}
                     {a.activa && (
                       <button onClick={() => cancelarAsignacion(a)} className="text-xs rounded-md border border-red-300 text-red-700 px-2 py-1 hover:bg-red-50">Cancelar</button>
                     )}
