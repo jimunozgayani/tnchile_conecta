@@ -55,6 +55,60 @@ function ComercialPage() {
         ? "Administrador"
         : "Ejecutivo Comercial";
 
+  if (isLeader) return <LiderCuentaView nombre={me?.nombre ?? "…"} rolLabel={rolLabel} />;
+  return <ComercialPersonalView me={me} userId={userId} rolLabel={rolLabel} isLeader={false} />;
+}
+
+function LiderCuentaView({ nombre, rolLabel }: { nombre: string; rolLabel: string }) {
+  const listarEquipo = useServerFn(obtenerEquipoComercial);
+  const { data: equipo, isLoading } = useQuery({
+    queryKey: ["equipo-comercial"],
+    queryFn: () => listarEquipo({ data: {} as never }),
+  });
+  const sinAsignar = equipo?.[0]?.sin_asignar ?? 0;
+
+  return (
+    <div className="space-y-6">
+      <UserCard nombre={nombre} rolLabel={rolLabel} />
+
+      <TeamTable
+        titulo="Mi equipo comercial"
+        cargando={isLoading}
+        filas={equipo ?? []}
+        columnas={[
+          { label: "Activas", get: (r: MiembroComercial) => r.operaciones_abiertas },
+          { label: "Cerradas (mes)", get: (r: MiembroComercial) => r.cerradas_mes },
+        ]}
+      />
+
+      <SinAsignarAlert count={sinAsignar} />
+
+      <MetasEquipo rol="comercial" puedeCrear />
+
+      <MisDocumentos />
+
+      <p className="text-xs text-muted-foreground">
+        ¿Buscas la agenda de contactos?{" "}
+        <Link to="/comercial-contactos" className="text-primary hover:underline">
+          Ir a Contactos
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+function ComercialPersonalView({
+  me,
+  userId,
+  rolLabel,
+  isLeader,
+}: {
+  me: { nombre: string; roles: string[] } | undefined;
+  userId: string | null;
+  rolLabel: string;
+  isLeader: boolean;
+}) {
+
   const { data } = useQuery({
     enabled: !!userId,
     queryKey: ["comercial-home", userId, isLeader],
