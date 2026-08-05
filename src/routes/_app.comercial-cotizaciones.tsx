@@ -13,7 +13,7 @@ import {
   type Asignable,
 } from "@/lib/cotizaciones.functions";
 import { nombresAsignados } from "@/lib/solicitudes.functions";
-import { TRANSICIONES, ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
+import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
 import { FileText, Plus, X, Search, AlertTriangle, MoreHorizontal, UserCircle2 } from "lucide-react";
 
