@@ -2,8 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type StaffRole = "admin" | "operador" | "comercial";
-export const STAFF_ROLES: StaffRole[] = ["admin", "operador", "comercial"];
+export type StaffRole = "admin" | "operador" | "comercial" | "lider_cuenta" | "jefe_operaciones";
+export const STAFF_ROLES: StaffRole[] = [
+  "admin",
+  "operador",
+  "comercial",
+  "lider_cuenta",
+  "jefe_operaciones",
+];
 
 export type AppUser = {
   id: string;
@@ -72,7 +78,7 @@ export const setStaffRole = createServerFn({ method: "POST" })
     z
       .object({
         user_id: z.string().uuid(),
-        role: z.enum(["admin", "operador", "comercial"]),
+        role: z.enum(["admin", "operador", "comercial", "lider_cuenta", "jefe_operaciones"]),
         grant: z.boolean(),
       })
       .parse(d),
@@ -108,7 +114,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
     z
       .object({
         email: z.string().email().max(255),
-        role: z.enum(["admin", "operador", "comercial"]),
+        role: z.enum(["admin", "operador", "comercial", "lider_cuenta", "jefe_operaciones"]),
       })
       .parse(d),
   )

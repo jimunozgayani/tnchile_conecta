@@ -30,6 +30,8 @@ const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
   operador: "Operador",
   comercial: "Comercial",
+  lider_cuenta: "Líder de Cuenta",
+  jefe_operaciones: "Jefe de Operaciones",
   supplier: "Proveedor",
   cliente: "Cliente",
   chofer: "Chofer",
@@ -39,7 +41,7 @@ function RoleChip({ role }: { role: string }) {
   const tone =
     role === "admin"
       ? "bg-primary text-primary-foreground"
-      : role === "operador" || role === "comercial"
+      : role === "operador" || role === "comercial" || role === "lider_cuenta" || role === "jefe_operaciones"
         ? "bg-primary-soft text-primary-dark"
         : "bg-muted text-muted-foreground";
   return (
@@ -147,6 +149,8 @@ function AdminUsuariosPage() {
             >
               <option value="operador">Operador</option>
               <option value="comercial">Comercial</option>
+              <option value="lider_cuenta">Líder de Cuenta</option>
+              <option value="jefe_operaciones">Jefe de Operaciones</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -207,9 +211,14 @@ function AdminUsuariosPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {(["operador", "comercial", "admin"] as StaffRole[]).map((r) => {
+                  {(["operador", "comercial", "lider_cuenta", "jefe_operaciones", "admin"] as StaffRole[]).map((r) => {
                     const active = u.roles.includes(r);
-                    const Icon = r === "admin" ? ShieldCheck : r === "comercial" ? Handshake : Briefcase;
+                    const Icon =
+                      r === "admin"
+                        ? ShieldCheck
+                        : r === "comercial" || r === "lider_cuenta"
+                          ? Handshake
+                          : Briefcase;
                     return (
                       <button
                         key={r}
