@@ -140,7 +140,7 @@ export const actualizarEstadoCotizacion = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("audit_log").insert({
+    const { error: aErr } = await supabaseAdmin.from("audit_log").insert({
       tabla_nombre: "cotizaciones",
       registro_id: data.id,
       accion: `estado_${data.estado}`,
@@ -151,6 +151,7 @@ export const actualizarEstadoCotizacion = createServerFn({ method: "POST" })
       },
       usuario_id: userId,
     } as never);
+    if (aErr) console.error("audit_log insert failed", aErr.message);
 
     return { ok: true, estado: patch["estado"] as string, revision_count: revisionCount };
   });
