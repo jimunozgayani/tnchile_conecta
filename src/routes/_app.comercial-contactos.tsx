@@ -205,7 +205,7 @@ function ComercialContactosPage() {
                 {c.telefono && <dd className="text-muted-foreground">{c.telefono}</dd>}
               </dl>
               {c.etapa_comercial && (
-                <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">{ETAPA_LABEL[c.etapa_comercial] ?? c.etapa_comercial}</p>
+                <p className="mt-2 text-xs tracking-wide text-muted-foreground">{ETAPA_LABEL[c.etapa_comercial] ?? c.etapa_comercial}</p>
               )}
               <button
                 onClick={() => toast.info("El detalle del contacto estará disponible pronto.")}
