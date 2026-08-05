@@ -172,7 +172,7 @@ function TarifasPage() {
         >
           {REGIONES_CAPITALES.map((r) => (
             <option key={r.name} value={r.name}>
-              {r.name} ({r.code})
+              {r.name}
             </option>
           ))}
         </select>
