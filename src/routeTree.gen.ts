@@ -39,6 +39,7 @@ import { Route as AppDocumentosRouteImport } from './routes/_app.documentos'
 import { Route as AppDisponibilidadChoferesRouteImport } from './routes/_app.disponibilidad-choferes'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppComparadorRouteImport } from './routes/_app.comparador'
+import { Route as AppComercialSolicitudesRouteImport } from './routes/_app.comercial-solicitudes'
 import { Route as AppComercialCotizacionesRouteImport } from './routes/_app.comercial-cotizaciones'
 import { Route as AppComercialContactosRouteImport } from './routes/_app.comercial-contactos'
 import { Route as AppComercialRouteImport } from './routes/_app.comercial'
@@ -206,6 +207,11 @@ const AppComparadorRoute = AppComparadorRouteImport.update({
   path: '/comparador',
   getParentRoute: () => AppRoute,
 } as any)
+const AppComercialSolicitudesRoute = AppComercialSolicitudesRouteImport.update({
+  id: '/comercial-solicitudes',
+  path: '/comercial-solicitudes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppComercialCotizacionesRoute =
   AppComercialCotizacionesRouteImport.update({
     id: '/comercial-cotizaciones',
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/comercial': typeof AppComercialRoute
   '/comercial-contactos': typeof AppComercialContactosRoute
   '/comercial-cotizaciones': typeof AppComercialCotizacionesRoute
+  '/comercial-solicitudes': typeof AppComercialSolicitudesRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/comercial': typeof AppComercialRoute
   '/comercial-contactos': typeof AppComercialContactosRoute
   '/comercial-cotizaciones': typeof AppComercialCotizacionesRoute
+  '/comercial-solicitudes': typeof AppComercialSolicitudesRoute
   '/comparador': typeof AppComparadorRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/_app/comercial': typeof AppComercialRoute
   '/_app/comercial-contactos': typeof AppComercialContactosRoute
   '/_app/comercial-cotizaciones': typeof AppComercialCotizacionesRoute
+  '/_app/comercial-solicitudes': typeof AppComercialSolicitudesRoute
   '/_app/comparador': typeof AppComparadorRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidad-choferes': typeof AppDisponibilidadChoferesRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/comercial'
     | '/comercial-contactos'
     | '/comercial-cotizaciones'
+    | '/comercial-solicitudes'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-choferes'
@@ -445,6 +455,7 @@ export interface FileRouteTypes {
     | '/comercial'
     | '/comercial-contactos'
     | '/comercial-cotizaciones'
+    | '/comercial-solicitudes'
     | '/comparador'
     | '/dashboard'
     | '/disponibilidad-choferes'
@@ -487,6 +498,7 @@ export interface FileRouteTypes {
     | '/_app/comercial'
     | '/_app/comercial-contactos'
     | '/_app/comercial-cotizaciones'
+    | '/_app/comercial-solicitudes'
     | '/_app/comparador'
     | '/_app/dashboard'
     | '/_app/disponibilidad-choferes'
@@ -737,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComparadorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/comercial-solicitudes': {
+      id: '/_app/comercial-solicitudes'
+      path: '/comercial-solicitudes'
+      fullPath: '/comercial-solicitudes'
+      preLoaderRoute: typeof AppComercialSolicitudesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/comercial-cotizaciones': {
       id: '/_app/comercial-cotizaciones'
       path: '/comercial-cotizaciones'
@@ -821,6 +840,7 @@ interface AppRouteChildren {
   AppComercialRoute: typeof AppComercialRoute
   AppComercialContactosRoute: typeof AppComercialContactosRoute
   AppComercialCotizacionesRoute: typeof AppComercialCotizacionesRoute
+  AppComercialSolicitudesRoute: typeof AppComercialSolicitudesRoute
   AppComparadorRoute: typeof AppComparadorRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadChoferesRoute: typeof AppDisponibilidadChoferesRoute
@@ -852,6 +872,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppComercialRoute: AppComercialRoute,
   AppComercialContactosRoute: AppComercialContactosRoute,
   AppComercialCotizacionesRoute: AppComercialCotizacionesRoute,
+  AppComercialSolicitudesRoute: AppComercialSolicitudesRoute,
   AppComparadorRoute: AppComparadorRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadChoferesRoute: AppDisponibilidadChoferesRoute,
