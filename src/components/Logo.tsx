@@ -6,9 +6,10 @@ type Props = {
   className?: string;
   textClassName?: string;
   showTagline?: boolean;
+  subtitle?: string;
 };
 
-export function Logo({ variant = "with-text", className = "", textClassName = "", showTagline = true }: Props) {
+export function Logo({ variant = "with-text", className = "", textClassName = "", showTagline = true, subtitle = "TN Chile Conecta" }: Props) {
   if (variant === "full") {
     return <img src={fullUrl} alt="TN Chile — La logística la hacemos juntos" className={className || "h-16 w-auto"} />;
   }
@@ -21,7 +22,7 @@ export function Logo({ variant = "with-text", className = "", textClassName = ""
       <div className="flex flex-col leading-none">
         <span className={`text-lg font-bold tracking-tight ${textClassName}`}>TN CHILE</span>
         {showTagline && (
-          <span className="mt-0.5 text-[10px] opacity-80">Portal de Proveedores</span>
+          <span className="mt-0.5 text-[10px] opacity-80">{subtitle}</span>
         )}
       </div>
     </div>
