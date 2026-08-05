@@ -171,6 +171,10 @@ function AdminUsuariosPage() {
         </p>
       </section>
 
+      <SubirDocumentoPrivado users={users ?? []} />
+
+
+
       <section className="rounded-xl border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Todos los usuarios</h2>
