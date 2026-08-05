@@ -2,6 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listarOperacionesActivas, type OperacionResumen } from "@/lib/operaciones.functions";
+import {
+  obtenerActividadOperaciones,
+  obtenerEquipoOperaciones,
+  type MiembroOperaciones,
+} from "@/lib/liderazgo.functions";
+import { ActividadEquipoCard, MetasEquipo, TeamTable } from "@/components/leader-dashboard";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
 import { supabase } from "@/integrations/supabase/client";
