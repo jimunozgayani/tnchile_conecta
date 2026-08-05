@@ -149,6 +149,8 @@ function AdminUsuariosPage() {
             >
               <option value="operador">Operador</option>
               <option value="comercial">Comercial</option>
+              <option value="lider_cuenta">Líder de Cuenta</option>
+              <option value="jefe_operaciones">Jefe de Operaciones</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
