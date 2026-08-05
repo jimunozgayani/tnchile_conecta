@@ -13,10 +13,13 @@ const contactoSchema = z.object({
   region: z.string().trim().max(120).optional().nullable(),
   tipos: z.array(z.enum(TIPOS)).min(1, "Selecciona al menos un tipo"),
   temperatura: z.enum(["frio", "tibio", "caliente"]).default("frio"),
-  etapa_comercial: z.string().trim().max(120).optional().nullable(),
+  etapa_comercial: z.enum(["lead", "contactado", "cotizado", "ganado", "perdido"]).default("lead"),
   notas: z.string().trim().max(2000).optional().nullable(),
   banco: z.string().trim().max(120).optional().nullable(),
-  tipo_cuenta: z.string().trim().max(60).optional().nullable(),
+  tipo_cuenta: z
+    .enum(["cuenta_corriente", "cuenta_vista", "cuenta_rut", "cuenta_ahorro", "otro", ""])
+    .optional()
+    .nullable(),
   numero_cuenta: z.string().trim().max(60).optional().nullable(),
   email_banco: z.string().trim().max(255).optional().nullable(),
 });
@@ -54,13 +57,13 @@ export const createContacto = createServerFn({ method: "POST" })
         region: clean(data.region),
         tipos: data.tipos,
         temperatura: data.temperatura,
-        etapa_comercial: clean(data.etapa_comercial),
+        etapa_comercial: data.etapa_comercial,
         notas: clean(data.notas),
         banco: clean(data.banco),
         tipo_cuenta: clean(data.tipo_cuenta),
         numero_cuenta: clean(data.numero_cuenta),
         email_banco: clean(data.email_banco),
-        origen_contacto: "agenda_comercial",
+        origen_contacto: "otro",
         responsable_id: userId,
         deleted_at: null,
       } as never)

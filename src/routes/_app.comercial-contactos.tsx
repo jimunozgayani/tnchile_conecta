@@ -17,6 +17,10 @@ const TIPO_CLASS: Record<Tipo, string> = {
   proveedor: "bg-emerald-100 text-emerald-800 ring-emerald-200",
   chofer: "bg-orange-100 text-orange-800 ring-orange-200",
 };
+const ETAPAS = ["lead", "contactado", "cotizado", "ganado", "perdido"] as const;
+const ETAPA_LABEL: Record<string, string> = {
+  lead: "Lead", contactado: "Contactado", cotizado: "Cotizado", ganado: "Ganado", perdido: "Perdido",
+};
 const TEMP_LABEL: Record<string, string> = { caliente: "Caliente", tibio: "Tibio", frio: "Frío" };
 const TEMP_DOT: Record<string, string> = { caliente: "bg-red-500", tibio: "bg-yellow-400", frio: "bg-blue-500" };
 
@@ -201,7 +205,7 @@ function ComercialContactosPage() {
                 {c.telefono && <dd className="text-muted-foreground">{c.telefono}</dd>}
               </dl>
               {c.etapa_comercial && (
-                <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">{c.etapa_comercial}</p>
+                <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">{ETAPA_LABEL[c.etapa_comercial] ?? c.etapa_comercial}</p>
               )}
               <button
                 onClick={() => toast.info("El detalle del contacto estará disponible pronto.")}
@@ -223,7 +227,7 @@ function ComercialContactosPage() {
 
 const EMPTY = {
   nombre: "", empresa: "", rut: "", telefono: "", email: "", region: "",
-  tipos: [] as Tipo[], temperatura: "frio", etapa_comercial: "", notas: "",
+  tipos: [] as Tipo[], temperatura: "frio", etapa_comercial: "lead", notas: "",
   banco: "", tipo_cuenta: "", numero_cuenta: "", email_banco: "",
 };
 
@@ -311,7 +315,9 @@ function ContactoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
             </div>
           </fieldset>
           <label className="sm:col-span-2 text-sm"><span className="font-medium">Etapa comercial</span>
-            <input value={form.etapa_comercial} onChange={(e) => set("etapa_comercial", e.target.value)} className={input} maxLength={120} />
+            <select value={form.etapa_comercial} onChange={(e) => set("etapa_comercial", e.target.value)} className={input}>
+              {ETAPAS.map((e2) => <option key={e2} value={e2}>{ETAPA_LABEL[e2]}</option>)}
+            </select>
           </label>
           <label className="sm:col-span-2 text-sm"><span className="font-medium">Notas</span>
             <textarea value={form.notas} onChange={(e) => set("notas", e.target.value)} rows={3} maxLength={2000}
@@ -332,7 +338,14 @@ function ContactoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
                 <input value={form.banco} onChange={(e) => set("banco", e.target.value)} className={input} maxLength={120} />
               </label>
               <label className="text-sm"><span className="font-medium">Tipo de cuenta</span>
-                <input value={form.tipo_cuenta} onChange={(e) => set("tipo_cuenta", e.target.value)} className={input} maxLength={60} />
+                <select value={form.tipo_cuenta} onChange={(e) => set("tipo_cuenta", e.target.value)} className={input}>
+                  <option value="">—</option>
+                  <option value="cuenta_corriente">Cuenta corriente</option>
+                  <option value="cuenta_vista">Cuenta vista</option>
+                  <option value="cuenta_rut">Cuenta RUT</option>
+                  <option value="cuenta_ahorro">Cuenta de ahorro</option>
+                  <option value="otro">Otro</option>
+                </select>
               </label>
               <label className="text-sm"><span className="font-medium">N° de cuenta</span>
                 <input value={form.numero_cuenta} onChange={(e) => set("numero_cuenta", e.target.value)} className={input} maxLength={60} />
