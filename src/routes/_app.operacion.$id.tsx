@@ -197,11 +197,7 @@ function FichaOperacion() {
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <EstadoBadge estado={op.estado} />
               {op.cotizacion_id && (
-                <Link
-                  to="/comercial-cotizaciones"
-                  search={{ q: op.cotizacion_id } as never}
-                  className="text-xs text-primary hover:underline"
-                >
+                <Link to="/comercial-cotizaciones" className="text-xs text-primary hover:underline">
                   Ver cotización original
                 </Link>
               )}
