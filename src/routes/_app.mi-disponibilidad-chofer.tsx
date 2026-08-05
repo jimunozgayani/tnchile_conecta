@@ -80,7 +80,7 @@ function MiDisponibilidadChofer() {
   if (!driverId) {
     return (
       <div className="mx-auto max-w-xl rounded-xl border p-6">
-        <h1 className="text-xl font-bold">Mi disponibilidad</h1>
+        <p className="text-base font-semibold text-foreground">Mi disponibilidad</p>
         <p className="mt-2 text-sm text-muted-foreground">
           Tu proveedor todavía no te ha registrado en su listado de choferes. Pídele que
           te agregue con el mismo RUT que registraste ({perfil.rut}) para poder cargar
