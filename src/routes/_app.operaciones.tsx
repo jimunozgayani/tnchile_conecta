@@ -30,17 +30,9 @@ export const Route = createFileRoute("/_app/operaciones")({
 
 const ACTIVAS = ["lista_para_operar", "confirmada", "en_operacion"];
 
-type Row = {
-  id: string;
-  contacto_nombre: string | null;
-  origen: string | null;
-  destinos: unknown;
-  estado: string;
-  fecha_despacho: string | null;
-};
-
 function OperacionesPage() {
   const { data: me } = useStaffIdentity();
+  const listarActivas = useServerFn(listarOperacionesActivas);
   const roles = me?.roles ?? [];
   const rolLabel = !me
     ? "…"
@@ -55,29 +47,25 @@ function OperacionesPage() {
     queryKey: ["operaciones-home", me?.userId],
     queryFn: async () => {
       const base = () =>
-        supabase.from("cotizaciones").select("*", { count: "exact", head: true });
+        supabase.from("operaciones").select("*", { count: "exact", head: true }).is("deleted_at", null);
       const hoy = new Date().toISOString().slice(0, 10);
 
-      const [enOperacion, finalizadasHoy, listas, rows] = await Promise.all([
+      const [enOperacion, finalizadasHoy, listas, activas] = await Promise.all([
         base().eq("estado", "en_operacion"),
         base().eq("estado", "finalizada").gte("updated_at", `${hoy}T00:00:00`),
         base().eq("estado", "lista_para_operar"),
-        supabase
-          .from("cotizaciones")
-          .select("id, contacto_nombre, origen, destinos, estado, fecha_despacho")
-          .in("estado", ACTIVAS)
-          .order("fecha_despacho", { ascending: true })
-          .limit(8),
+        listarActivas({}),
       ]);
 
       return {
         enOperacion: enOperacion.count ?? 0,
         finalizadasHoy: finalizadasHoy.count ?? 0,
         listas: listas.count ?? 0,
-        activas: (rows.data ?? []) as Row[],
+        activas: activas.filter((o) => ACTIVAS.includes(o.estado)),
       };
     },
   });
+
 
   return (
     <div className="space-y-6">
