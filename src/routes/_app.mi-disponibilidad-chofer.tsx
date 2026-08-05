@@ -130,9 +130,13 @@ function MiDisponibilidadChofer() {
     <div className="mx-auto max-w-2xl space-y-4 pb-24">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-primary-dark">Mi disponibilidad</h1>
+          <h1 className="text-2xl font-bold text-primary-dark">
+            {esProveedor ? "Disponibilidad de mis choferes" : "Mi disponibilidad"}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Indica cuándo estás disponible, dónde estás y hacia dónde te mueves.
+            {esProveedor
+              ? "Selecciona un chofer e indica cuándo está disponible, dónde está y hacia dónde se mueve."
+              : "Indica cuándo estás disponible, dónde estás y hacia dónde te mueves."}
           </p>
         </div>
         {!showForm && (
@@ -143,10 +147,28 @@ function MiDisponibilidadChofer() {
         )}
       </div>
 
+      {esProveedor && misChoferes && misChoferes.length > 0 && (
+        <label className="block text-sm">
+          <span className="font-medium">Chofer</span>
+          <select
+            value={driverId ?? ""}
+            onChange={(e) => { setDriverId(e.target.value); setShowForm(false); setEditing(null); }}
+            className="min-h-[44px] w-full rounded-md border bg-background px-2 text-sm"
+          >
+            {misChoferes.map((d: any) => (
+              <option key={d.id} value={d.id}>
+                {d.nombre_completo}{d.rut ? ` · ${d.rut}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       {showForm && (
         <DisponibilidadChoferForm
           driverId={driverId}
-          proveedorUserId={perfil.proveedor_id}
+          proveedorUserId={proveedorUserId}
+
           initial={editing ?? undefined}
           onSaved={() => { setShowForm(false); setEditing(null); dispQuery.refetch(); }}
           onCancel={() => { setShowForm(false); setEditing(null); }}
