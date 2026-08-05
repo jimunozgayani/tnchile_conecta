@@ -52,7 +52,7 @@ export function useDayRows(selected: string) {
       const { data, error } = await supabase
         .from("drivers")
         .select(
-          "id, nombre_completo, origen_registro, user_id, camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
+          "id, nombre_completo, origen_registro, user_id, creado_por, celular, clase_licencia, camion_asignado_id, camion:camion_asignado_id(patente, tipo, tipo_camion:tipo_camion_id(nombre, requiere_acople), acoplado:acoplado_a_truck_id(patente))",
         )
         .is("deleted_at", null)
         .order("nombre_completo");
