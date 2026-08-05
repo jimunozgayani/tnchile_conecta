@@ -319,7 +319,9 @@ export default function ComercialCotizacionesPage() {
                   {cards.length === 0 ? (
                     <p className="px-1 py-4 text-center text-xs text-muted-foreground">Sin cotizaciones</p>
                   ) : (
-                    cards.map((c) => <Card key={c.id} c={c} />)
+                    cards.map((c) => (
+                      <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} />
+                    ))
                   )}
                 </div>
               </section>
@@ -337,7 +339,7 @@ export default function ComercialCotizacionesPage() {
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {rechazadas.map((c) => (
-                <Card key={c.id} c={c} />
+                <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} />
               ))}
             </div>
           )}
