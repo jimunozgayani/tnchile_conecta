@@ -133,16 +133,19 @@ export default function ComercialCotizacionesPage() {
   });
   const roles = rolesQuery.data ?? [];
   const puedeCrear = ["admin", "lider_cuenta", "comercial"].some((r) => roles.includes(r));
+  const puedeAsignar = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
+
+  const queryClient = useQueryClient();
+  const listKey = ["cotizaciones-pipeline", q, desde, hasta] as const;
 
   const listQuery = useQuery({
-    queryKey: ["cotizaciones-pipeline", q, desde, hasta],
+    queryKey: listKey,
     queryFn: async () => {
-      // TODO: cuando exista cotizaciones.asignado_a, filtrar por
-      // asignado_a = auth.uid() para el rol `comercial`. Por ahora ve todas.
+      // TODO: filtrar por asignado_a = auth.uid() para el rol `comercial`.
       let query = supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, created_at",
+          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, created_at, revision_count, comentarios_revision, asignado_a",
         )
         .order("created_at", { ascending: false })
         .limit(500);
@@ -157,6 +160,32 @@ export default function ComercialCotizacionesPage() {
   });
 
   const rows = listQuery.data ?? [];
+
+  /** Actualiza la tarjeta en su lugar; la columna se recalcula sin recargar todo. */
+  const patchRow = (id: string, patch: Partial<Cotizacion>) =>
+    queryClient.setQueryData<Cotizacion[]>(listKey, (old) =>
+      (old ?? []).map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    );
+
+  const asignadosIds = useMemo(
+    () => [...new Set(rows.map((r) => r.asignado_a).filter((v): v is string => !!v))],
+    [rows],
+  );
+  const nombresFn = useServerFn(nombresAsignados);
+  const nombresQuery = useQuery({
+    queryKey: ["cotizaciones-asignados", asignadosIds],
+    queryFn: () => nombresFn({ data: { ids: asignadosIds } }),
+    enabled: asignadosIds.length > 0,
+  });
+  const nombres = nombresQuery.data ?? {};
+
+  const asignablesFn = useServerFn(obtenerAsignables);
+  const asignablesQuery = useQuery({
+    queryKey: ["cotizaciones-asignables"],
+    queryFn: () => asignablesFn(),
+    enabled: puedeAsignar,
+  });
+
   const rechazadas = useMemo(() => rows.filter((r) => r.estado === "rechazada"), [rows]);
   const porColumna = useMemo(
     () => COLUMNAS.map((c) => ({ col: c, cards: rows.filter((r) => c.estados.includes(r.estado)) })),
