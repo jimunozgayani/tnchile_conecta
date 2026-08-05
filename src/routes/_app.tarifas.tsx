@@ -172,7 +172,7 @@ function TarifasPage() {
         >
           {REGIONES_CAPITALES.map((r) => (
             <option key={r.name} value={r.name}>
-              {r.name} ({r.code})
+              {r.name}
             </option>
           ))}
         </select>
@@ -207,8 +207,8 @@ function TarifasPage() {
                 destinos.map((dest) => (
                   <tr key={dest.name} className="hover:bg-muted/30">
                     <td className="sticky left-0 z-10 bg-card px-4 py-3 font-medium whitespace-nowrap">
-                      {dest.name}{" "}
-                      <span className="text-xs text-muted-foreground">({dest.code})</span>
+                      {dest.name}
+
                     </td>
                     {TIPOS_CAMION_TARIFA.map((t) => {
                       const c = cells[cellKey(dest.name, t.value)];

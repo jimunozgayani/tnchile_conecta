@@ -1,24 +1,24 @@
-export type RegionCap = { name: string; code: string };
+export type RegionCap = { id: string; name: string };
 
-export const REGIONES_CAPITALES: RegionCap[] = [
-  { name: "Arica", code: "XV" },
-  { name: "Iquique", code: "I" },
-  { name: "Antofagasta", code: "II" },
-  { name: "Copiapó", code: "III" },
-  { name: "La Serena", code: "IV" },
-  { name: "Valparaíso", code: "V" },
-  { name: "Santiago RM", code: "XIII" },
-  { name: "Rancagua", code: "VI" },
-  { name: "Talca", code: "VII" },
-  { name: "Chillán", code: "XVI" },
-  { name: "Concepción", code: "VIII" },
-  { name: "Temuco", code: "IX" },
-  { name: "Valdivia", code: "XIV" },
-  { name: "Osorno", code: "X" },
-  { name: "Puerto Montt", code: "X" },
-  { name: "Coyhaique", code: "XI" },
-  { name: "Punta Arenas", code: "XII" },
-];
+export const REGIONES_CAPITALES: readonly RegionCap[] = [
+  { id: "arica", name: "Arica y Parinacota" },
+  { id: "tarapaca", name: "Tarapacá" },
+  { id: "antofagasta", name: "Antofagasta" },
+  { id: "atacama", name: "Atacama" },
+  { id: "coquimbo", name: "Coquimbo" },
+  { id: "valparaiso", name: "Valparaíso" },
+  { id: "metropolitana", name: "Metropolitana de Santiago" },
+  { id: "ohiggins", name: "Libertador Gral. B. O'Higgins" },
+  { id: "maule", name: "Maule" },
+  { id: "nuble", name: "Ñuble" },
+  { id: "biobio", name: "Biobío" },
+  { id: "araucania", name: "La Araucanía" },
+  { id: "losrios", name: "Los Ríos" },
+  { id: "loslagos", name: "Los Lagos" },
+  { id: "aysen", name: "Aysén" },
+  { id: "magallanes", name: "Magallanes" },
+] as const;
+
 
 export const TIPOS_CAMION_TARIFA = [
   { value: "tracto", label: "Tracto" },

@@ -100,7 +100,7 @@ function ComparadorPage() {
           <label className="block text-xs font-medium text-muted-foreground">Región origen</label>
           <select value={origen} onChange={(e) => setOrigen(e.target.value)}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-            {REGIONES_CAPITALES.map((r) => <option key={r.name} value={r.name}>{r.name} ({r.code})</option>)}
+            {REGIONES_CAPITALES.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
           </select>
         </div>
         <div className="flex items-end">
@@ -113,7 +113,7 @@ function ComparadorPage() {
           <label className="block text-xs font-medium text-muted-foreground">Región destino</label>
           <select value={destino} onChange={(e) => setDestino(e.target.value)}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-            {REGIONES_CAPITALES.map((r) => <option key={r.name} value={r.name}>{r.name} ({r.code})</option>)}
+            {REGIONES_CAPITALES.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
           </select>
         </div>
         <div>
