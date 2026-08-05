@@ -15,10 +15,15 @@ export type DayRow = {
   proveedor: string | null;
   proveedor_id: string | null;
   origen_registro: string | null;
+  creado_por: string | null;
+  celular: string | null;
+  clase_licencia: string | null;
+  camion_asignado_id: string | null;
   camion: any | null;
   disp: any | null;
   estado: DayEstado;
 };
+
 
 
 const NEXT_ESTADO: Record<DayEstado, DayEstado> = {
