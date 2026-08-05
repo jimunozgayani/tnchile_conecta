@@ -1,7 +1,7 @@
 {
-  "name": "Portal TN Chile",
-  "short_name": "TN Chile",
-  "description": "Portal de Proveedores TN Chile",
+  "name": "TN Chile Conecta",
+  "short_name": "TN Conecta",
+  "description": "TN Chile Conecta: plataforma logística de TN Chile",
   "theme_color": "#2D7A45",
   "background_color": "#ffffff",
   "display": "standalone",
