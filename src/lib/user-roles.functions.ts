@@ -2,8 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type StaffRole = "admin" | "operador" | "comercial";
-export const STAFF_ROLES: StaffRole[] = ["admin", "operador", "comercial"];
+export type StaffRole = "admin" | "operador" | "comercial" | "lider_cuenta" | "jefe_operaciones";
+export const STAFF_ROLES: StaffRole[] = [
+  "admin",
+  "operador",
+  "comercial",
+  "lider_cuenta",
+  "jefe_operaciones",
+];
 
 export type AppUser = {
   id: string;
