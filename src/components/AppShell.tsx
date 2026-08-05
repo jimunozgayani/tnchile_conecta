@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare, Briefcase, History as HistoryIcon, Building2 } from "lucide-react";
+import { LayoutDashboard, User, Truck, Users, DollarSign, FileText, LogOut, Menu, X, ShieldCheck, MessageSquare, Briefcase, History as HistoryIcon, Building2, Handshake } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
@@ -27,6 +27,18 @@ const NAV = [
   { to: "/mensajes", label: "Mensajes", icon: MessageSquare },
 ] as const;
 
+const OPERACIONES_NAV = [
+  { to: "/operaciones", label: "Operaciones", icon: Briefcase },
+  { to: "/operaciones-disponibilidad", label: "Disponibilidad", icon: Truck },
+  { to: "/operaciones-asignaciones", label: "Asignaciones", icon: Users },
+] as const;
+
+const COMERCIAL_NAV = [
+  { to: "/comercial", label: "Comercial", icon: Handshake },
+  { to: "/comercial-contactos", label: "Contactos", icon: Users },
+  { to: "/comercial-cotizaciones", label: "Cotizaciones", icon: FileText },
+] as const;
+
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -34,6 +46,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOperador, setIsOperador] = useState(false);
+  const [isJefeOps, setIsJefeOps] = useState(false);
+  const [isLiderCuenta, setIsLiderCuenta] = useState(false);
+  const [isComercial, setIsComercial] = useState(false);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isCliente, setIsCliente] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -50,6 +65,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showChoferNav = view === "chofer";
   const showProveedorNav = view === "proveedor";
   const showClienteNav = view === "cliente";
+  const showOperacionesNav = isAdmin || isJefeOps || isOperador;
+  const showComercialNav = isAdmin || isLiderCuenta || isComercial;
 
   useEffect(() => {
     (async () => {
@@ -60,6 +77,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const rs = (data ?? []).map((r: any) => r.role);
       setIsAdmin(rs.includes("admin"));
       setIsOperador(rs.includes("operador"));
+      setIsJefeOps(rs.includes("jefe_operaciones"));
+      setIsLiderCuenta(rs.includes("lider_cuenta"));
+      setIsComercial(rs.includes("comercial"));
       setIsCliente(rs.includes("cliente"));
     })();
   }, []);
@@ -220,16 +240,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   Auditoría de acceso
                 </Link>
                 )}
-
-                <Link to="/operaciones" onClick={() => setOpen(false)}
-                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    location.pathname.startsWith("/operaciones") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
-                  }`}>
-                  <Briefcase className="h-4 w-4" />
-                  Operaciones
-                </Link>
               </div>
             </>
+          )}
+
+          {showOperacionesNav && (
+            <div className="mt-4 border-t border-sidebar-border pt-3">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+                Operaciones
+              </p>
+              {OPERACIONES_NAV.map(({ to, label, icon: Icon }) => (
+                <Link key={to} to={to} onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname === to ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {showComercialNav && (
+            <div className="mt-4 border-t border-sidebar-border pt-3">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+                Comercial
+              </p>
+              {COMERCIAL_NAV.map(({ to, label, icon: Icon }) => (
+                <Link key={to} to={to} onClick={() => setOpen(false)}
+                  className={`mt-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    location.pathname === to ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"
+                  }`}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
           )}
 
         </nav>
