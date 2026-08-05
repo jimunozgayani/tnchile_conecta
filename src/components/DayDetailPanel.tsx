@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CityCombobox } from "@/components/CityCombobox";
 import { CamionLabel } from "@/components/CamionLabel";
-import { Truck } from "lucide-react";
+import { Truck, StickyNote } from "lucide-react";
 
 export type DayEstado = "sin_confirmar" | "disponible" | "no_disponible";
 
@@ -488,4 +488,75 @@ export function DayDetailPanel({
     </div>
   );
 
+}
+
+/**
+ * Inline "Notas" field for one driver/day row. Debounced 800ms — no save button.
+ * Full width and 44px tap height on mobile.
+ */
+function NotaInline({
+  value,
+  readOnly,
+  onSave,
+}: {
+  value: string | null;
+  readOnly: boolean;
+  onSave: (notas: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(value ?? "");
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!editing) setText(value ?? "");
+  }, [value, editing]);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  const onChange = (v: string) => {
+    setText(v);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => onSave(v), 800);
+  };
+
+  const preview = (value ?? "").trim();
+  const corto = preview.length > 60 ? `${preview.slice(0, 60)}…` : preview;
+
+  if (editing && !readOnly) {
+    return (
+      <div className="mt-2 flex w-full items-start gap-2">
+        <StickyNote className="mt-3 h-4 w-4 shrink-0 text-muted-foreground" />
+        <textarea
+          autoFocus
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={() => {
+            if (timer.current) clearTimeout(timer.current);
+            onSave(text);
+            setEditing(false);
+          }}
+          rows={2}
+          placeholder="Nota del día…"
+          aria-label="Nota del día"
+          className="min-h-[44px] w-full rounded border border-input bg-background px-2 py-2 text-sm"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={readOnly}
+      data-testid="day-nota"
+      aria-label="Nota del día"
+      onClick={() => setEditing(true)}
+      className="mt-2 flex min-h-[44px] w-full items-center gap-2 rounded border border-transparent px-2 text-left text-xs transition hover:border-input hover:bg-muted disabled:opacity-60"
+    >
+      <StickyNote className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <span className={corto ? "text-foreground" : "text-muted-foreground"}>
+        {corto || "Agregar nota…"}
+      </span>
+    </button>
+  );
 }
