@@ -3,6 +3,7 @@ import { pageHead } from "@/lib/page-head";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/login")({
