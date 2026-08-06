@@ -15,6 +15,23 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setGoogleLoading(false);
+      toast.error("No pudimos iniciar sesión con Google. Inténtalo de nuevo.");
+      return;
+    }
+    if (result.redirected) return;
+    localStorage.setItem("tn_last_activity", String(Date.now()));
+    setGoogleLoading(false);
+    await goAfterLogin();
+  };
 
   const goAfterLogin = async () => {
     const { data: { user } } = await supabase.auth.getUser();
