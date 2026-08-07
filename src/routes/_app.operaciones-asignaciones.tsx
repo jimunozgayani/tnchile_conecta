@@ -131,7 +131,7 @@ function AsignacionesPage() {
       activa: true,
     });
     if (e1) { setMsg("Error al crear asignación: " + e1.message); setSaving(false); return; }
-    const { error: e2 } = await supabase.from("cotizaciones").update({ estado: "asignada" }).eq("id", selected.id);
+    const { error: e2 } = await supabase.from("cotizaciones").update({ estado: "confirmada" }).eq("id", selected.id);
     if (e2) { setMsg("Asignación creada pero no se pudo actualizar cotización: " + e2.message); }
     setSaving(false);
     setSelected(null);
@@ -139,19 +139,25 @@ function AsignacionesPage() {
   }
 
   async function cancelarAsignacion(a: Asignacion) {
-    if (!confirm("¿Cancelar esta asignación? Se marcará como inactiva y la carga volverá a 'pendiente'.")) return;
+    if (!confirm("¿Cancelar esta asignación? Se marcará como inactiva y la carga volverá a estar por asignar.")) return;
+    setMsg(null);
     await supabase.from("asignaciones").update({ activa: false }).eq("id", a.id);
-    if (a.cotizacion_id) await supabase.from("cotizaciones").update({ estado: "pendiente" }).eq("id", a.cotizacion_id);
+    if (a.cotizacion_id) {
+      const { error } = await supabase.from("cotizaciones").update({ estado: "lista_para_operar" }).eq("id", a.cotizacion_id);
+      if (error) setMsg("No se pudo devolver la carga a 'por asignar': " + error.message);
+    }
     await loadAll();
   }
 
   async function reasignar(a: Asignacion) {
     if (!confirm("Se cancelará esta asignación para permitir reasignar. ¿Continuar?")) return;
+    setMsg(null);
     await supabase.from("asignaciones").update({ activa: false }).eq("id", a.id);
     if (a.cotizacion_id) {
-      await supabase.from("cotizaciones").update({ estado: "pendiente" }).eq("id", a.cotizacion_id);
+      const { error } = await supabase.from("cotizaciones").update({ estado: "lista_para_operar" }).eq("id", a.cotizacion_id);
+      if (error) { setMsg("No se pudo devolver la carga a 'por asignar': " + error.message); await loadAll(); return; }
       const c = a.cotizaciones;
-      if (c) openCotizacion(c);
+      if (c) openCotizacion({ ...c, estado: "lista_para_operar" });
     }
     await loadAll();
   }
