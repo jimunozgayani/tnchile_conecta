@@ -768,7 +768,7 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
     queryFn: async () => {
       let query = supabase
         .from("contactos")
-        .select("id, nombre, empresa")
+        .select("id, nombre, empresa, telefono, email")
         .is("deleted_at", null)
         .order("nombre")
         .limit(50);
