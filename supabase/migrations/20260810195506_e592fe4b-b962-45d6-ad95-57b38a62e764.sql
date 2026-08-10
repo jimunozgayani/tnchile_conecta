@@ -1,0 +1,1 @@
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS exploracion_limite_at timestamptz;

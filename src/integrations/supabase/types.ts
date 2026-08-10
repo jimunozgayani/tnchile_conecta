@@ -296,6 +296,7 @@ export type Database = {
           estado: string
           exploracion_abierta_at: string | null
           exploracion_abierta_por: string | null
+          exploracion_limite_at: string | null
           fecha_despacho: string | null
           fotos: Json
           gate2_autorizado_at: string | null
@@ -342,6 +343,7 @@ export type Database = {
           estado?: string
           exploracion_abierta_at?: string | null
           exploracion_abierta_por?: string | null
+          exploracion_limite_at?: string | null
           fecha_despacho?: string | null
           fotos?: Json
           gate2_autorizado_at?: string | null
@@ -388,6 +390,7 @@ export type Database = {
           estado?: string
           exploracion_abierta_at?: string | null
           exploracion_abierta_por?: string | null
+          exploracion_limite_at?: string | null
           fecha_despacho?: string | null
           fotos?: Json
           gate2_autorizado_at?: string | null

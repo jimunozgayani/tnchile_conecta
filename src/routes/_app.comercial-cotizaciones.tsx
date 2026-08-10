@@ -17,6 +17,7 @@ import { nombresAsignados } from "@/lib/solicitudes.functions";
 import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
+import { CountdownBadge } from "@/components/ExploracionCountdown";
 import { createContacto } from "@/lib/contactos.functions";
 import { fmtCLP } from "@/lib/regiones-capitales";
 import {
@@ -70,7 +71,11 @@ type Columna = { label: string; estados: string[]; zona: Zona };
  * valor del estado en la base de datos).
  */
 const COLUMNAS: Columna[] = [
-  { label: "Nueva", estados: ["nueva", "pendiente"], zona: "comercial" },
+  {
+    label: "Nueva",
+    estados: ["nueva", "pendiente", "en_exploracion", "costo_fijado"],
+    zona: "comercial",
+  },
   { label: "Cotizada", estados: ["cotizada", "en_revision"], zona: "comercial" },
   { label: "Aceptada", estados: ["aceptada"], zona: "comercial" },
   { label: "Cierre sellado", estados: ["lista_para_operar"], zona: "comercial" },
@@ -82,7 +87,15 @@ const COLUMNAS: Columna[] = [
 ];
 
 /** Estados de la zona comercial donde se permite reasignar. */
-const ZONA_COMERCIAL_ESTADOS = ["nueva", "pendiente", "cotizada", "en_revision", "aceptada"];
+const ZONA_COMERCIAL_ESTADOS = [
+  "nueva",
+  "pendiente",
+  "en_exploracion",
+  "costo_fijado",
+  "cotizada",
+  "en_revision",
+  "aceptada",
+];
 
 const ZONA_LABEL: Record<Zona, string> = {
   comercial: "Zona comercial",
@@ -105,6 +118,8 @@ type Cotizacion = {
   tipo_camion: string | null;
   fecha_despacho: string | null;
   precio_ofrecido_cliente_clp: number | null;
+  costo_proveedor_fijado_clp: number | null;
+  exploracion_limite_at: string | null;
   created_at: string;
   revision_count: number | null;
   comentarios_revision: string | null;
@@ -163,7 +178,7 @@ export default function ComercialCotizacionesPage() {
       let query = supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, created_at, revision_count, comentarios_revision, asignado_a",
+          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, costo_proveedor_fijado_clp, exploracion_limite_at, created_at, revision_count, comentarios_revision, asignado_a",
         )
         .order("created_at", { ascending: false })
         .limit(500);
@@ -242,7 +257,7 @@ export default function ComercialCotizacionesPage() {
             </button>
           )}
 
-        <div className="min-w-[200px] flex-1">
+        <div className="w-full max-w-[260px] shrink-0 sm:w-[260px]">
           <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="q">
             Buscar contacto
           </label>
@@ -577,6 +592,21 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
         </span>
       )}
 
+      {c.estado === "en_exploracion" && (
+        <div className="mt-1 flex flex-wrap items-center gap-1">
+          <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-300">
+            🔍 En exploración
+          </span>
+          <CountdownBadge limiteAt={c.exploracion_limite_at} className="text-[10px]" />
+        </div>
+      )}
+
+      {c.estado === "costo_fijado" && (
+        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+          ✅ Costo fijado: {fmtCLP(c.costo_proveedor_fijado_clp)}
+        </span>
+      )}
+
       <p className="mt-1.5 text-muted-foreground">
         {c.origen ?? "—"} → {primerDestino(c.destinos)}
       </p>
@@ -738,7 +768,7 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
     queryFn: async () => {
       let query = supabase
         .from("contactos")
-        .select("id, nombre, empresa")
+        .select("id, nombre, empresa, telefono, email")
         .is("deleted_at", null)
         .order("nombre")
         .limit(50);
@@ -746,7 +776,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
       if (term) query = query.or(`nombre.ilike.%${term}%,empresa.ilike.%${term}%`);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as { id: string; nombre: string; empresa: string | null }[];
+      return (data ?? []) as {
+        id: string;
+        nombre: string;
+        empresa: string | null;
+        telefono: string | null;
+        email: string | null;
+      }[];
     },
   });
 
@@ -856,7 +892,15 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           />
           <select
             value={contactoId}
-            onChange={(e) => setContactoId(e.target.value)}
+            onChange={(e) => {
+              const id = e.target.value;
+              setContactoId(id);
+              const sel = (contactosQuery.data ?? []).find((x) => x.id === id);
+              if (sel) {
+                setTelefono(sel.telefono ?? "");
+                setEmail(sel.email ?? "");
+              }
+            }}
             aria-label="Contacto"
             className="w-full rounded-md border bg-background px-3 py-2 text-sm"
           >

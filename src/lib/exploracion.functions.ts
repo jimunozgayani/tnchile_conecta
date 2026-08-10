@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rolesDe } from "@/lib/cotizaciones-transiciones";
 
 const OPS_ABRIR = ["admin", "jefe_operaciones"];
-const OPS_PROPONER = ["admin", "jefe_operaciones", "operador"];
-const OPS_GANADORA = ["admin", "jefe_operaciones"];
+const OPS_PROPONER = ["admin", "jefe_operaciones", "operador", "lider_cuenta"];
+const OPS_GANADORA = ["admin", "lider_cuenta"];
 
 export type Propuesta = {
   id: string;
@@ -24,7 +24,14 @@ export type Propuesta = {
 /** Abre la exploración de proveedores para una cotización en estado 'nueva'. */
 export const abrirExploracion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ cotizacion_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        cotizacion_id: z.string().uuid(),
+        duracion_horas: z.coerce.number().positive().max(72).default(3),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await rolesDe(supabase as never, userId);
@@ -43,13 +50,17 @@ export const abrirExploracion = createServerFn({ method: "POST" })
       throw new Error("La exploración solo se abre desde el estado 'nueva'.");
     }
 
+    const ahora = new Date();
+    const limite = new Date(ahora.getTime() + data.duracion_horas * 3_600_000);
+
     const { error } = await supabase
       .from("cotizaciones")
       .update({
         estado: "en_exploracion",
-        exploracion_abierta_at: new Date().toISOString(),
+        exploracion_abierta_at: ahora.toISOString(),
         exploracion_abierta_por: userId,
-        updated_at: new Date().toISOString(),
+        exploracion_limite_at: limite.toISOString(),
+        updated_at: ahora.toISOString(),
       } as never)
       .eq("id", data.cotizacion_id);
     if (error) throw new Error(error.message);
@@ -59,11 +70,19 @@ export const abrirExploracion = createServerFn({ method: "POST" })
       tabla_nombre: "cotizaciones",
       registro_id: data.cotizacion_id,
       accion: "exploracion_abierta",
-      datos_nuevos: { estado: "en_exploracion" },
+      datos_nuevos: {
+        estado: "en_exploracion",
+        duracion_horas: data.duracion_horas,
+        exploracion_limite_at: limite.toISOString(),
+      },
       usuario_id: userId,
     } as never);
 
-    return { ok: true, estado: "en_exploracion" };
+    return {
+      ok: true,
+      estado: "en_exploracion",
+      exploracion_limite_at: limite.toISOString(),
+    };
   });
 
 const propuestaSchema = z.object({
@@ -127,15 +146,24 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
     return { ok: true, id: (row as { id: string }).id };
   });
 
-/** Marca una propuesta como ganadora, descarta el resto y fija el costo. */
-export const elegirGanadora = createServerFn({ method: "POST" })
+/** Elige la propuesta ganadora, fija el costo del proveedor y el precio al cliente. */
+export const elegirGanadoraYFijarPrecio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ propuesta_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        propuesta_id: z.string().uuid(),
+        precio_ofrecido_cliente_clp: z.coerce.number().positive().max(999_999_999),
+        tipo_pago: z.enum(["contado", "anticipo", "15_dias", "30_dias"]).optional().nullable(),
+        validez_hasta: z.string().trim().min(1).optional().nullable(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await rolesDe(supabase as never, userId);
     if (!OPS_GANADORA.some((r) => roles.includes(r))) {
-      throw new Error("Solo admin o jefe de operaciones puede elegir la ganadora.");
+      throw new Error("Solo admin o líder de cuenta puede elegir la ganadora y cotizar.");
     }
 
     const { data: prop, error: pErr } = await supabase
@@ -147,15 +175,17 @@ export const elegirGanadora = createServerFn({ method: "POST" })
     if (!prop) throw new Error("Propuesta no encontrada.");
     const p = prop as { id: string; cotizacion_id: string; costo_clp: number; proveedor_nombre: string };
 
+    const ahora = new Date().toISOString();
+
     const { error: gErr } = await supabase
       .from("propuestas_proveedor")
-      .update({ estado: "ganadora", actualizado_at: new Date().toISOString() } as never)
+      .update({ estado: "ganadora", actualizado_at: ahora } as never)
       .eq("id", p.id);
     if (gErr) throw new Error(gErr.message);
 
     const { error: dErr } = await supabase
       .from("propuestas_proveedor")
-      .update({ estado: "descartada", actualizado_at: new Date().toISOString() } as never)
+      .update({ estado: "descartada", actualizado_at: ahora } as never)
       .eq("cotizacion_id", p.cotizacion_id)
       .neq("id", p.id);
     if (dErr) throw new Error(dErr.message);
@@ -165,8 +195,11 @@ export const elegirGanadora = createServerFn({ method: "POST" })
       .update({
         costo_proveedor_fijado_clp: p.costo_clp,
         propuesta_ganadora_id: p.id,
-        estado: "costo_fijado",
-        updated_at: new Date().toISOString(),
+        precio_ofrecido_cliente_clp: data.precio_ofrecido_cliente_clp,
+        ...(data.tipo_pago ? { tipo_pago: data.tipo_pago } : {}),
+        ...(data.validez_hasta ? { validez_hasta: data.validez_hasta } : {}),
+        estado: "cotizada",
+        updated_at: ahora,
       } as never)
       .eq("id", p.cotizacion_id);
     if (cErr) throw new Error(cErr.message);
@@ -175,16 +208,23 @@ export const elegirGanadora = createServerFn({ method: "POST" })
     await supabaseAdmin.from("audit_log").insert({
       tabla_nombre: "propuestas_proveedor",
       registro_id: p.id,
-      accion: "ganadora_elegida",
+      accion: "ganadora_elegida_y_cotizada",
       datos_nuevos: {
+        propuesta_id: p.id,
         cotizacion_id: p.cotizacion_id,
         proveedor_nombre: p.proveedor_nombre,
         costo_clp: p.costo_clp,
+        precio_ofrecido_cliente_clp: data.precio_ofrecido_cliente_clp,
       },
       usuario_id: userId,
     } as never);
 
-    return { ok: true, cotizacion_id: p.cotizacion_id, costo_clp: p.costo_clp };
+    return {
+      ok: true,
+      cotizacion_id: p.cotizacion_id,
+      costo_clp: p.costo_clp,
+      precio_ofrecido_cliente_clp: data.precio_ofrecido_cliente_clp,
+    };
   });
 
 /** Propuestas visibles para el usuario, con el nombre del operador que propuso. */
