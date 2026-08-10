@@ -716,6 +716,9 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
   const [tipoCamion, setTipoCamion] = useState("");
   const [fecha, setFecha] = useState("");
   const [notas, setNotas] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
+  const [peso, setPeso] = useState("");
 
   const contactosQuery = useQuery({
     queryKey: ["contactos-select", contactoQ],
@@ -750,6 +753,9 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           tipo_camion: tipoCamion || null,
           fecha_despacho: fecha || null,
           notas_admin: notas || null,
+          contacto_telefono: telefono || null,
+          contacto_email: email || null,
+          peso_kg: peso ? Number(peso) : null,
         },
       });
       toast.success("Cotización creada");
@@ -828,6 +834,43 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
             />
           </div>
           <div>
+            <label className="mb-1 block text-xs font-medium" htmlFor="c-tel">
+              Teléfono del contacto
+            </label>
+            <input
+              id="c-tel"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium" htmlFor="c-email">
+              Email del contacto
+            </label>
+            <input
+              id="c-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium" htmlFor="c-peso">
+              Peso estimado (kg)
+            </label>
+            <input
+              id="c-peso"
+              type="number"
+              min="0"
+              step="1"
+              value={peso}
+              onChange={(e) => setPeso(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
             <label className="mb-1 block text-xs font-medium" htmlFor="c-tipo">
               Tipo de camión
             </label>
@@ -861,7 +904,7 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
 
         <div>
           <label className="mb-1 block text-xs font-medium" htmlFor="c-notas">
-            Notas
+            Notas internas
           </label>
           <textarea
             id="c-notas"
