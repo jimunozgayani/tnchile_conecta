@@ -708,6 +708,7 @@ function ComentarioModal({
 
 function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const crear = useServerFn(createCotizacion);
+  const crearContacto = useServerFn(createContacto);
   const [saving, setSaving] = useState(false);
   const [contactoQ, setContactoQ] = useState("");
   const [contactoId, setContactoId] = useState("");
@@ -719,6 +720,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [peso, setPeso] = useState("");
+
+  const [inlineOpen, setInlineOpen] = useState(false);
+  const [inlineBusy, setInlineBusy] = useState(false);
+  const [inlineNombre, setInlineNombre] = useState("");
+  const [inlineEmpresa, setInlineEmpresa] = useState("");
+  const [inlineTelefono, setInlineTelefono] = useState("");
+  const [inlineEmail, setInlineEmail] = useState("");
 
   const contactosQuery = useQuery({
     queryKey: ["contactos-select", contactoQ],
@@ -736,6 +744,52 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
       return (data ?? []) as { id: string; nombre: string; empresa: string | null }[];
     },
   });
+
+  const tiposCamionQuery = useQuery({
+    queryKey: ["tipos-camion-activos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tipos_camion")
+        .select("id, nombre")
+        .eq("activo", true)
+        .order("orden");
+      if (error) throw error;
+      return (data ?? []) as { id: string; nombre: string }[];
+    },
+  });
+
+  const sinResultados =
+    !!contactoQ.trim() && !contactosQuery.isLoading && (contactosQuery.data ?? []).length === 0;
+
+  const crearContactoInline = async () => {
+    if (!inlineNombre.trim()) return;
+    setInlineBusy(true);
+    try {
+      const res = await crearContacto({
+        data: {
+          nombre: inlineNombre.trim(),
+          empresa: inlineEmpresa.trim() || null,
+          telefono: inlineTelefono.trim() || null,
+          email: inlineEmail.trim() || null,
+          tipos: ["cliente"],
+          temperatura: "frio",
+          etapa_comercial: "lead",
+        },
+      });
+      if (!telefono && inlineTelefono.trim()) setTelefono(inlineTelefono.trim());
+      if (!email && inlineEmail.trim()) setEmail(inlineEmail.trim());
+      setContactoQ(inlineNombre.trim());
+      await contactosQuery.refetch();
+      setContactoId(res.id);
+      setInlineOpen(false);
+      toast.success("Contacto creado y seleccionado.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo crear el contacto");
+    } finally {
+      setInlineBusy(false);
+    }
+  };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
