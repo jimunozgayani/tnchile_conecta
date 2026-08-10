@@ -892,7 +892,15 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           />
           <select
             value={contactoId}
-            onChange={(e) => setContactoId(e.target.value)}
+            onChange={(e) => {
+              const id = e.target.value;
+              setContactoId(id);
+              const sel = (contactosQuery.data ?? []).find((x) => x.id === id);
+              if (sel) {
+                setTelefono(sel.telefono ?? "");
+                setEmail(sel.email ?? "");
+              }
+            }}
             aria-label="Contacto"
             className="w-full rounded-md border bg-background px-3 py-2 text-sm"
           >
