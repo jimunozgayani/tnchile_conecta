@@ -17,7 +17,8 @@ import { nombresAsignados } from "@/lib/solicitudes.functions";
 import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
-import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
+import { createContacto } from "@/lib/contactos.functions";
+import { fmtCLP } from "@/lib/regiones-capitales";
 import {
   FileText,
   Plus,
@@ -223,22 +224,24 @@ export default function ComercialCotizacionesPage() {
             Seguimiento de cotizaciones por estado, desde el ingreso comercial hasta el cierre.
           </p>
         </div>
-        {puedeCrear && (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" /> Nueva cotización
-          </button>
-        )}
       </header>
 
-      {/* PART B — filtros */}
-      <section
-        aria-label="Filtros"
-        className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-3"
-      >
+      {/* PART B — barra de control fija */}
+      <div className="sticky top-0 z-30 -mx-2 border-b bg-background/95 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <section
+          aria-label="Filtros"
+          className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-3"
+        >
+          {puedeCrear && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="order-last inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> Nueva cotización
+            </button>
+          )}
+
         <div className="min-w-[200px] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="q">
             Buscar contacto
@@ -303,7 +306,9 @@ export default function ComercialCotizacionesPage() {
             <X className="h-3.5 w-3.5" aria-hidden="true" /> Limpiar
           </button>
         )}
-      </section>
+        </section>
+      </div>
+
 
       {/* PART A — kanban */}
       {listQuery.isLoading ? (
@@ -708,6 +713,7 @@ function ComentarioModal({
 
 function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const crear = useServerFn(createCotizacion);
+  const crearContacto = useServerFn(createContacto);
   const [saving, setSaving] = useState(false);
   const [contactoQ, setContactoQ] = useState("");
   const [contactoId, setContactoId] = useState("");
@@ -719,6 +725,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [peso, setPeso] = useState("");
+
+  const [inlineOpen, setInlineOpen] = useState(false);
+  const [inlineBusy, setInlineBusy] = useState(false);
+  const [inlineNombre, setInlineNombre] = useState("");
+  const [inlineEmpresa, setInlineEmpresa] = useState("");
+  const [inlineTelefono, setInlineTelefono] = useState("");
+  const [inlineEmail, setInlineEmail] = useState("");
 
   const contactosQuery = useQuery({
     queryKey: ["contactos-select", contactoQ],
@@ -736,6 +749,52 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
       return (data ?? []) as { id: string; nombre: string; empresa: string | null }[];
     },
   });
+
+  const tiposCamionQuery = useQuery({
+    queryKey: ["tipos-camion-activos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tipos_camion")
+        .select("id, nombre")
+        .eq("activo", true)
+        .order("orden");
+      if (error) throw error;
+      return (data ?? []) as { id: string; nombre: string }[];
+    },
+  });
+
+  const sinResultados =
+    !!contactoQ.trim() && !contactosQuery.isLoading && (contactosQuery.data ?? []).length === 0;
+
+  const crearContactoInline = async () => {
+    if (!inlineNombre.trim()) return;
+    setInlineBusy(true);
+    try {
+      const res = await crearContacto({
+        data: {
+          nombre: inlineNombre.trim(),
+          empresa: inlineEmpresa.trim() || null,
+          telefono: inlineTelefono.trim() || null,
+          email: inlineEmail.trim() || null,
+          tipos: ["cliente"],
+          temperatura: "frio",
+          etapa_comercial: "lead",
+        },
+      });
+      if (!telefono && inlineTelefono.trim()) setTelefono(inlineTelefono.trim());
+      if (!email && inlineEmail.trim()) setEmail(inlineEmail.trim());
+      setContactoQ(inlineNombre.trim());
+      await contactosQuery.refetch();
+      setContactoId(res.id);
+      setInlineOpen(false);
+      toast.success("Contacto creado y seleccionado.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo crear el contacto");
+    } finally {
+      setInlineBusy(false);
+    }
+  };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -788,7 +847,10 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           <input
             id="c-buscar"
             value={contactoQ}
-            onChange={(e) => setContactoQ(e.target.value)}
+            onChange={(e) => {
+              setContactoQ(e.target.value);
+              setContactoId("");
+            }}
             placeholder="Buscar por nombre o empresa…"
             className="mb-1.5 w-full rounded-md border bg-background px-3 py-2 text-sm"
           />
@@ -806,7 +868,86 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
               </option>
             ))}
           </select>
+
+          {!contactoId && contactoQ.trim() && (
+            <p className="mt-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400">
+              Selecciona un contacto de la lista o créalo abajo.
+            </p>
+          )}
+
+          {sinResultados && !inlineOpen && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="text-xs text-muted-foreground">No se encontró ningún contacto.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setInlineNombre(contactoQ.trim());
+                  setInlineTelefono(telefono);
+                  setInlineEmail(email);
+                  setInlineOpen(true);
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-primary px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Crear contacto nuevo
+              </button>
+            </div>
+          )}
+
+          {inlineOpen && (
+            <div className="mt-2 space-y-2 rounded-md border bg-muted/30 p-3">
+              <p className="text-xs font-semibold">Nuevo contacto</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  value={inlineNombre}
+                  onChange={(e) => setInlineNombre(e.target.value)}
+                  placeholder="Nombre *"
+                  aria-label="Nombre del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  value={inlineEmpresa}
+                  onChange={(e) => setInlineEmpresa(e.target.value)}
+                  placeholder="Empresa"
+                  aria-label="Empresa del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  value={inlineTelefono}
+                  onChange={(e) => setInlineTelefono(e.target.value)}
+                  placeholder="Teléfono"
+                  aria-label="Teléfono del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  value={inlineEmail}
+                  onChange={(e) => setInlineEmail(e.target.value)}
+                  placeholder="Email"
+                  aria-label="Email del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInlineOpen(false)}
+                  className="rounded-md border px-3 py-1.5 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void crearContactoInline()}
+                  disabled={inlineBusy || !inlineNombre.trim()}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                >
+                  {inlineBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  Crear y usar este contacto
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -881,9 +1022,9 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             >
               <option value="">Sin definir</option>
-              {TIPOS_CAMION_TARIFA.map((t) => (
-                <option key={t.value} value={t.label}>
-                  {t.label}
+              {(tiposCamionQuery.data ?? []).map((t) => (
+                <option key={t.id} value={t.nombre}>
+                  {t.nombre}
                 </option>
               ))}
             </select>
@@ -921,7 +1062,7 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !contactoId}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {saving ? "Guardando…" : "Crear cotización"}
