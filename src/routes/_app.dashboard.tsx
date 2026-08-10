@@ -7,7 +7,7 @@ import { diasHasta } from "@/lib/regions";
 import { calcCompleteness, completionTone, type CompletenessResult } from "@/lib/completeness";
 
 export const Route = createFileRoute("/_app/dashboard")({
-  head: () => pageHead("/dashboard", "Panel del proveedor · Portal TN Chile", "Resumen de tu operación como proveedor TN Chile: flota, choferes, documentos por vencer, tarifas activas y asignaciones en curso."),
+  head: () => pageHead("/dashboard", "Panel del proveedor · TN Chile Conecta", "Resumen de tu operación como proveedor en TN Chile Conecta: flota, choferes, documentos por vencer, tarifas activas y asignaciones en curso."),
   component: Dashboard,
 });
 

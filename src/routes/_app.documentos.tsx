@@ -10,7 +10,7 @@ import { CameraOrFileInput } from "@/components/CameraOrFileInput";
 
 
 export const Route = createFileRoute("/_app/documentos")({
-  head: () => pageHead("/documentos", "Documentos · Portal Proveedores TN Chile", "Sube y controla los documentos de tu empresa, camiones y choferes en TN Chile con alertas automáticas de vencimiento."),
+  head: () => pageHead("/documentos", "Documentos · TN Chile Conecta", "Sube y controla los documentos de tu empresa, camiones y choferes en TN Chile Conecta con alertas automáticas de vencimiento."),
   component: DocumentosPage,
 });
 

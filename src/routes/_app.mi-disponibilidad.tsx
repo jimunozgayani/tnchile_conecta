@@ -7,8 +7,8 @@ export const Route = createFileRoute("/_app/mi-disponibilidad")({
   head: () =>
     pageHead(
       "/mi-disponibilidad",
-      "Mi disponibilidad · Portal TN Chile",
-      "Esta sección se movió: la disponibilidad ahora se gestiona por chofer en el portal TN Chile.",
+      "Mi disponibilidad · TN Chile Conecta",
+      "Esta sección se movió: la disponibilidad ahora se gestiona por chofer en TN Chile Conecta.",
     ),
   component: MiDisponibilidadRedirect,
 });

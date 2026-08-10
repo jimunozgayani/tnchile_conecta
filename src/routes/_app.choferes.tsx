@@ -12,7 +12,7 @@ import { inviteDriver } from "@/lib/driver-invitations.functions";
 import { saveOwnerDriver } from "@/lib/owner-driver.functions";
 
 export const Route = createFileRoute("/_app/choferes")({
-  head: () => pageHead("/choferes", "Mis choferes · Portal Proveedores TN Chile", "Gestiona los choferes de tu empresa en TN Chile: licencias, documentos, vigencias y camiones asignados a cada conductor."),
+  head: () => pageHead("/choferes", "Mis choferes · TN Chile Conecta", "Gestiona los choferes de tu empresa en TN Chile Conecta: licencias, documentos, vigencias y camiones asignados a cada conductor."),
   component: ChoferesPage,
 });
 
