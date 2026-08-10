@@ -86,7 +86,15 @@ const COLUMNAS: Columna[] = [
 ];
 
 /** Estados de la zona comercial donde se permite reasignar. */
-const ZONA_COMERCIAL_ESTADOS = ["nueva", "pendiente", "cotizada", "en_revision", "aceptada"];
+const ZONA_COMERCIAL_ESTADOS = [
+  "nueva",
+  "pendiente",
+  "en_exploracion",
+  "costo_fijado",
+  "cotizada",
+  "en_revision",
+  "aceptada",
+];
 
 const ZONA_LABEL: Record<Zona, string> = {
   comercial: "Zona comercial",
