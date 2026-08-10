@@ -177,7 +177,7 @@ export default function ComercialCotizacionesPage() {
       let query = supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, created_at, revision_count, comentarios_revision, asignado_a",
+          "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, costo_proveedor_fijado_clp, exploracion_limite_at, created_at, revision_count, comentarios_revision, asignado_a",
         )
         .order("created_at", { ascending: false })
         .limit(500);
