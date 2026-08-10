@@ -881,9 +881,9 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             >
               <option value="">Sin definir</option>
-              {TIPOS_CAMION_TARIFA.map((t) => (
-                <option key={t.value} value={t.label}>
-                  {t.label}
+              {(tiposCamionQuery.data ?? []).map((t) => (
+                <option key={t.id} value={t.nombre}>
+                  {t.nombre}
                 </option>
               ))}
             </select>
