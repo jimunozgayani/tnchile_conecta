@@ -224,22 +224,24 @@ export default function ComercialCotizacionesPage() {
             Seguimiento de cotizaciones por estado, desde el ingreso comercial hasta el cierre.
           </p>
         </div>
-        {puedeCrear && (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" /> Nueva cotización
-          </button>
-        )}
       </header>
 
-      {/* PART B — filtros */}
-      <section
-        aria-label="Filtros"
-        className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-3"
-      >
+      {/* PART B — barra de control fija */}
+      <div className="sticky top-0 z-30 -mx-2 border-b bg-background/95 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <section
+          aria-label="Filtros"
+          className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-3"
+        >
+          {puedeCrear && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="order-last inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> Nueva cotización
+            </button>
+          )}
+
         <div className="min-w-[200px] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="q">
             Buscar contacto
