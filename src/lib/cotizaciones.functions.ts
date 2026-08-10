@@ -15,7 +15,11 @@ const cotizacionSchema = z.object({
   tipo_camion: z.string().trim().max(120).optional().nullable(),
   fecha_despacho: z.string().trim().max(10).optional().nullable(),
   notas_admin: z.string().trim().max(2000).optional().nullable(),
+  contacto_telefono: z.string().trim().max(40).optional().nullable(),
+  contacto_email: z.string().trim().max(200).optional().nullable(),
+  peso_kg: z.coerce.number().nonnegative().max(1_000_000).optional().nullable(),
 });
+
 
 export type CotizacionInput = z.infer<typeof cotizacionSchema>;
 
@@ -55,17 +59,20 @@ export const createCotizacion = createServerFn({ method: "POST" })
       .insert({
         contacto_id: data.contacto_id,
         contacto_nombre: c.nombre,
-        contacto_telefono: c.telefono,
-        contacto_email: c.email,
+        contacto_telefono: clean(data.contacto_telefono) ?? c.telefono,
+        contacto_email: clean(data.contacto_email) ?? c.email,
         origen: data.origen,
         destinos: [data.destino],
         tipo_camion: clean(data.tipo_camion),
+        peso_kg: data.peso_kg ?? null,
         fecha_despacho: clean(data.fecha_despacho),
         notas_admin: clean(data.notas_admin),
         modalidad: "completo",
         estado: "nueva",
+        asignado_a: userId,
         fotos: [],
       } as never)
+
       .select("id, estado")
       .single();
 
@@ -225,4 +232,31 @@ export const obtenerAsignables = createServerFn({ method: "POST" })
       out.push({ id, nombre });
     }
     return out.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+
+// ─────────────────────────────────────────────────────────────
+// Edición de campos de la ficha de cotización
+// ─────────────────────────────────────────────────────────────
+
+const patchSchema = z.object({
+  id: z.string().uuid(),
+  notas_admin: z.string().trim().max(4000).optional().nullable(),
+});
+
+/** Actualiza las notas internas de una cotización (admin, lider_cuenta, comercial). */
+export const actualizarCotizacion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => patchSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!COMERCIALISH.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
+
+    const notas = (data.notas_admin ?? "").trim();
+    const { error } = await supabase
+      .from("cotizaciones")
+      .update({ notas_admin: notas || null, updated_at: new Date().toISOString() } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true, notas_admin: notas || null };
   });

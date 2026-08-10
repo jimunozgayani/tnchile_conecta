@@ -6,6 +6,7 @@ import { requireCommercial } from "@/lib/require-admin";
 import { supabase } from "@/integrations/supabase/client";
 import { obtenerEquipoComercial, type MiembroComercial } from "@/lib/liderazgo.functions";
 import { MetasEquipo, SinAsignarAlert, TeamTable } from "@/components/leader-dashboard";
+import { RechazadasSection } from "@/components/RechazadasTable";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import {
   EstadoBadge,
@@ -89,6 +90,8 @@ function LiderCuentaView({ nombre, rolLabel }: { nombre: string; rolLabel: strin
       <MetasEquipo rol="comercial" puedeCrear />
 
       <MisDocumentos />
+
+      <RechazadasSection />
 
       <p className="text-xs text-muted-foreground">
         ¿Buscas la agenda de contactos?{" "}

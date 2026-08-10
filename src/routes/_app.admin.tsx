@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { RechazadasTable } from "@/components/RechazadasTable";
 import { pageHead } from "@/lib/page-head";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -770,6 +771,11 @@ function AdminPage() {
           </ul>
         )}
       </div>
+
+      <section aria-label="Cotizaciones rechazadas" className="rounded-xl border bg-card p-5">
+        <h2 className="mb-3 text-lg font-semibold">Cotizaciones rechazadas</h2>
+        <RechazadasTable />
+      </section>
 
       {msgTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !msgSending && setMsgTarget(null)}>
