@@ -9,7 +9,7 @@ import { REGIONES_CHILE } from "@/lib/regions";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const Route = createFileRoute("/_app/perfil")({
-  head: () => pageHead("/perfil", "Perfil de la empresa · Portal Proveedores TN Chile", "Actualiza los datos de tu empresa proveedora en TN Chile: razón social, RUT, contacto, pólizas de seguro y completitud del perfil."),
+  head: () => pageHead("/perfil", "Perfil de la empresa · TN Chile Conecta", "Actualiza los datos de tu empresa proveedora en TN Chile Conecta: razón social, RUT, contacto, pólizas de seguro y completitud del perfil."),
   component: PerfilPage,
 });
 

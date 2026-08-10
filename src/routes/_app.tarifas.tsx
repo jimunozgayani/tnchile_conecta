@@ -13,7 +13,7 @@ import {
 } from "@/lib/regiones-capitales";
 
 export const Route = createFileRoute("/_app/tarifas")({
-  head: () => pageHead("/tarifas", "Tarifas por región · Portal Proveedores TN Chile", "Publica y actualiza tus tarifas de transporte por región y tipo de camión para las 16 capitales regionales de Chile."),
+  head: () => pageHead("/tarifas", "Tarifas por región · TN Chile Conecta", "Publica y actualiza tus tarifas de transporte por región y tipo de camión para las 16 capitales regionales de Chile."),
   component: TarifasPage,
 });
 

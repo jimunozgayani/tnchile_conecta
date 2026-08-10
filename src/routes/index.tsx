@@ -5,7 +5,7 @@ import logoFull from "@/assets/tn-chile-full.png";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
-  head: () => pageHead("/", "TN Chile · Portal de proveedores, clientes y choferes de transporte", "Accede al portal TN Chile: proveedores, clientes que solicitan carga, choferes y operaciones. Gestiona flota, cotizaciones, disponibilidad y viajes en un solo lugar."),
+  head: () => pageHead("/", "TN Chile Conecta · Portal de proveedores, clientes y choferes de transporte", "Accede a TN Chile Conecta: proveedores, clientes que solicitan carga, choferes y operaciones. Gestiona flota, cotizaciones, disponibilidad y viajes en un solo lugar."),
   component: Landing,
 });
 
