@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rolesDe } from "@/lib/cotizaciones-transiciones";
 
 const OPS_ABRIR = ["admin", "jefe_operaciones"];
-const OPS_PROPONER = ["admin", "jefe_operaciones", "operador"];
-const OPS_GANADORA = ["admin", "jefe_operaciones"];
+const OPS_PROPONER = ["admin", "jefe_operaciones", "operador", "lider_cuenta"];
+const OPS_GANADORA = ["admin", "lider_cuenta"];
 
 export type Propuesta = {
   id: string;
