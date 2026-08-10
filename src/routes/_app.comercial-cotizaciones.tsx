@@ -256,7 +256,7 @@ export default function ComercialCotizacionesPage() {
             </button>
           )}
 
-        <div className="min-w-[200px] flex-1">
+        <div className="w-full max-w-[260px] shrink-0 sm:w-[260px]">
           <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="q">
             Buscar contacto
           </label>
