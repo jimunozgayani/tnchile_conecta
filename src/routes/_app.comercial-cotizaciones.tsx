@@ -70,7 +70,11 @@ type Columna = { label: string; estados: string[]; zona: Zona };
  * valor del estado en la base de datos).
  */
 const COLUMNAS: Columna[] = [
-  { label: "Nueva", estados: ["nueva", "pendiente"], zona: "comercial" },
+  {
+    label: "Nueva",
+    estados: ["nueva", "pendiente", "en_exploracion", "costo_fijado"],
+    zona: "comercial",
+  },
   { label: "Cotizada", estados: ["cotizada", "en_revision"], zona: "comercial" },
   { label: "Aceptada", estados: ["aceptada"], zona: "comercial" },
   { label: "Cierre sellado", estados: ["lista_para_operar"], zona: "comercial" },
