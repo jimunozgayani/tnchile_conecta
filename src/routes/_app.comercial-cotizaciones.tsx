@@ -776,7 +776,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
       if (term) query = query.or(`nombre.ilike.%${term}%,empresa.ilike.%${term}%`);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as { id: string; nombre: string; empresa: string | null }[];
+      return (data ?? []) as {
+        id: string;
+        nombre: string;
+        empresa: string | null;
+        telefono: string | null;
+        email: string | null;
+      }[];
     },
   });
 
