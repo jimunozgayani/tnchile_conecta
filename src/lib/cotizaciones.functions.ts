@@ -15,7 +15,11 @@ const cotizacionSchema = z.object({
   tipo_camion: z.string().trim().max(120).optional().nullable(),
   fecha_despacho: z.string().trim().max(10).optional().nullable(),
   notas_admin: z.string().trim().max(2000).optional().nullable(),
+  contacto_telefono: z.string().trim().max(40).optional().nullable(),
+  contacto_email: z.string().trim().max(200).optional().nullable(),
+  peso_kg: z.coerce.number().nonnegative().max(1_000_000).optional().nullable(),
 });
+
 
 export type CotizacionInput = z.infer<typeof cotizacionSchema>;
 
