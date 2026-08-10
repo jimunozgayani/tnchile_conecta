@@ -5,10 +5,12 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
+import { getSignedUrl } from "@/lib/signed-url";
+import { CountdownBadge } from "@/components/ExploracionCountdown";
 import {
   abrirExploracion,
   agregarPropuesta,
-  elegirGanadora,
+  elegirGanadoraYFijarPrecio,
   listarPropuestas,
   type Propuesta,
 } from "@/lib/exploracion.functions";
@@ -22,6 +24,8 @@ import {
   Trophy,
   X,
   AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/operaciones-exploracion")({
@@ -46,6 +50,13 @@ type Carga = {
   fecha_despacho: string | null;
   estado: string;
   peso_kg: number | null;
+  largo_cm: number | null;
+  ancho_cm: number | null;
+  alto_cm: number | null;
+  notas_admin: string | null;
+  fotos: unknown;
+  exploracion_abierta_at: string | null;
+  exploracion_limite_at: string | null;
 };
 type TipoCamion = { id: string; nombre: string };
 type Contacto = { id: string; nombre: string; empresa: string | null };
@@ -66,11 +77,133 @@ function primerDestino(destinos: unknown): string {
   return "Sin destino";
 }
 
+function todosDestinos(destinos: unknown): string[] {
+  if (!Array.isArray(destinos)) return [];
+  return destinos
+    .map((d) => {
+      if (typeof d === "string") return d;
+      if (d && typeof d === "object") {
+        const o = d as Record<string, unknown>;
+        const v = o["destino"] ?? o["ciudad"] ?? o["nombre"] ?? o["texto"];
+        if (typeof v === "string") return v;
+      }
+      return null;
+    })
+    .filter((v): v is string => !!v);
+}
+
+const fotoPaths = (fotos: unknown): string[] => {
+  if (!Array.isArray(fotos)) return [];
+  return fotos
+    .map((f) => {
+      if (typeof f === "string") return f;
+      if (f && typeof f === "object") {
+        const o = f as Record<string, unknown>;
+        const v = o["path"] ?? o["storage_path"] ?? o["url"];
+        if (typeof v === "string") return v;
+      }
+      return null;
+    })
+    .filter((v): v is string => !!v);
+};
+
 const ESTADO_PROPUESTA: Record<string, { label: string; cls: string }> = {
   propuesta: { label: "Propuesta", cls: "bg-muted text-muted-foreground" },
   ganadora: { label: "Ganadora", cls: "bg-primary/15 text-primary" },
   descartada: { label: "Descartada", cls: "bg-destructive/10 text-destructive" },
 };
+
+function DetalleCarga({ c }: { c: Carga }) {
+  const paths = useMemo(() => fotoPaths(c.fotos), [c.fotos]);
+  const [urls, setUrls] = useState<string[]>([]);
+  const [zoom, setZoom] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancel = false;
+    if (paths.length === 0) {
+      setUrls([]);
+      return;
+    }
+    void (async () => {
+      const res = await Promise.all(paths.map((p) => getSignedUrl("cotizacion-fotos", p)));
+      if (!cancel) setUrls(res.filter((u): u is string => !!u));
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [paths]);
+
+  const dims = [c.largo_cm, c.ancho_cm, c.alto_cm];
+  const tieneDims = dims.some((d) => d != null);
+  const destinos = todosDestinos(c.destinos);
+
+  return (
+    <div className="mt-3 space-y-3 rounded-md bg-muted/40 p-3 text-sm">
+      <div className="grid gap-2 sm:grid-cols-2">
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">Origen</span>
+          <br />
+          {c.origen || "—"}
+        </p>
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">Destino(s)</span>
+          <br />
+          {destinos.length > 0 ? destinos.join(" · ") : "—"}
+        </p>
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">Peso</span>
+          <br />
+          {c.peso_kg != null ? `${Number(c.peso_kg).toLocaleString("es-CL")} kg` : "—"}
+        </p>
+        {tieneDims && (
+          <p>
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Dimensiones (cm)
+            </span>
+            <br />
+            {dims.map((d) => (d == null ? "?" : d)).join(" × ")}
+          </p>
+        )}
+      </div>
+
+      {c.notas_admin && (
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Notas internas</p>
+          <p className="whitespace-pre-wrap">{c.notas_admin}</p>
+        </div>
+      )}
+
+      {paths.length > 0 && (
+        <div>
+          <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
+            Fotos ({paths.length})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {urls.map((u) => (
+              <button
+                key={u}
+                type="button"
+                onClick={() => setZoom(u)}
+                className="overflow-hidden rounded-md border"
+              >
+                <img src={u} alt="Foto de la carga" className="h-20 w-20 object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {zoom && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setZoom(null)}
+        >
+          <img src={zoom} alt="Foto de la carga" className="max-h-full max-w-full rounded-md" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ExploracionPage() {
   const [cargas, setCargas] = useState<Carga[]>([]);
@@ -82,14 +215,17 @@ function ExploracionPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [modalCarga, setModalCarga] = useState<Carga | null>(null);
+  const [detalle, setDetalle] = useState<Record<string, boolean>>({});
+  const [abrirPara, setAbrirPara] = useState<Carga | null>(null);
+  const [ganadoraPara, setGanadoraPara] = useState<Propuesta | null>(null);
 
   const fetchPropuestas = useServerFn(listarPropuestas);
   const abrir = useServerFn(abrirExploracion);
   const agregar = useServerFn(agregarPropuesta);
-  const elegir = useServerFn(elegirGanadora);
+  const elegir = useServerFn(elegirGanadoraYFijarPrecio);
 
   const puedeAbrir = roles.includes("admin") || roles.includes("jefe_operaciones");
-  const puedeElegir = puedeAbrir;
+  const puedeElegir = roles.includes("admin") || roles.includes("lider_cuenta");
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -102,7 +238,9 @@ function ExploracionPage() {
         : Promise.resolve({ data: [] as { role: string }[] }),
       supabase
         .from("cotizaciones")
-        .select("id, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, estado, peso_kg")
+        .select(
+          "id, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, fotos, exploracion_abierta_at, exploracion_limite_at",
+        )
         .in("estado", ["nueva", "en_exploracion"])
         .order("created_at", { ascending: false }),
       supabase.from("tipos_camion").select("id, nombre").eq("activo", true).order("orden"),
@@ -162,11 +300,12 @@ function ExploracionPage() {
     return m;
   }, [propuestas]);
 
-  async function onAbrir(c: Carga) {
+  async function onAbrir(c: Carga, horas: number) {
     setBusy(c.id);
     try {
-      await abrir({ data: { cotizacion_id: c.id } });
-      toast.success("Exploración abierta.");
+      await abrir({ data: { cotizacion_id: c.id, duracion_horas: horas } });
+      toast.success(`Exploración abierta por ${horas} h.`);
+      setAbrirPara(null);
       await cargar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo abrir la exploración.");
@@ -175,17 +314,27 @@ function ExploracionPage() {
     }
   }
 
-  async function onElegir(p: Propuesta) {
-    if (
-      !window.confirm(
-        `¿Confirmas que ${p.proveedor_nombre} con costo ${clp(p.costo_clp)} gana esta exploración?`,
-      )
-    )
-      return;
+  async function onElegir(
+    p: Propuesta,
+    precio: number,
+    tipoPago: string | null,
+    validez: string | null,
+  ) {
     setBusy(p.id);
     try {
-      await elegir({ data: { propuesta_id: p.id } });
-      toast.success("Propuesta ganadora registrada y costo fijado.");
+      await elegir({
+        data: {
+          propuesta_id: p.id,
+          precio_ofrecido_cliente_clp: precio,
+          tipo_pago: (tipoPago || null) as never,
+          validez_hasta: validez || null,
+        },
+      });
+      const carga = cargas.find((c) => c.id === p.cotizacion_id);
+      toast.success(
+        `Cotización lista para ${carga?.contacto_nombre ?? "el cliente"} por ${clp(precio)}.`,
+      );
+      setGanadoraPara(null);
       await cargar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo elegir la propuesta.");
@@ -215,8 +364,17 @@ function ExploracionPage() {
         <ul className="space-y-4">
           {cargas.map((c) => {
             const props = porCarga.get(c.id) ?? [];
+            const abierto = !!detalle[c.id];
             return (
               <li key={c.id} className="rounded-lg border bg-card p-4 shadow-sm">
+                {c.estado === "en_exploracion" && c.exploracion_limite_at && (
+                  <div className="mb-2">
+                    <CountdownBadge
+                      limiteAt={c.exploracion_limite_at}
+                      abiertaAt={c.exploracion_abierta_at}
+                    />
+                  </div>
+                )}
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">{c.contacto_nombre ?? "Sin contacto"}</p>
@@ -246,19 +404,39 @@ function ExploracionPage() {
                   </span>
                 </div>
 
+                <button
+                  type="button"
+                  onClick={() => setDetalle((d) => ({ ...d, [c.id]: !abierto }))}
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  {abierto ? (
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  )}
+                  {abierto ? "Ocultar detalle" : "Ver detalle completo"}
+                </button>
+
+                {abierto && <DetalleCarga c={c} />}
+
                 {c.estado === "nueva" && puedeAbrir && (
-                  <button
-                    onClick={() => void onAbrir(c)}
-                    disabled={busy === c.id}
-                    className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                  >
-                    {busy === c.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="mt-4">
+                    {abrirPara?.id === c.id ? (
+                      <AbrirExploracionSelector
+                        busy={busy === c.id}
+                        onCancel={() => setAbrirPara(null)}
+                        onConfirm={(h) => void onAbrir(c, h)}
+                      />
                     ) : (
-                      <Search className="h-4 w-4" />
+                      <button
+                        onClick={() => setAbrirPara(c)}
+                        className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+                      >
+                        <Search className="h-4 w-4" />
+                        Abrir exploración
+                      </button>
                     )}
-                    Abrir exploración
-                  </button>
+                  </div>
                 )}
 
                 {c.estado === "nueva" && !puedeAbrir && (
@@ -303,7 +481,7 @@ function ExploracionPage() {
                                 </span>
                                 {puedeElegir && p.estado === "propuesta" && (
                                   <button
-                                    onClick={() => void onElegir(p)}
+                                    onClick={() => setGanadoraPara(p)}
                                     disabled={busy === p.id}
                                     className="inline-flex items-center gap-1 rounded-md border border-primary px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-60"
                                   >
@@ -350,6 +528,182 @@ function ExploracionPage() {
           }}
         />
       )}
+
+      {ganadoraPara && (
+        <GanadoraModal
+          propuesta={ganadoraPara}
+          busy={busy === ganadoraPara.id}
+          onClose={() => setGanadoraPara(null)}
+          onConfirm={(precio, tipoPago, validez) =>
+            void onElegir(ganadoraPara, precio, tipoPago, validez)
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+const DURACIONES = [1, 3, 5, 12, 24];
+
+function AbrirExploracionSelector({
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: (horas: number) => void;
+}) {
+  const [horas, setHoras] = useState(3);
+  return (
+    <div className="rounded-md border bg-muted/30 p-3">
+      <p className="text-xs font-medium text-muted-foreground">
+        Tiempo límite para recibir propuestas:
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {DURACIONES.map((h) => (
+          <button
+            key={h}
+            type="button"
+            onClick={() => setHoras(h)}
+            className={`rounded-full px-3 py-1 text-xs font-medium ${
+              horas === h
+                ? "bg-primary text-primary-foreground"
+                : "border bg-background hover:bg-accent"
+            }`}
+          >
+            {h} {h === 1 ? "hora" : "horas"}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onConfirm(horas)}
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          Confirmar apertura
+        </button>
+        <button type="button" onClick={onCancel} className="rounded-md border px-3 py-2 text-sm">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const TIPOS_PAGO = [
+  { value: "contado", label: "Contado" },
+  { value: "anticipo", label: "Anticipo" },
+  { value: "15_dias", label: "15 días" },
+  { value: "30_dias", label: "30 días" },
+];
+
+function GanadoraModal({
+  propuesta,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  propuesta: Propuesta;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (precio: number, tipoPago: string | null, validez: string | null) => void;
+}) {
+  const [precio, setPrecio] = useState("");
+  const [tipoPago, setTipoPago] = useState("");
+  const [validez, setValidez] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const monto = Number(precio);
+    if (!Number.isFinite(monto) || monto <= 0) {
+      setError("Ingresa un precio válido para el cliente.");
+      return;
+    }
+    setError(null);
+    onConfirm(monto, tipoPago || null, validez || null);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <form
+        onSubmit={submit}
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-xl bg-card p-5 shadow-xl sm:rounded-xl"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Confirmar ganadora y cotizar</h2>
+            <p className="text-xs text-muted-foreground">
+              {propuesta.proveedor_nombre} · {clp(propuesta.costo_clp)}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-md p-1 hover:bg-accent">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <label className="block text-sm font-medium">
+          Precio a cobrar al cliente (CLP) *
+          <input
+            type="number"
+            min={1}
+            step={1000}
+            value={precio}
+            onChange={(e) => setPrecio(e.target.value)}
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </label>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Costo proveedor: {clp(propuesta.costo_clp)} · Sugerencia con margen 20%:{" "}
+          {clp(propuesta.costo_clp * 1.2)}
+        </p>
+
+        <label className="mt-3 block text-sm font-medium">
+          Condición de pago
+          <select
+            value={tipoPago}
+            onChange={(e) => setTipoPago(e.target.value)}
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Sin especificar</option>
+            {TIPOS_PAGO.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="mt-3 block text-sm font-medium">
+          Válida hasta
+          <input
+            type="date"
+            value={validez}
+            onChange={(e) => setValidez(e.target.value)}
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </label>
+
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-md border px-3 py-2 text-sm">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            Confirmar ganadora y cotizar
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
