@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => pageHead("/reset-password", "Restablecer contraseña · TN Chile Conecta", "Define una nueva contraseña segura para tu cuenta del Portal TN Chile de logística y transporte."),
+  head: () => pageHead("/reset-password", "Restablecer contraseña · TN Chile Conecta", "Define una nueva contraseña segura para tu cuenta de TN Chile Conecta de logística y transporte."),
   component: ResetPage,
 });
 
