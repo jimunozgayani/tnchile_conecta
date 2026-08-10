@@ -16,6 +16,7 @@ import {
 import { nombresAsignados } from "@/lib/solicitudes.functions";
 import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
+import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
 import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
 import {
   FileText,
@@ -79,6 +80,9 @@ const COLUMNAS: Columna[] = [
   { label: "Cerrada", estados: ["cerrada"], zona: "cierre" },
 ];
 
+/** Estados de la zona comercial donde se permite reasignar. */
+const ZONA_COMERCIAL_ESTADOS = ["nueva", "pendiente", "cotizada", "en_revision", "aceptada"];
+
 const ZONA_LABEL: Record<Zona, string> = {
   comercial: "Zona comercial",
   operaciones: "Zona operaciones",
@@ -131,6 +135,7 @@ export default function ComercialCotizacionesPage() {
   const [hasta, setHasta] = useState("");
   const [showRechazadas, setShowRechazadas] = useState(false);
   const [open, setOpen] = useState(false);
+  const [fichaId, setFichaId] = useState<string | null>(null);
 
   const rolesQuery = useQuery({
     queryKey: ["mis-roles-cotizaciones"],
@@ -332,7 +337,7 @@ export default function ComercialCotizacionesPage() {
                     <p className="px-1 py-4 text-center text-xs text-muted-foreground">Sin cotizaciones</p>
                   ) : (
                     cards.map((c) => (
-                      <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} />
+                      <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
                     ))
                   )}
                 </div>
@@ -351,11 +356,24 @@ export default function ComercialCotizacionesPage() {
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {rechazadas.map((c) => (
-                <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} />
+                <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
               ))}
             </div>
           )}
         </section>
+      )}
+
+      {fichaId && (
+        <CotizacionDrawer
+          id={fichaId}
+          roles={roles}
+          asignables={asignablesQuery.data ?? []}
+          nombreAsignado={
+            nombres[rows.find((r) => r.id === fichaId)?.asignado_a ?? ""] ?? undefined
+          }
+          onClose={() => setFichaId(null)}
+          onChanged={(patch) => patchRow(fichaId, patch as Partial<Cotizacion>)}
+        />
       )}
 
       {open && <NuevaCotizacionModal onClose={() => setOpen(false)} onSaved={() => listQuery.refetch()} />}
@@ -370,6 +388,7 @@ type CardProps = {
   asignables: Asignable[];
   nombres: Record<string, string>;
   onPatch: (id: string, patch: Partial<Cotizacion>) => void;
+  onOpen: (id: string) => void;
 };
 
 const ACCIONES: Record<string, { estado: string; label: string }[]> = {
@@ -384,12 +403,13 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
   cobro_pendiente: [{ estado: "cerrada", label: "Marcar como cerrada" }],
 };
 
-function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: CardProps) {
+function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
   const sellar = useServerFn(sellarCierreYCrearOperacion);
   const [menu, setMenu] = useState(false);
   const [chip, setChip] = useState(false);
+  const [reasignarOpen, setReasignarOpen] = useState(false);
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
@@ -480,10 +500,16 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
   };
 
   return (
-    <article className="relative rounded-md border bg-card p-2.5 text-xs shadow-sm">
+    <article
+      className="relative cursor-pointer rounded-md border bg-card p-2.5 text-xs shadow-sm transition hover:border-primary/50 hover:shadow"
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button,a,[data-stop]")) return;
+        onOpen(c.id);
+      }}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="font-bold leading-tight">{c.contacto_nombre ?? "Sin contacto"}</p>
-        {(acciones.length > 0 || puedePDF) && (
+        {(acciones.length > 0 || puedePDF || puedeAsignar) && (
           <div className="relative">
             <button
               type="button"
@@ -519,6 +545,18 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
                       <Download className="h-3.5 w-3.5" aria-hidden="true" />
                     )}
                     {pdfBusy ? "Generando PDF…" : "Descargar cotización PDF"}
+                  </button>
+                )}
+                {puedeAsignar && ZONA_COMERCIAL_ESTADOS.includes(c.estado) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenu(false);
+                      setReasignarOpen(true);
+                    }}
+                    className="block w-full border-t px-3 py-2 text-left text-xs hover:bg-muted"
+                  >
+                    Reasignar
                   </button>
                 )}
               </div>
@@ -582,6 +620,15 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch }: Ca
           </div>
         )}
       </div>
+
+      {reasignarOpen && (
+        <ReasignarModal
+          id={c.id}
+          asignables={asignables}
+          onClose={() => setReasignarOpen(false)}
+          onDone={(uid) => onPatch(c.id, { asignado_a: uid })}
+        />
+      )}
 
       {comentarioPara && (
         <ComentarioModal
