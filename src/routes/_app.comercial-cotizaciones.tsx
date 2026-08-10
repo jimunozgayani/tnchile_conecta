@@ -1058,7 +1058,7 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !contactoId}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {saving ? "Guardando…" : "Crear cotización"}
