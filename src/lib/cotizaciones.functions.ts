@@ -59,17 +59,20 @@ export const createCotizacion = createServerFn({ method: "POST" })
       .insert({
         contacto_id: data.contacto_id,
         contacto_nombre: c.nombre,
-        contacto_telefono: c.telefono,
-        contacto_email: c.email,
+        contacto_telefono: clean(data.contacto_telefono) ?? c.telefono,
+        contacto_email: clean(data.contacto_email) ?? c.email,
         origen: data.origen,
         destinos: [data.destino],
         tipo_camion: clean(data.tipo_camion),
+        peso_kg: data.peso_kg ?? null,
         fecha_despacho: clean(data.fecha_despacho),
         notas_admin: clean(data.notas_admin),
         modalidad: "completo",
         estado: "nueva",
+        asignado_a: userId,
         fotos: [],
       } as never)
+
       .select("id, estado")
       .single();
 
