@@ -591,6 +591,21 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
         </span>
       )}
 
+      {c.estado === "en_exploracion" && (
+        <div className="mt-1 flex flex-wrap items-center gap-1">
+          <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-300">
+            🔍 En exploración
+          </span>
+          <CountdownBadge limiteAt={c.exploracion_limite_at} className="text-[10px]" />
+        </div>
+      )}
+
+      {c.estado === "costo_fijado" && (
+        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+          ✅ Costo fijado: {fmtCLP(c.costo_proveedor_fijado_clp)}
+        </span>
+      )}
+
       <p className="mt-1.5 text-muted-foreground">
         {c.origen ?? "—"} → {primerDestino(c.destinos)}
       </p>
