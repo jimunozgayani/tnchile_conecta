@@ -233,3 +233,30 @@ export const obtenerAsignables = createServerFn({ method: "POST" })
     }
     return out.sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
+
+// ─────────────────────────────────────────────────────────────
+// Edición de campos de la ficha de cotización
+// ─────────────────────────────────────────────────────────────
+
+const patchSchema = z.object({
+  id: z.string().uuid(),
+  notas_admin: z.string().trim().max(4000).optional().nullable(),
+});
+
+/** Actualiza las notas internas de una cotización (admin, lider_cuenta, comercial). */
+export const actualizarCotizacion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => patchSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!COMERCIALISH.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
+
+    const notas = (data.notas_admin ?? "").trim();
+    const { error } = await supabase
+      .from("cotizaciones")
+      .update({ notas_admin: notas || null, updated_at: new Date().toISOString() } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true, notas_admin: notas || null };
+  });
