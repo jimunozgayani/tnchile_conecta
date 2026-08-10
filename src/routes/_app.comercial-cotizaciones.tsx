@@ -788,7 +788,10 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           <input
             id="c-buscar"
             value={contactoQ}
-            onChange={(e) => setContactoQ(e.target.value)}
+            onChange={(e) => {
+              setContactoQ(e.target.value);
+              setContactoId("");
+            }}
             placeholder="Buscar por nombre o empresa…"
             className="mb-1.5 w-full rounded-md border bg-background px-3 py-2 text-sm"
           />
@@ -806,7 +809,86 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
               </option>
             ))}
           </select>
+
+          {!contactoId && contactoQ.trim() && (
+            <p className="mt-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400">
+              Selecciona un contacto de la lista o créalo abajo.
+            </p>
+          )}
+
+          {sinResultados && !inlineOpen && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="text-xs text-muted-foreground">No se encontró ningún contacto.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setInlineNombre(contactoQ.trim());
+                  setInlineTelefono(telefono);
+                  setInlineEmail(email);
+                  setInlineOpen(true);
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-primary px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Crear contacto nuevo
+              </button>
+            </div>
+          )}
+
+          {inlineOpen && (
+            <div className="mt-2 space-y-2 rounded-md border bg-muted/30 p-3">
+              <p className="text-xs font-semibold">Nuevo contacto</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  value={inlineNombre}
+                  onChange={(e) => setInlineNombre(e.target.value)}
+                  placeholder="Nombre *"
+                  aria-label="Nombre del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  value={inlineEmpresa}
+                  onChange={(e) => setInlineEmpresa(e.target.value)}
+                  placeholder="Empresa"
+                  aria-label="Empresa del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  value={inlineTelefono}
+                  onChange={(e) => setInlineTelefono(e.target.value)}
+                  placeholder="Teléfono"
+                  aria-label="Teléfono del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  value={inlineEmail}
+                  onChange={(e) => setInlineEmail(e.target.value)}
+                  placeholder="Email"
+                  aria-label="Email del nuevo contacto"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInlineOpen(false)}
+                  className="rounded-md border px-3 py-1.5 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void crearContactoInline()}
+                  disabled={inlineBusy || !inlineNombre.trim()}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                >
+                  {inlineBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  Crear y usar este contacto
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
