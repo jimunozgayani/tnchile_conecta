@@ -117,6 +117,8 @@ type Cotizacion = {
   tipo_camion: string | null;
   fecha_despacho: string | null;
   precio_ofrecido_cliente_clp: number | null;
+  costo_proveedor_fijado_clp: number | null;
+  exploracion_limite_at: string | null;
   created_at: string;
   revision_count: number | null;
   comentarios_revision: string | null;
