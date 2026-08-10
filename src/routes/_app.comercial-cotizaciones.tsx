@@ -17,7 +17,8 @@ import { nombresAsignados } from "@/lib/solicitudes.functions";
 import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
-import { TIPOS_CAMION_TARIFA, fmtCLP } from "@/lib/regiones-capitales";
+import { createContacto } from "@/lib/contactos.functions";
+import { fmtCLP } from "@/lib/regiones-capitales";
 import {
   FileText,
   Plus,
