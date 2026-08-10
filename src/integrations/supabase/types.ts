@@ -290,11 +290,18 @@ export type Database = {
           contacto_id: string | null
           contacto_nombre: string
           contacto_telefono: string | null
+          costo_proveedor_fijado_clp: number | null
           created_at: string
           destinos: Json
           estado: string
+          exploracion_abierta_at: string | null
+          exploracion_abierta_por: string | null
           fecha_despacho: string | null
           fotos: Json
+          gate2_autorizado_at: string | null
+          gate2_autorizado_por: string | null
+          gate3_autorizado_at: string | null
+          gate3_autorizado_por: string | null
           id: string
           largo_cm: number | null
           lineas_servicio: Json | null
@@ -304,6 +311,7 @@ export type Database = {
           peso_kg: number | null
           precio_maximo_proveedor_clp: number | null
           precio_ofrecido_cliente_clp: number | null
+          propuesta_ganadora_id: string | null
           rechazada_at: string | null
           revision_count: number
           sobreestadia_dias_libres: number | null
@@ -328,11 +336,18 @@ export type Database = {
           contacto_id?: string | null
           contacto_nombre: string
           contacto_telefono?: string | null
+          costo_proveedor_fijado_clp?: number | null
           created_at?: string
           destinos?: Json
           estado?: string
+          exploracion_abierta_at?: string | null
+          exploracion_abierta_por?: string | null
           fecha_despacho?: string | null
           fotos?: Json
+          gate2_autorizado_at?: string | null
+          gate2_autorizado_por?: string | null
+          gate3_autorizado_at?: string | null
+          gate3_autorizado_por?: string | null
           id?: string
           largo_cm?: number | null
           lineas_servicio?: Json | null
@@ -342,6 +357,7 @@ export type Database = {
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
+          propuesta_ganadora_id?: string | null
           rechazada_at?: string | null
           revision_count?: number
           sobreestadia_dias_libres?: number | null
@@ -366,11 +382,18 @@ export type Database = {
           contacto_id?: string | null
           contacto_nombre?: string
           contacto_telefono?: string | null
+          costo_proveedor_fijado_clp?: number | null
           created_at?: string
           destinos?: Json
           estado?: string
+          exploracion_abierta_at?: string | null
+          exploracion_abierta_por?: string | null
           fecha_despacho?: string | null
           fotos?: Json
+          gate2_autorizado_at?: string | null
+          gate2_autorizado_por?: string | null
+          gate3_autorizado_at?: string | null
+          gate3_autorizado_por?: string | null
           id?: string
           largo_cm?: number | null
           lineas_servicio?: Json | null
@@ -380,6 +403,7 @@ export type Database = {
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
+          propuesta_ganadora_id?: string | null
           rechazada_at?: string | null
           revision_count?: number
           sobreestadia_dias_libres?: number | null
@@ -399,6 +423,13 @@ export type Database = {
             columns: ["contacto_id"]
             isOneToOne: false
             referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_propuesta_ganadora_id_fkey"
+            columns: ["propuesta_ganadora_id"]
+            isOneToOne: false
+            referencedRelation: "propuestas_proveedor"
             referencedColumns: ["id"]
           },
           {
@@ -1226,6 +1257,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      propuestas_proveedor: {
+        Row: {
+          actualizado_at: string
+          costo_clp: number
+          cotizacion_id: string
+          creado_at: string
+          estado: string
+          id: string
+          notas: string | null
+          operador_id: string
+          proveedor_contacto_id: string | null
+          proveedor_nombre: string
+          tipo_camion_id: string | null
+        }
+        Insert: {
+          actualizado_at?: string
+          costo_clp: number
+          cotizacion_id: string
+          creado_at?: string
+          estado?: string
+          id?: string
+          notas?: string | null
+          operador_id: string
+          proveedor_contacto_id?: string | null
+          proveedor_nombre: string
+          tipo_camion_id?: string | null
+        }
+        Update: {
+          actualizado_at?: string
+          costo_clp?: number
+          cotizacion_id?: string
+          creado_at?: string
+          estado?: string
+          id?: string
+          notas?: string | null
+          operador_id?: string
+          proveedor_contacto_id?: string | null
+          proveedor_nombre?: string
+          tipo_camion_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "propuestas_proveedor_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propuestas_proveedor_proveedor_contacto_id_fkey"
+            columns: ["proveedor_contacto_id"]
+            isOneToOne: false
+            referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propuestas_proveedor_tipo_camion_id_fkey"
+            columns: ["tipo_camion_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_camion"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rates: {
         Row: {
