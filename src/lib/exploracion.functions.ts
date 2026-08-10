@@ -24,7 +24,14 @@ export type Propuesta = {
 /** Abre la exploración de proveedores para una cotización en estado 'nueva'. */
 export const abrirExploracion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ cotizacion_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        cotizacion_id: z.string().uuid(),
+        duracion_horas: z.coerce.number().positive().max(72).default(3),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await rolesDe(supabase as never, userId);
@@ -43,13 +50,17 @@ export const abrirExploracion = createServerFn({ method: "POST" })
       throw new Error("La exploración solo se abre desde el estado 'nueva'.");
     }
 
+    const ahora = new Date();
+    const limite = new Date(ahora.getTime() + data.duracion_horas * 3_600_000);
+
     const { error } = await supabase
       .from("cotizaciones")
       .update({
         estado: "en_exploracion",
-        exploracion_abierta_at: new Date().toISOString(),
+        exploracion_abierta_at: ahora.toISOString(),
         exploracion_abierta_por: userId,
-        updated_at: new Date().toISOString(),
+        exploracion_limite_at: limite.toISOString(),
+        updated_at: ahora.toISOString(),
       } as never)
       .eq("id", data.cotizacion_id);
     if (error) throw new Error(error.message);
@@ -59,11 +70,19 @@ export const abrirExploracion = createServerFn({ method: "POST" })
       tabla_nombre: "cotizaciones",
       registro_id: data.cotizacion_id,
       accion: "exploracion_abierta",
-      datos_nuevos: { estado: "en_exploracion" },
+      datos_nuevos: {
+        estado: "en_exploracion",
+        duracion_horas: data.duracion_horas,
+        exploracion_limite_at: limite.toISOString(),
+      },
       usuario_id: userId,
     } as never);
 
-    return { ok: true, estado: "en_exploracion" };
+    return {
+      ok: true,
+      estado: "en_exploracion",
+      exploracion_limite_at: limite.toISOString(),
+    };
   });
 
 const propuestaSchema = z.object({
