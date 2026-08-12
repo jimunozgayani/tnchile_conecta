@@ -596,7 +596,7 @@ function AbrirExploracionSelector({
 
 const TIPOS_PAGO = [
   { value: "contado", label: "Contado" },
-  { value: "anticipo", label: "Anticipo" },
+  { value: "50_50", label: "Anticipo (50/50)" },
   { value: "15_dias", label: "15 días" },
   { value: "30_dias", label: "30 días" },
 ];
