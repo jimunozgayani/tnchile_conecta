@@ -489,7 +489,17 @@ export function CotizacionDrawer({
                   {pdfBusy ? "Generando PDF…" : "Descargar PDF"}
                 </button>
               )}
+              {f.estado === "lista_para_operar" && puedeGate3 && (
+                <Gate3Actions
+                  id={f.id}
+                  onDone={(patch: Record<string, unknown>) => {
+                    onChanged(patch);
+                    void fichaQuery.refetch();
+                  }}
+                />
+              )}
             </div>
+
           </div>
         )}
 
