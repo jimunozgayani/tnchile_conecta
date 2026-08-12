@@ -832,7 +832,7 @@ function PropuestaModal({
           <input
             type="number"
             min={1}
-            step={1000}
+            step={1}
             value={costo}
             onChange={(e) => setCosto(e.target.value)}
             className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
