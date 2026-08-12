@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { X, UserCircle2, AlertTriangle, Loader2, Download, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedUrl } from "@/lib/signed-url";
+import { Gate3Actions } from "@/components/Gate3Actions";
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
@@ -182,6 +183,7 @@ export function CotizacionDrawer({
 }) {
   const puedeTodo = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
   const puedeNotas = puedeTodo || roles.includes("comercial");
+  const puedeGate3 = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
 
   const guardarNotas = useServerFn(actualizarCotizacion);
   const actualizarEstado = useServerFn(actualizarEstadoCotizacion);
