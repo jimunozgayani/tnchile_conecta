@@ -596,7 +596,7 @@ function AbrirExploracionSelector({
 
 const TIPOS_PAGO = [
   { value: "contado", label: "Contado" },
-  { value: "anticipo", label: "Anticipo" },
+  { value: "50_50", label: "Anticipo (50/50)" },
   { value: "15_dias", label: "15 días" },
   { value: "30_dias", label: "30 días" },
 ];
@@ -651,7 +651,7 @@ function GanadoraModal({
           <input
             type="number"
             min={1}
-            step={1000}
+            step={1}
             value={precio}
             onChange={(e) => setPrecio(e.target.value)}
             className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
