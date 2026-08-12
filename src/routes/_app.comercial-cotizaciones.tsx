@@ -18,6 +18,8 @@ import { ESTADOS_OPERACIONES } from "@/lib/cotizaciones-transiciones";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
 import { CountdownBadge } from "@/components/ExploracionCountdown";
+import { Gate3Actions } from "@/components/Gate3Actions";
+
 import { createContacto } from "@/lib/contactos.functions";
 import { fmtCLP } from "@/lib/regiones-capitales";
 import {
