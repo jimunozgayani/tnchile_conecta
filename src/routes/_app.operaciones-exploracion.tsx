@@ -12,6 +12,7 @@ import {
   agregarPropuesta,
   elegirGanadoraYFijarPrecio,
   listarPropuestas,
+  resolverExploracionVencida,
   type Propuesta,
 } from "@/lib/exploracion.functions";
 import {
@@ -218,11 +219,14 @@ function ExploracionPage() {
   const [detalle, setDetalle] = useState<Record<string, boolean>>({});
   const [abrirPara, setAbrirPara] = useState<Carga | null>(null);
   const [ganadoraPara, setGanadoraPara] = useState<Propuesta | null>(null);
+  const [reabrirPara, setReabrirPara] = useState<Carga | null>(null);
+  const [rechazarPara, setRechazarPara] = useState<Carga | null>(null);
 
   const fetchPropuestas = useServerFn(listarPropuestas);
   const abrir = useServerFn(abrirExploracion);
   const agregar = useServerFn(agregarPropuesta);
   const elegir = useServerFn(elegirGanadoraYFijarPrecio);
+  const resolver = useServerFn(resolverExploracionVencida);
 
   const puedeAbrir = roles.includes("admin") || roles.includes("jefe_operaciones");
   const puedeElegir = roles.includes("admin") || roles.includes("lider_cuenta");
@@ -241,7 +245,7 @@ function ExploracionPage() {
         .select(
           "id, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, fotos, exploracion_abierta_at, exploracion_limite_at",
         )
-        .in("estado", ["nueva", "en_exploracion"])
+        .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
         .order("created_at", { ascending: false }),
       supabase.from("tipos_camion").select("id, nombre").eq("activo", true).order("orden"),
       supabase.from("contactos").select("id, nombre, empresa").is("deleted_at", null).order("nombre"),
@@ -343,6 +347,34 @@ function ExploracionPage() {
     }
   }
 
+  async function onResolver(
+    c: Carga,
+    accion: "reabrir" | "volver_nueva" | "rechazar",
+    horas = 3,
+    comentarios: string | null = null,
+  ) {
+    setBusy(c.id);
+    try {
+      await resolver({
+        data: { cotizacion_id: c.id, accion, duracion_horas: horas, comentarios },
+      });
+      toast.success(
+        accion === "reabrir"
+          ? `Exploración reabierta por ${horas} h.`
+          : accion === "volver_nueva"
+            ? "La carga volvió al estado nueva."
+            : "Cotización rechazada.",
+      );
+      setReabrirPara(null);
+      setRechazarPara(null);
+      await cargar();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo resolver la exploración.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
       <header className="mb-6">
@@ -367,6 +399,14 @@ function ExploracionPage() {
             const abierto = !!detalle[c.id];
             return (
               <li key={c.id} className="rounded-lg border bg-card p-4 shadow-sm">
+                {c.estado === "exploracion_vencida" && (
+                  <div className="mb-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>
+                      Tiempo vencido — esperando revisión de Líder de Cuenta / Admin.
+                    </span>
+                  </div>
+                )}
                 {c.estado === "en_exploracion" && c.exploracion_limite_at && (
                   <div className="mb-2">
                     <CountdownBadge
@@ -397,10 +437,16 @@ function ExploracionPage() {
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                       c.estado === "en_exploracion"
                         ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground"
+                        : c.estado === "exploracion_vencida"
+                          ? "bg-destructive/15 text-destructive"
+                          : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {c.estado === "en_exploracion" ? "En exploración" : "Nueva"}
+                    {c.estado === "en_exploracion"
+                      ? "En exploración"
+                      : c.estado === "exploracion_vencida"
+                        ? "Tiempo vencido"
+                        : "Nueva"}
                   </span>
                 </div>
 
@@ -443,6 +489,48 @@ function ExploracionPage() {
                   <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <AlertCircle className="h-3.5 w-3.5" />
                     Esperando que administración abra la exploración.
+                  </p>
+                )}
+
+                {c.estado === "exploracion_vencida" && puedeElegir && (
+                  <div className="mt-4 border-t pt-3">
+                    {reabrirPara?.id === c.id ? (
+                      <AbrirExploracionSelector
+                        busy={busy === c.id}
+                        onCancel={() => setReabrirPara(null)}
+                        onConfirm={(h) => void onResolver(c, "reabrir", h)}
+                      />
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setReabrirPara(c)}
+                          disabled={busy === c.id}
+                          className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                        >
+                          <Search className="h-4 w-4" /> Reabrir exploración
+                        </button>
+                        <button
+                          onClick={() => void onResolver(c, "volver_nueva")}
+                          disabled={busy === c.id}
+                          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent disabled:opacity-60"
+                        >
+                          Volver a nueva
+                        </button>
+                        <button
+                          onClick={() => setRechazarPara(c)}
+                          disabled={busy === c.id}
+                          className="inline-flex items-center gap-2 rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+                        >
+                          <X className="h-4 w-4" /> Rechazar cotización
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {c.estado === "exploracion_vencida" && !puedeElegir && (
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Solo administración o líder de cuenta puede decidir el siguiente paso.
                   </p>
                 )}
 
@@ -526,6 +614,15 @@ function ExploracionPage() {
             setModalCarga(null);
             await cargar();
           }}
+        />
+      )}
+
+      {rechazarPara && (
+        <RechazoModal
+          carga={rechazarPara}
+          busy={busy === rechazarPara.id}
+          onClose={() => setRechazarPara(null)}
+          onConfirm={(motivo) => void onResolver(rechazarPara, "rechazar", 3, motivo)}
         />
       )}
 
@@ -881,6 +978,58 @@ function PropuestaModal({
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+function RechazoModal({
+  carga,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  carga: Carga;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (motivo: string) => void;
+}) {
+  const [motivo, setMotivo] = useState("");
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-lg border bg-card p-4 shadow-lg">
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-lg font-semibold">Rechazar cotización</h2>
+          <button onClick={onClose} aria-label="Cerrar" className="text-muted-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {carga.contacto_nombre ?? "Sin contacto"} · {carga.origen}
+        </p>
+        <label className="mt-3 block text-sm font-medium" htmlFor="motivo-rechazo">
+          Motivo del rechazo
+        </label>
+        <textarea
+          id="motivo-rechazo"
+          value={motivo}
+          onChange={(e) => setMotivo(e.target.value)}
+          rows={3}
+          className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          placeholder="Sin proveedores disponibles, cliente desistió, etc."
+        />
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md border px-3 py-2 text-sm font-medium">
+            Cancelar
+          </button>
+          <button
+            onClick={() => onConfirm(motivo.trim())}
+            disabled={busy || motivo.trim().length === 0}
+            className="inline-flex items-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-60"
+          >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Rechazar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
