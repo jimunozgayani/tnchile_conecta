@@ -1648,6 +1648,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cerrar_exploraciones_vencidas: { Args: never; Returns: undefined }
       chofer_driver_ids: { Args: { _uid: string }; Returns: string[] }
       crear_solicitud_carga: { Args: { _payload: Json }; Returns: string }
       elegir_ganadora_y_fijar_precio: {
