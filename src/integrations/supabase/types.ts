@@ -1279,6 +1279,7 @@ export type Database = {
           operador_id: string
           proveedor_contacto_id: string | null
           proveedor_nombre: string
+          ronda: number
           tipo_camion_id: string | null
         }
         Insert: {
@@ -1292,6 +1293,7 @@ export type Database = {
           operador_id: string
           proveedor_contacto_id?: string | null
           proveedor_nombre: string
+          ronda?: number
           tipo_camion_id?: string | null
         }
         Update: {
@@ -1305,6 +1307,7 @@ export type Database = {
           operador_id?: string
           proveedor_contacto_id?: string | null
           proveedor_nombre?: string
+          ronda?: number
           tipo_camion_id?: string | null
         }
         Relationships: [

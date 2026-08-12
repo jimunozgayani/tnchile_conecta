@@ -463,7 +463,15 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
       onPatch(c.id, {
         estado: res.estado,
         revision_count: res.revision_count,
-        ...(estado === "en_revision" ? { comentarios_revision: comentario ?? null } : {}),
+        ...(estado === "en_revision"
+          ? {
+              comentarios_revision: comentario ?? null,
+              exploracion_abierta_at: null,
+              exploracion_limite_at: null,
+              costo_proveedor_fijado_clp: null,
+              propuesta_ganadora_id: null,
+            }
+          : {}),
       });
       if (estado === "lista_para_operar") {
         try {

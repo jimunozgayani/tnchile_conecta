@@ -19,6 +19,7 @@ export type Propuesta = {
   notas: string | null;
   estado: string;
   creado_at: string;
+  ronda: number;
 };
 
 /** Abre la exploración de proveedores para una cotización en estado 'nueva'. */
@@ -105,7 +106,7 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
 
     const { data: cot, error: rErr } = await supabase
       .from("cotizaciones")
-      .select("id, estado")
+      .select("id, estado, revision_count")
       .eq("id", data.cotizacion_id)
       .maybeSingle();
     if (rErr) throw new Error(rErr.message);
@@ -113,6 +114,10 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
     if ((cot as { estado: string }).estado !== "en_exploracion") {
       throw new Error("La exploración de esta carga no está abierta.");
     }
+
+    // La ronda de exploración se deriva de revision_count: cada vez que la
+    // cotización vuelve a 'nueva' por revisión, empieza una ronda nueva.
+    const ronda = ((cot as { revision_count: number | null }).revision_count ?? 0) + 1;
 
     const { data: row, error } = await supabase
       .from("propuestas_proveedor")
@@ -125,6 +130,7 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
         tipo_camion_id: data.tipo_camion_id || null,
         notas: (data.notas ?? "").trim() || null,
         estado: "propuesta",
+        ronda,
       } as never)
       .select("id")
       .single();
@@ -139,6 +145,7 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
         cotizacion_id: data.cotizacion_id,
         proveedor_nombre: data.proveedor_nombre,
         costo_clp: data.costo_clp,
+        ronda,
       },
       usuario_id: userId,
     } as never);
@@ -207,7 +214,7 @@ export const listarPropuestas = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabase
       .from("propuestas_proveedor")
       .select(
-        "id, cotizacion_id, operador_id, proveedor_nombre, proveedor_contacto_id, costo_clp, tipo_camion_id, notas, estado, creado_at",
+        "id, cotizacion_id, operador_id, proveedor_nombre, proveedor_contacto_id, costo_clp, tipo_camion_id, notas, estado, creado_at, ronda",
       )
       .in("cotizacion_id", data.cotizacion_ids)
       .order("costo_clp", { ascending: true });

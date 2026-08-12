@@ -206,6 +206,62 @@ function DetalleCarga({ c }: { c: Carga }) {
   );
 }
 
+/** Separa las propuestas de la ronda vigente de las de rondas anteriores. */
+function propsActuales(list: Propuesta[]): {
+  actuales: Propuesta[];
+  anteriores: { ronda: number; items: Propuesta[] }[];
+} {
+  if (list.length === 0) return { actuales: [], anteriores: [] };
+  const max = Math.max(...list.map((p) => p.ronda ?? 1));
+  const actuales = list.filter((p) => (p.ronda ?? 1) === max);
+  const grupos = new Map<number, Propuesta[]>();
+  for (const p of list) {
+    const r = p.ronda ?? 1;
+    if (r === max) continue;
+    grupos.set(r, [...(grupos.get(r) ?? []), p]);
+  }
+  const anteriores = [...grupos.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([ronda, items]) => ({ ronda, items }));
+  return { actuales, anteriores };
+}
+
+function RondasAnteriores({ rondas }: { rondas: { ronda: number; items: Propuesta[] }[] }) {
+  if (rondas.length === 0) return null;
+  return (
+    <div className="mt-3 space-y-2">
+      {rondas.map(({ ronda, items }) => {
+        const fecha = items
+          .map((i) => i.creado_at)
+          .sort()
+          .at(-1);
+        return (
+          <details key={ronda} className="rounded-md border border-dashed bg-muted/20 px-3 py-2">
+            <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+              Ronda anterior {rondas.length > 1 ? `#${ronda} ` : ""}
+              {fecha ? `— ${new Date(fecha).toLocaleDateString("es-CL")}` : ""} ({items.length})
+            </summary>
+            <ul className="mt-2 space-y-1.5 opacity-60">
+              {items.map((p) => (
+                <li key={p.id} className="rounded-md bg-muted/40 px-2.5 py-1.5">
+                  <p className="truncate text-sm text-muted-foreground">
+                    {p.proveedor_nombre} · {clp(p.costo_clp)}
+                    {p.estado === "ganadora" ? " · ganadora" : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.operador_nombre}
+                    {p.notas ? ` · ${p.notas}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </details>
+        );
+      })}
+    </div>
+  );
+}
+
 function ExploracionPage() {
   const [cargas, setCargas] = useState<Carga[]>([]);
   const [propuestas, setPropuestas] = useState<Propuesta[]>([]);
@@ -537,13 +593,13 @@ function ExploracionPage() {
                 {c.estado === "en_exploracion" && (
                   <div className="mt-4 border-t pt-3">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Propuestas ({props.length})
+                      Propuestas ({propsActuales(props).actuales.length})
                     </p>
-                    {props.length === 0 ? (
+                    {propsActuales(props).actuales.length === 0 ? (
                       <p className="text-sm text-muted-foreground">Aún no hay propuestas.</p>
                     ) : (
                       <ul className="space-y-2">
-                        {props.map((p) => {
+                        {propsActuales(props).actuales.map((p) => {
                           const badge =
                             ESTADO_PROPUESTA[p.estado] ?? {
                               label: String(p.estado),
@@ -587,6 +643,8 @@ function ExploracionPage() {
                         })}
                       </ul>
                     )}
+
+                    <RondasAnteriores rondas={propsActuales(props).anteriores} />
 
                     <button
                       onClick={() => setModalCarga(c)}

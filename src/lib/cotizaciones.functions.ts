@@ -131,7 +131,13 @@ export const actualizarEstadoCotizacion = createServerFn({ method: "POST" })
       revisionCount += 1;
       patch["revision_count"] = revisionCount;
       patch["comentarios_revision"] = comentario;
-      patch["estado"] = "cotizada";
+      // Vuelve al inicio del flujo para poder re-explorar desde cero.
+      patch["estado"] = "nueva";
+      patch["exploracion_abierta_at"] = null;
+      patch["exploracion_abierta_por"] = null;
+      patch["exploracion_limite_at"] = null;
+      patch["costo_proveedor_fijado_clp"] = null;
+      patch["propuesta_ganadora_id"] = null;
     } else if (data.estado === "rechazada") {
       patch["comentarios_rechazo"] = comentario;
       patch["rechazada_at"] = new Date().toISOString();
@@ -150,7 +156,7 @@ export const actualizarEstadoCotizacion = createServerFn({ method: "POST" })
     const { error: aErr } = await supabaseAdmin.from("audit_log").insert({
       tabla_nombre: "cotizaciones",
       registro_id: data.id,
-      accion: `estado_${data.estado}`,
+      accion: data.estado === "en_revision" ? "revision_vuelve_a_nueva" : `estado_${data.estado}`,
       datos_nuevos: {
         estado: data.estado,
         comentario: comentario || null,
