@@ -242,3 +242,85 @@ export const listarPropuestas = createServerFn({ method: "POST" })
 
     return list.map((r) => ({ ...r, operador_nombre: nombres.get(r.operador_id) ?? "—" }));
   });
+
+/**
+ * Resuelve una exploración cerrada automáticamente por vencimiento de plazo:
+ * reabrirla con un nuevo plazo, devolverla a 'nueva' o rechazar la cotización.
+ */
+export const resolverExploracionVencida = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        cotizacion_id: z.string().uuid(),
+        accion: z.enum(["reabrir", "volver_nueva", "rechazar"]),
+        duracion_horas: z.coerce.number().positive().max(72).default(3),
+        comentarios: z.string().trim().max(2000).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!OPS_GANADORA.some((r) => roles.includes(r))) {
+      throw new Error("Solo admin o líder de cuenta puede resolver una exploración vencida.");
+    }
+
+    const { data: cot, error: rErr } = await supabase
+      .from("cotizaciones")
+      .select("id, estado")
+      .eq("id", data.cotizacion_id)
+      .maybeSingle();
+    if (rErr) throw new Error(rErr.message);
+    if (!cot) throw new Error("Cotización no encontrada.");
+    if ((cot as { estado: string }).estado !== "exploracion_vencida") {
+      throw new Error("Esta carga no está en estado 'exploración vencida'.");
+    }
+
+    const ahora = new Date();
+    let patch: Record<string, unknown>;
+    let estado: string;
+
+    if (data.accion === "reabrir") {
+      const limite = new Date(ahora.getTime() + data.duracion_horas * 3_600_000);
+      estado = "en_exploracion";
+      patch = {
+        estado,
+        exploracion_abierta_at: ahora.toISOString(),
+        exploracion_abierta_por: userId,
+        exploracion_limite_at: limite.toISOString(),
+      };
+    } else if (data.accion === "volver_nueva") {
+      estado = "nueva";
+      patch = {
+        estado,
+        exploracion_abierta_at: null,
+        exploracion_abierta_por: null,
+        exploracion_limite_at: null,
+      };
+    } else {
+      estado = "rechazada";
+      patch = {
+        estado,
+        comentarios_rechazo: (data.comentarios ?? "").trim() || null,
+        rechazada_at: ahora.toISOString(),
+      };
+    }
+
+    const { error } = await supabase
+      .from("cotizaciones")
+      .update({ ...patch, updated_at: ahora.toISOString() } as never)
+      .eq("id", data.cotizacion_id);
+    if (error) throw new Error(error.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("audit_log").insert({
+      tabla_nombre: "cotizaciones",
+      registro_id: data.cotizacion_id,
+      accion: "exploracion_vencida_resuelta",
+      datos_nuevos: { accion: data.accion, estado, ...patch },
+      usuario_id: userId,
+    } as never);
+
+    return { ok: true, estado };
+  });

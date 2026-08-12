@@ -73,7 +73,7 @@ type Columna = { label: string; estados: string[]; zona: Zona };
 const COLUMNAS: Columna[] = [
   {
     label: "Nueva",
-    estados: ["nueva", "pendiente", "en_exploracion", "costo_fijado"],
+    estados: ["nueva", "pendiente", "en_exploracion", "exploracion_vencida", "costo_fijado"],
     zona: "comercial",
   },
   { label: "Cotizada", estados: ["cotizada", "en_revision"], zona: "comercial" },
@@ -91,6 +91,7 @@ const ZONA_COMERCIAL_ESTADOS = [
   "nueva",
   "pendiente",
   "en_exploracion",
+  "exploracion_vencida",
   "costo_fijado",
   "cotizada",
   "en_revision",
@@ -599,6 +600,12 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
           </span>
           <CountdownBadge limiteAt={c.exploracion_limite_at} className="text-[10px]" />
         </div>
+      )}
+
+      {c.estado === "exploracion_vencida" && (
+        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+          ⏰ Tiempo vencido — esperando revisión
+        </span>
       )}
 
       {c.estado === "costo_fijado" && (
