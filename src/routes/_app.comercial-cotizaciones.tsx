@@ -631,7 +631,12 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
 
       {c.estado === "lista_para_operar" && puedeAsignar && (
         <div className="mt-2 border-t pt-2">
-          <Gate3Actions id={c.id} size="xs" onDone={(patch) => onPatch(c.id, patch as Partial<Cotizacion>)} />
+          <Gate3Actions
+            id={c.id}
+            size="xs"
+            onDone={(patch: Record<string, unknown>) => onPatch(c.id, patch as Partial<Cotizacion>)}
+          />
+
         </div>
       )}
 
