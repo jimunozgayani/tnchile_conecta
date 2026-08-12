@@ -1650,6 +1650,15 @@ export type Database = {
     Functions: {
       chofer_driver_ids: { Args: { _uid: string }; Returns: string[] }
       crear_solicitud_carga: { Args: { _payload: Json }; Returns: string }
+      elegir_ganadora_y_fijar_precio: {
+        Args: {
+          p_precio_ofrecido_cliente_clp: number
+          p_propuesta_id: string
+          p_tipo_pago?: string
+          p_validez_hasta?: string
+        }
+        Returns: undefined
+      }
       get_admin_dashboard_stats: {
         Args: never
         Returns: unknown
