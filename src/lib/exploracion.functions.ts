@@ -154,7 +154,7 @@ export const elegirGanadoraYFijarPrecio = createServerFn({ method: "POST" })
       .object({
         propuesta_id: z.string().uuid(),
         precio_ofrecido_cliente_clp: z.coerce.number().positive().max(999_999_999),
-        tipo_pago: z.enum(["contado", "anticipo", "15_dias", "30_dias"]).optional().nullable(),
+        tipo_pago: z.enum(["contado", "50_50", "15_dias", "30_dias"]).optional().nullable(),
         validez_hasta: z.string().trim().min(1).optional().nullable(),
       })
       .parse(d),
