@@ -25,6 +25,7 @@ export type MiembroOperaciones = {
 export type Meta = {
   id: string;
   rol: string;
+  user_id: string | null;
   periodo: string;
   descripcion: string;
   valor_objetivo: number | null;
@@ -192,6 +193,7 @@ export const crearMeta = createServerFn({ method: "POST" })
         descripcion: z.string().trim().min(3).max(300),
         valor_objetivo: z.number().positive(),
         unidad: z.enum(["operaciones", "CLP", "%"]),
+        user_id: z.string().uuid().nullable().optional(),
       })
       .parse(d),
   )
@@ -215,9 +217,10 @@ export const crearMeta = createServerFn({ method: "POST" })
         descripcion: data.descripcion,
         valor_objetivo: data.valor_objetivo,
         unidad: data.unidad,
+        user_id: data.user_id ?? null,
         creado_por: context.userId,
       } as never)
-      .select("id, rol, periodo, descripcion, valor_objetivo, valor_actual, unidad")
+      .select("id, rol, user_id, periodo, descripcion, valor_objetivo, valor_actual, unidad")
       .single();
     if (error) throw new Error(error.message);
 
@@ -253,7 +256,7 @@ export const obtenerMetas = createServerFn({ method: "POST" })
     ]);
     const { data: metas, error } = await context.supabase
       .from("metas")
-      .select("id, rol, periodo, descripcion, valor_objetivo, valor_actual, unidad")
+      .select("id, rol, user_id, periodo, descripcion, valor_objetivo, valor_actual, unidad")
       .eq("rol", data.rol)
       .eq("periodo", data.periodo)
       .order("created_at", { ascending: true });

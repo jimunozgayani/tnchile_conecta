@@ -120,7 +120,7 @@ export function SinAsignarAlert({ count }: { count: number }) {
   );
 }
 
-function ProgressBar({ meta }: { meta: Meta }) {
+export function ProgressBar({ meta }: { meta: Meta }) {
   const objetivo = Number(meta.valor_objetivo ?? 0);
   const actual = Number(meta.valor_actual ?? 0);
   const pct = objetivo > 0 ? Math.min(100, Math.round((actual / objetivo) * 100)) : 0;
@@ -205,12 +205,12 @@ export function MetasEquipo({
       </header>
       <div className="space-y-4 px-5 py-4">
         {isLoading && <p className="text-sm text-muted-foreground">Cargando metas…</p>}
-        {!isLoading && (metas ?? []).length === 0 && (
+        {!isLoading && (metas ?? []).filter((m) => !m.user_id).length === 0 && (
           <p className="text-sm text-muted-foreground">
             Aún no hay metas definidas para este período.
           </p>
         )}
-        {(metas ?? []).map((m) => (
+        {(metas ?? []).filter((m) => !m.user_id).map((m) => (
           <ProgressBar key={m.id} meta={m} />
         ))}
       </div>
