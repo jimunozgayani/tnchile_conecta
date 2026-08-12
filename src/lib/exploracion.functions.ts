@@ -175,49 +175,14 @@ export const elegirGanadoraYFijarPrecio = createServerFn({ method: "POST" })
     if (!prop) throw new Error("Propuesta no encontrada.");
     const p = prop as { id: string; cotizacion_id: string; costo_clp: number; proveedor_nombre: string };
 
-    const ahora = new Date().toISOString();
-
-    const { error: gErr } = await supabase
-      .from("propuestas_proveedor")
-      .update({ estado: "ganadora", actualizado_at: ahora } as never)
-      .eq("id", p.id);
-    if (gErr) throw new Error(gErr.message);
-
-    const { error: dErr } = await supabase
-      .from("propuestas_proveedor")
-      .update({ estado: "descartada", actualizado_at: ahora } as never)
-      .eq("cotizacion_id", p.cotizacion_id)
-      .neq("id", p.id);
-    if (dErr) throw new Error(dErr.message);
-
-    const { error: cErr } = await supabase
-      .from("cotizaciones")
-      .update({
-        costo_proveedor_fijado_clp: p.costo_clp,
-        propuesta_ganadora_id: p.id,
-        precio_ofrecido_cliente_clp: data.precio_ofrecido_cliente_clp,
-        ...(data.tipo_pago ? { tipo_pago: data.tipo_pago } : {}),
-        ...(data.validez_hasta ? { validez_hasta: data.validez_hasta } : {}),
-        estado: "cotizada",
-        updated_at: ahora,
-      } as never)
-      .eq("id", p.cotizacion_id);
-    if (cErr) throw new Error(cErr.message);
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("audit_log").insert({
-      tabla_nombre: "propuestas_proveedor",
-      registro_id: p.id,
-      accion: "ganadora_elegida_y_cotizada",
-      datos_nuevos: {
-        propuesta_id: p.id,
-        cotizacion_id: p.cotizacion_id,
-        proveedor_nombre: p.proveedor_nombre,
-        costo_clp: p.costo_clp,
-        precio_ofrecido_cliente_clp: data.precio_ofrecido_cliente_clp,
-      },
-      usuario_id: userId,
+    // Una sola transacción atómica en la base de datos (incluye el audit_log).
+    const { error: rpcErr } = await supabase.rpc("elegir_ganadora_y_fijar_precio", {
+      p_propuesta_id: p.id,
+      p_precio_ofrecido_cliente_clp: data.precio_ofrecido_cliente_clp,
+      p_tipo_pago: data.tipo_pago ?? null,
+      p_validez_hasta: data.validez_hasta ?? null,
     } as never);
+    if (rpcErr) throw new Error(rpcErr.message);
 
     return {
       ok: true,
