@@ -627,6 +627,14 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
         <p className="mt-1.5 text-[10px] italic text-muted-foreground">En manos de Operaciones</p>
       )}
 
+      {c.estado === "lista_para_operar" && puedeAsignar && (
+        <div className="mt-2 border-t pt-2">
+          <Gate3Actions id={c.id} size="xs" onDone={(patch) => onPatch(c.id, patch as Partial<Cotizacion>)} />
+        </div>
+      )}
+
+
+
       {/* Chip de asignación */}
       <div className="relative mt-2 border-t pt-1.5">
         <button
