@@ -834,6 +834,7 @@ export type Database = {
           rol: string
           unidad: string | null
           updated_at: string
+          user_id: string | null
           valor_actual: number | null
           valor_objetivo: number | null
         }
@@ -846,6 +847,7 @@ export type Database = {
           rol: string
           unidad?: string | null
           updated_at?: string
+          user_id?: string | null
           valor_actual?: number | null
           valor_objetivo?: number | null
         }
@@ -858,6 +860,7 @@ export type Database = {
           rol?: string
           unidad?: string | null
           updated_at?: string
+          user_id?: string | null
           valor_actual?: number | null
           valor_objetivo?: number | null
         }
@@ -1206,6 +1209,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           cargo: string | null
           certificado_sii_url: string | null
           correo: string | null
@@ -1224,6 +1228,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           cargo?: string | null
           certificado_sii_url?: string | null
           correo?: string | null
@@ -1242,6 +1247,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           cargo?: string | null
           certificado_sii_url?: string | null
           correo?: string | null
