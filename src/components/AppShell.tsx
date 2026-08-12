@@ -36,9 +36,9 @@ const OPERACIONES_NAV = [
 
 const COMERCIAL_NAV = [
   { to: "/comercial-solicitudes", label: "Solicitudes", icon: Inbox },
-  { to: "/comercial", label: "Comercial", icon: Handshake },
+  { to: "/comercial", label: "Mi Perfil", icon: Handshake },
   { to: "/comercial-contactos", label: "Contactos", icon: Users },
-  { to: "/comercial-cotizaciones", label: "Cotizaciones", icon: FileText },
+  { to: "/comercial-cotizaciones", label: "Mi Cartera", icon: FileText },
 ] as const;
 
 
