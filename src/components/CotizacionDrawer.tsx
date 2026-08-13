@@ -630,9 +630,17 @@ function ComentarioSimple({
 }) {
   const [txt, setTxt] = useState("");
   const valido = txt.trim().length >= 10;
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+
+  // FIX 1 + FIX 2: portaling to document.body and stopping propagation on the
+  // inner content box so clicks inside the modal never reach the parent
+  // overlay's onClose handler.
+  const content: ReactNode = (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+      onClick={onCancel}
+    >
       <form
+        onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault();
           if (valido) onSubmit(txt.trim());
@@ -650,6 +658,10 @@ function ComentarioSimple({
           placeholder="Comentario (mínimo 10 caracteres)"
           className="w-full rounded-md border bg-background px-3 py-2 text-sm"
         />
+        {/* FIX 3: visible character counter hint */}
+        <p className="text-right text-xs text-muted-foreground">
+          {txt.trim().length}/10 caracteres mínimo
+        </p>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onCancel} className="rounded-md border px-4 py-2 text-sm">
             Cancelar
@@ -665,4 +677,8 @@ function ComentarioSimple({
       </form>
     </div>
   );
+
+  // Render at the top level of the DOM to avoid stacking/scroll-context
+  // issues with the drawer's overlay.
+  return createPortal(content, document.body);
 }
