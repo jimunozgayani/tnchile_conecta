@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { subirArchivoCargaPublica } from "@/lib/carga-publica.functions";
 
 import { Logo } from "@/components/Logo";
+import { enviarSolicitudPublica } from "@/lib/public-rpc.functions";
 import { pageHead } from "@/lib/page-head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ const ACCEPTED = ["image/jpeg", "image/jpg", "image/png", "image/webp", "applica
 function NuevaCargaPage() {
   const navigate = useNavigate();
   const subirArchivo = useServerFn(subirArchivoCargaPublica);
+  const enviarSolicitud = useServerFn(enviarSolicitudPublica);
 
   const [step, setStep] = useState(1);
   const [enviando, setEnviando] = useState(false);
@@ -157,35 +159,35 @@ function NuevaCargaPage() {
 
     const toCm = (v: string) => (v ? String(Number(v) * 100) : "");
 
-    const { data, error } = await supabase.rpc("crear_solicitud_carga", {
-      _payload: {
-        nombre,
-        empresa,
-        rut,
-        telefono,
-        email,
-        origen,
-        destinos: [{ destino }],
-        tipo_camion_id: tipoCamionId === "otro" ? "" : tipoCamionId,
-        tipo_camion_otro: tipoCamionId === "otro" ? tipoCamionOtro : "",
-        tipo_camion: tipoNombre,
-        peso_kg: pesoKg,
-        largo_cm: toCm(largo),
-        ancho_cm: toCm(ancho),
-        alto_cm: toCm(alto),
-        fecha_despacho: fechaTipo === "exacta" ? fechaExacta : "",
-        fotos: archivos,
-        lineas_servicio: [{ descripcion, cantidad: 1, precio_neto_clp: null }],
-        notas_admin: notas,
-      },
-    });
+    const payload = {
+      nombre,
+      empresa,
+      rut,
+      telefono,
+      email,
+      origen,
+      destinos: [{ destino }],
+      tipo_camion_id: tipoCamionId === "otro" ? "" : tipoCamionId,
+      tipo_camion_otro: tipoCamionId === "otro" ? tipoCamionOtro : "",
+      tipo_camion: tipoNombre,
+      peso_kg: pesoKg,
+      largo_cm: toCm(largo),
+      ancho_cm: toCm(ancho),
+      alto_cm: toCm(alto),
+      fecha_despacho: fechaTipo === "exacta" ? fechaExacta : "",
+      fotos: archivos,
+      lineas_servicio: [{ descripcion, cantidad: 1, precio_neto_clp: null }],
+      notas_admin: notas,
+    };
 
-    setEnviando(false);
-    if (error || !data) {
+    try {
+      const res = await enviarSolicitud({ data: payload as never });
+      setEnviando(false);
+      navigate({ to: "/nueva-carga/gracias", search: { ref: res.id } });
+    } catch {
+      setEnviando(false);
       toast.error("No pudimos enviar tu solicitud. Intenta nuevamente.");
-      return;
     }
-    navigate({ to: "/nueva-carga/gracias", search: { ref: data as string } });
   }
 
   return (

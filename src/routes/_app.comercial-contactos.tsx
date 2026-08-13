@@ -68,11 +68,10 @@ function ComercialContactosPage() {
   const listQuery = useQuery({
     queryKey: ["contactos", tipos, temp, q, readOnly],
     queryFn: async () => {
-      // Operaciones (solo lectura) usa la vista sin datos bancarios.
-      let query = (readOnly
-        ? supabase.from("contactos_operaciones" as never).select("*")
-        : supabase.from("contactos").select("*")
-      )
+      // La agenda siempre se lee desde la vista sin datos bancarios.
+      let query = supabase
+        .from("contactos_operaciones" as never)
+        .select("*")
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(300);
