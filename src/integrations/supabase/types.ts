@@ -1281,6 +1281,7 @@ export type Database = {
           proveedor_nombre: string
           ronda: number
           tipo_camion_id: string | null
+          tipo_pago: string | null
         }
         Insert: {
           actualizado_at?: string
@@ -1295,6 +1296,7 @@ export type Database = {
           proveedor_nombre: string
           ronda?: number
           tipo_camion_id?: string | null
+          tipo_pago?: string | null
         }
         Update: {
           actualizado_at?: string
@@ -1309,6 +1311,7 @@ export type Database = {
           proveedor_nombre?: string
           ronda?: number
           tipo_camion_id?: string | null
+          tipo_pago?: string | null
         }
         Relationships: [
           {
