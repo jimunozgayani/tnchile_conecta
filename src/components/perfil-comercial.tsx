@@ -312,11 +312,13 @@ export function CargaDeTrabajoHoy({ userId }: { userId: string | null }) {
 export function MetasPersonales({
   userId,
   puedeCrear,
+  puedeSelfAsignar,
   mostrarEquipo,
   equipo,
 }: {
   userId: string | null;
   puedeCrear: boolean;
+  puedeSelfAsignar: boolean;
   mostrarEquipo: boolean;
   equipo: MiembroComercial[];
 }) {
@@ -326,7 +328,7 @@ export function MetasPersonales({
   const crear = useServerFn(crearMeta);
 
   const [open, setOpen] = useState(false);
-  const [destino, setDestino] = useState<string>("mi");
+  const [destino, setDestino] = useState<string>(puedeSelfAsignar ? "mi" : "equipo");
   const [descripcion, setDescripcion] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [unidad, setUnidad] = useState<"operaciones" | "CLP" | "%">("operaciones");
