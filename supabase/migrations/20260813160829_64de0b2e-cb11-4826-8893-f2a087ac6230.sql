@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.is_email_locked(text) FROM authenticated;
