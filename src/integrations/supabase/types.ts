@@ -429,6 +429,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cotizaciones_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "contactos_operaciones"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cotizaciones_propuesta_ganadora_id_fkey"
             columns: ["propuesta_ganadora_id"]
             isOneToOne: false
@@ -1051,6 +1058,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "operaciones_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: false
+            referencedRelation: "contactos_operaciones"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "operaciones_cotizacion_id_fkey"
             columns: ["cotizacion_id"]
             isOneToOne: false
@@ -1326,6 +1340,13 @@ export type Database = {
             columns: ["proveedor_contacto_id"]
             isOneToOne: false
             referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propuestas_proveedor_proveedor_contacto_id_fkey"
+            columns: ["proveedor_contacto_id"]
+            isOneToOne: false
+            referencedRelation: "contactos_operaciones"
             referencedColumns: ["id"]
           },
           {
@@ -1657,7 +1678,87 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contactos_operaciones: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          driver_id: string | null
+          email: string | null
+          empresa: string | null
+          etapa_comercial: string | null
+          id: string | null
+          nombre: string | null
+          notas: string | null
+          origen_contacto: string | null
+          profile_id: string | null
+          region: string | null
+          responsable_id: string | null
+          rut: string | null
+          telefono: string | null
+          temperatura: string | null
+          tipos: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          driver_id?: string | null
+          email?: string | null
+          empresa?: string | null
+          etapa_comercial?: string | null
+          id?: string | null
+          nombre?: string | null
+          notas?: string | null
+          origen_contacto?: string | null
+          profile_id?: string | null
+          region?: string | null
+          responsable_id?: string | null
+          rut?: string | null
+          telefono?: string | null
+          temperatura?: string | null
+          tipos?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          driver_id?: string | null
+          email?: string | null
+          empresa?: string | null
+          etapa_comercial?: string | null
+          id?: string | null
+          nombre?: string | null
+          notas?: string | null
+          origen_contacto?: string | null
+          profile_id?: string | null
+          region?: string | null
+          responsable_id?: string | null
+          rut?: string | null
+          telefono?: string | null
+          temperatura?: string | null
+          tipos?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contactos_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cerrar_exploraciones_vencidas: { Args: never; Returns: undefined }
