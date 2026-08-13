@@ -275,6 +275,7 @@ function ExploracionPage() {
   const [detalle, setDetalle] = useState<Record<string, boolean>>({});
   const [abrirPara, setAbrirPara] = useState<Carga | null>(null);
   const [ganadoraPara, setGanadoraPara] = useState<Propuesta | null>(null);
+  const [detallePropuesta, setDetallePropuesta] = useState<Propuesta | null>(null);
   const [reabrirPara, setReabrirPara] = useState<Carga | null>(null);
   const [rechazarPara, setRechazarPara] = useState<Carga | null>(null);
 
@@ -623,6 +624,15 @@ function ExploracionPage() {
                                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}>
                                   {badge.label}
                                 </span>
+                                {puedeElegir && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDetallePropuesta(p)}
+                                    className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-accent"
+                                  >
+                                    Ver detalle completo
+                                  </button>
+                                )}
                                 {puedeElegir && p.estado === "propuesta" && (
                                   <button
                                     onClick={() => setGanadoraPara(p)}
@@ -661,6 +671,11 @@ function ExploracionPage() {
       )}
 
       {modalCarga && (
+        <DetallePropuestaModal
+          propuesta={detallePropuesta}
+          tipos={tipos}
+          onClose={() => setDetallePropuesta(null)}
+        />
         <PropuestaModal
           carga={modalCarga}
           tipos={tipos}
@@ -869,6 +884,7 @@ type PropuestaForm = {
   costo_clp: number;
   tipo_camion_id: string | null;
   notas: string | null;
+  tipo_pago: string | null;
 };
 
 function PropuestaModal({
@@ -890,6 +906,7 @@ function PropuestaModal({
   const [costo, setCosto] = useState("");
   const [tipoId, setTipoId] = useState("");
   const [notas, setNotas] = useState("");
+  const [tipoPago, setTipoPago] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -918,6 +935,7 @@ function PropuestaModal({
         costo_clp: monto,
         tipo_camion_id: tipoId || null,
         notas: notas.trim() || null,
+        tipo_pago: tipoPago || null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar la propuesta.");
@@ -1011,6 +1029,22 @@ function PropuestaModal({
         </label>
 
         <label className="mt-3 block text-sm font-medium">
+          Condición de pago al proveedor
+          <select
+            value={tipoPago}
+            onChange={(e) => setTipoPago(e.target.value)}
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Sin especificar</option>
+            {TIPOS_PAGO.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="mt-3 block text-sm font-medium">
           Notas
           <textarea
             value={notas}
@@ -1085,6 +1119,74 @@ function RechazoModal({
             className="inline-flex items-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-60"
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />} Rechazar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetallePropuestaModal({
+  propuesta,
+  tipos,
+  onClose,
+}: {
+  propuesta: Propuesta | null;
+  tipos: TipoCamion[];
+  onClose: () => void;
+}) {
+  if (!propuesta) return null;
+  const p = propuesta;
+  const tipoNombre = tipos.find((t) => t.id === p.tipo_camion_id)?.nombre ?? "Sin especificar";
+  const pagoLabel = TIPOS_PAGO.find((t) => t.value === p.tipo_pago)?.label ?? "Sin especificar";
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border bg-card p-4 shadow-lg">
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-lg font-semibold">Detalle de la propuesta</h2>
+          <button onClick={onClose} aria-label="Cerrar" className="text-muted-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <dl className="mt-3 space-y-2 text-sm">
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Proveedor</dt>
+            <dd className="font-medium">{p.proveedor_nombre}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Costo</dt>
+            <dd className="font-medium">{clp(p.costo_clp)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de camión</dt>
+            <dd>{tipoNombre}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              Condición de pago al proveedor
+            </dt>
+            <dd>{pagoLabel}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Notas</dt>
+            <dd className="whitespace-pre-wrap">{p.notas || "Sin notas."}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Propuesta por</dt>
+            <dd>{p.operador_nombre}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Ronda</dt>
+            <dd>#{p.ronda ?? 1}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Registrada</dt>
+            <dd>{new Date(p.creado_at).toLocaleString("es-CL")}</dd>
+          </div>
+        </dl>
+        <div className="mt-4 flex justify-end">
+          <button onClick={onClose} className="rounded-md border px-3 py-2 text-sm font-medium">
+            Cerrar
           </button>
         </div>
       </div>
