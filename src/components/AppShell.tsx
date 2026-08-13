@@ -334,10 +334,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Footer />
       </div>
       <SessionExpiryWarning />
-      <MobileBottomNav
-        space={canSwitch ? space : undefined}
-        setSpace={canSwitch ? setSpace : undefined}
-      />
+      {!isStaff && (
+        <MobileBottomNav
+          space={canSwitch ? space : undefined}
+          setSpace={canSwitch ? setSpace : undefined}
+        />
+      )}
+
       <InstallPrompt />
       <CriticalAlertsListener />
     </div>
