@@ -309,17 +309,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-3">
             <ActiveSpaceBadge
-              view={
-                view === "admin" ? "admin"
-                : view === "cliente" ? "cliente"
-                : view === "chofer" ? "chofer"
-                : "proveedor"
-              }
-              canSwitch={canSwitch}
+              view={view}
+              canSwitch={!isStaff && canSwitch}
               userEmail={userEmail}
             />
 
-            {(isChofer || isProveedor) && !isAdmin && !isCliente && (
+            {!isStaff && (isChofer || isProveedor) && !isCliente && (
               <SpaceSwitcher
                 space={space}
                 setSpace={setSpace}
@@ -328,6 +323,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="hidden sm:inline-flex"
               />
             )}
+
             <div className="hidden text-xs italic opacity-90 lg:block">La logística la hacemos juntos.</div>
             <ThemeToggle />
             <NotificationBell />
