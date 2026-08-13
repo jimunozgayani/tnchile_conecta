@@ -778,11 +778,15 @@ const TIPOS_PAGO = [
 
 function GanadoraModal({
   propuesta,
+  carga,
+  tipos,
   busy,
   onClose,
   onConfirm,
 }: {
   propuesta: Propuesta;
+  carga: Carga | null;
+  tipos: TipoCamion[];
   busy: boolean;
   onClose: () => void;
   onConfirm: (precio: number, tipoPago: string | null, validez: string | null) => void;
@@ -791,6 +795,20 @@ function GanadoraModal({
   const [tipoPago, setTipoPago] = useState("");
   const [validez, setValidez] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Comparar el tipo de camión propuesto vs el pedido por el cliente.
+  const tipoPedidoId = carga?.tipo_camion_id ?? null;
+  const tipoPedidoNombre = tipoPedidoId
+    ? tipos.find((t) => t.id === tipoPedidoId)?.nombre ?? null
+    : carga?.tipo_camion_otro ?? null;
+  const tipoPropuestoId = propuesta.tipo_camion_id;
+  const tipoPropuestoNombre = tipoPropuestoId
+    ? tipos.find((t) => t.id === tipoPropuestoId)?.nombre ?? null
+    : null;
+  const difiereTipo =
+    tipoPedidoId != null &&
+    tipoPropuestoId != null &&
+    tipoPedidoId !== tipoPropuestoId;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -821,6 +839,17 @@ function GanadoraModal({
           </button>
         </div>
 
+        {difiereTipo && (
+          <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              El proveedor propone <strong>{tipoPropuestoNombre ?? "otro"}</strong> pero el
+              cliente pidió <strong>{tipoPedidoNombre ?? "otro"}</strong>. Confirma que esto es
+              correcto antes de continuar.
+            </span>
+          </div>
+        )}
+
         <label className="block text-sm font-medium">
           Precio a cobrar al cliente (CLP) *
           <input
@@ -833,8 +862,8 @@ function GanadoraModal({
           />
         </label>
         <p className="mt-1 text-xs text-muted-foreground">
-          Costo proveedor: {clp(propuesta.costo_clp)} · Sugerencia con margen 20%:{" "}
-          {clp(propuesta.costo_clp * 1.2)}
+          Costo proveedor: {clp(propuesta.costo_clp)} · Sugerencia con margen 25%:{" "}
+          {clp(propuesta.costo_clp * 1.25)}
         </p>
 
         <label className="mt-3 block text-sm font-medium">
