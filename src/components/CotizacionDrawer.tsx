@@ -168,6 +168,7 @@ type Ficha = {
   revision_count: number | null;
   asignado_a: string | null;
   precio_ofrecido_cliente_clp: number | null;
+  presupuesto_referencial_cliente_clp: number | null;
   tipo_pago: string | null;
   validez_hasta: string | null;
   fotos: unknown;
@@ -193,6 +194,7 @@ export function CotizacionDrawer({
   const puedeTodo = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
   const puedeNotas = puedeTodo || roles.includes("comercial");
   const puedeGate3 = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
+  const esComercial = roles.includes("comercial");
 
   const guardarNotas = useServerFn(actualizarCotizacion);
   const actualizarEstado = useServerFn(actualizarEstadoCotizacion);
@@ -207,13 +209,19 @@ export function CotizacionDrawer({
   const [prep, setPrep] = useState(false);
   const [editando, setEditando] = useState(false);
 
+  const uidQuery = useQuery({
+    queryKey: ["auth-uid"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
+  });
+  const uid = uidQuery.data ?? null;
+
   const fichaQuery = useQuery({
     queryKey: ["cotizacion-ficha", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_id, contacto_nombre, contacto_telefono, contacto_email, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, comentarios_revision, comentarios_rechazo, revision_count, asignado_a, precio_ofrecido_cliente_clp, tipo_pago, validez_hasta, fotos, created_at",
+          "id, estado, contacto_id, contacto_nombre, contacto_telefono, contacto_email, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, comentarios_revision, comentarios_rechazo, revision_count, asignado_a, precio_ofrecido_cliente_clp, presupuesto_referencial_cliente_clp, tipo_pago, validez_hasta, fotos, created_at",
         )
         .eq("id", id)
         .maybeSingle();
@@ -286,6 +294,16 @@ export function CotizacionDrawer({
     }
   };
 
+  // El comercial puede corregir los datos de la carga de su propia cotización
+  // mientras no esté en manos de operaciones.
+  const puedeEditarCarga =
+    puedeTodo ||
+    (esComercial &&
+      !!f &&
+      ["nueva", "pendiente", "cotizada"].includes(f.estado) &&
+      !!uid &&
+      f.asignado_a === uid);
+
   const acciones = puedeTodo || roles.includes("comercial") ? (ACCIONES[f?.estado ?? ""] ?? []) : [];
   const revCount = f?.revision_count ?? 0;
   const puedePDF = f?.estado === "cotizada" || f?.estado === "aceptada";
@@ -308,7 +326,7 @@ export function CotizacionDrawer({
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-card px-5 py-3">
           <h2 className="text-base font-bold">Ficha de cotización</h2>
           <div className="flex items-center gap-2">
-            {puedeTodo && !editando && (
+            {puedeEditarCarga && !editando && (
               <button
                 type="button"
                 onClick={() => setEditando(true)}
@@ -332,6 +350,7 @@ export function CotizacionDrawer({
           <div className="grid gap-6 p-5 md:grid-cols-2">
             <CotizacionEditForm
               ficha={f}
+              soloCarga={!puedeTodo}
               onCancel={() => setEditando(false)}
               onSaved={(patch) => {
                 onChanged(patch);
@@ -391,6 +410,14 @@ export function CotizacionDrawer({
                 <div className="flex gap-2">
                   <dt className="w-24 shrink-0 text-xs text-muted-foreground">Precio</dt>
                   <dd className="font-semibold">{fmtCLP(f.precio_ofrecido_cliente_clp)}</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-xs text-muted-foreground">Presup. cliente</dt>
+                  <dd className="text-muted-foreground">
+                    {f.presupuesto_referencial_cliente_clp == null
+                      ? "Sin dato"
+                      : fmtCLP(f.presupuesto_referencial_cliente_clp)}
+                  </dd>
                 </div>
               </dl>
 
