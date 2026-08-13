@@ -412,5 +412,5 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
     } as never);
     if (aErr) console.error("audit_log insert failed", aErr.message);
 
-    return { ok: true, campos };
+    return { ok: true, campos: Object.keys(campos) };
   });
