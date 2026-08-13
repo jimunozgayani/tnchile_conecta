@@ -66,11 +66,13 @@ function ComercialContactosPage() {
   const readOnly = roles.includes("operador") && !["admin", "lider_cuenta", "comercial"].some((r) => roles.includes(r));
 
   const listQuery = useQuery({
-    queryKey: ["contactos", tipos, temp, q],
+    queryKey: ["contactos", tipos, temp, q, readOnly],
     queryFn: async () => {
-      let query = supabase
-        .from("contactos")
-        .select("*")
+      // Operaciones (solo lectura) usa la vista sin datos bancarios.
+      let query = (readOnly
+        ? supabase.from("contactos_operaciones" as never).select("*")
+        : supabase.from("contactos").select("*")
+      )
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(300);
@@ -82,7 +84,9 @@ function ComercialContactosPage() {
       if (error) throw error;
       return data ?? [];
     },
+    enabled: !rolesQuery.isLoading,
   });
+
 
   const rows = listQuery.data ?? [];
   const hasFilters = tipos.length > 0 || !!temp || !!q.trim();
