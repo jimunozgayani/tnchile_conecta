@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_app/comercial-contactos")({
 });
 
 function ComercialContactosPage() {
-  const [tipos, setTipos] = useState<Tipo[]>([]);
+  const [tipos, setTipos] = useState<Tipo[]>(["cliente"]);
   const [temp, setTemp] = useState("");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
