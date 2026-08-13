@@ -77,6 +77,25 @@ export const retenerGate3 = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 
+    // Soft-delete la ficha de operación creada al sellar el cierre, para que
+    // desaparezca de la cola de Operaciones.
+    const { data: ops, error: oErr } = await supabaseAdmin
+      .from("operaciones")
+      .update({ deleted_at: now, updated_at: now } as never)
+      .eq("cotizacion_id", data.id)
+      .is("deleted_at", null)
+      .select("id");
+    if (oErr) throw new Error(oErr.message);
+
+    for (const op of (ops ?? []) as { id: string }[]) {
+      await auditCotizacion(
+        data.id,
+        "operacion_retenida_por_gate3",
+        { operacion_id: op.id, comentario: data.comentario },
+        userId,
+      );
+    }
+
     await auditCotizacion(
       data.id,
       "gate3_retenido",
@@ -84,5 +103,6 @@ export const retenerGate3 = createServerFn({ method: "POST" })
       userId,
     );
 
-    return { ok: true, estado: "aceptada" as const };
+    return { ok: true, estado: "aceptada" as const, operaciones_retenidas: (ops ?? []).length };
   });
+
