@@ -57,6 +57,7 @@ type Carga = {
   ancho_cm: number | null;
   alto_cm: number | null;
   notas_admin: string | null;
+  presupuesto_referencial_cliente_clp: number | null;
   fotos: unknown;
   exploracion_abierta_at: string | null;
   exploracion_limite_at: string | null;
@@ -302,7 +303,7 @@ function ExploracionPage() {
       supabase
         .from("cotizaciones")
         .select(
-          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, fotos, exploracion_abierta_at, exploracion_limite_at",
+          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, presupuesto_referencial_cliente_clp, fotos, exploracion_abierta_at, exploracion_limite_at",
         )
         .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
         .order("created_at", { ascending: false }),
@@ -496,6 +497,12 @@ function ExploracionPage() {
                         {c.fecha_despacho ?? "Fecha por confirmar"}
                       </span>
                     </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Cliente dispuesto a pagar hasta:{" "}
+                      {c.presupuesto_referencial_cliente_clp == null
+                        ? "Sin dato"
+                        : clp(c.presupuesto_referencial_cliente_clp)}
+                    </p>
                   </div>
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -869,6 +876,12 @@ function GanadoraModal({
         <p className="mt-1 text-xs text-muted-foreground">
           Costo proveedor: {clp(propuesta.costo_clp)} · Sugerencia con margen 25%:{" "}
           {clp(propuesta.costo_clp * 1.25)}
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Presupuesto cliente:{" "}
+          {carga?.presupuesto_referencial_cliente_clp == null
+            ? "Sin dato"
+            : clp(carga.presupuesto_referencial_cliente_clp)}
         </p>
 
         <label className="mt-3 block text-sm font-medium">

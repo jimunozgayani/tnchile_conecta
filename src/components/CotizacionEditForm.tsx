@@ -43,6 +43,7 @@ export type FichaEditable = {
   fecha_despacho: string | null;
   notas_admin: string | null;
   precio_ofrecido_cliente_clp: number | null;
+  presupuesto_referencial_cliente_clp: number | null;
   tipo_pago: string | null;
   validez_hasta: string | null;
   fotos: unknown;
@@ -81,18 +82,24 @@ const primerDestino = (destinos: unknown): string => {
 const inputCls = "w-full rounded-md border bg-background px-3 py-2 text-sm";
 const labelCls = "mb-1 block text-xs font-medium";
 
-/** Edición completa de la ficha — solo admin / líder de cuenta, en cualquier estado. */
+/**
+ * Edición de la ficha.
+ * - admin / líder de cuenta: todos los campos, en cualquier estado.
+ * - comercial (`soloCarga`): datos de la carga + presupuesto referencial del cliente.
+ */
 export function CotizacionEditForm({
   ficha,
+  soloCarga = false,
   onCancel,
   onSaved,
 }: {
   ficha: FichaEditable;
+  soloCarga?: boolean;
   onCancel: () => void;
   onSaved: (patch: Record<string, unknown>) => void;
 }) {
   const guardar = useServerFn(actualizarCotizacionCompleta);
-  const precioEditable = ESTADOS_CON_PRECIO.includes(ficha.estado);
+  const precioEditable = !soloCarga && ESTADOS_CON_PRECIO.includes(ficha.estado);
 
   const [contactoQ, setContactoQ] = useState("");
   const [contactoId, setContactoId] = useState(ficha.contacto_id ?? "");
@@ -107,6 +114,7 @@ export function CotizacionEditForm({
   const [fecha, setFecha] = useState(ficha.fecha_despacho ?? "");
   const [notas, setNotas] = useState(ficha.notas_admin ?? "");
   const [precio, setPrecio] = useState(num(ficha.precio_ofrecido_cliente_clp));
+  const [presupuesto, setPresupuesto] = useState(num(ficha.presupuesto_referencial_cliente_clp));
   const [tipoPago, setTipoPago] = useState(ficha.tipo_pago ?? "");
   const [validez, setValidez] = useState(ficha.validez_hasta ?? "");
   const [paths, setPaths] = useState<string[]>(fotoPathsOf(ficha.fotos));
@@ -128,6 +136,7 @@ export function CotizacionEditForm({
 
   const contactosQuery = useQuery({
     queryKey: ["contactos-select", contactoQ],
+    enabled: !soloCarga,
     queryFn: async () => {
       let q = supabase
         .from("contactos")
@@ -201,9 +210,11 @@ export function CotizacionEditForm({
         alto_cm: alto === "" ? null : Number(alto),
         fecha_despacho: fecha || null,
         notas_admin: notas || null,
+        presupuesto_referencial_cliente_clp: presupuesto === "" ? null : Number(presupuesto),
         fotos: rutas,
       };
-      if (contactoId && contactoId !== ficha.contacto_id) payload["contacto_id"] = contactoId;
+      if (!soloCarga && contactoId && contactoId !== ficha.contacto_id)
+        payload["contacto_id"] = contactoId;
       if (precioEditable) {
         payload["precio_ofrecido_cliente_clp"] = precio === "" ? null : Number(precio);
         payload["tipo_pago"] = tipoPago || null;
@@ -216,6 +227,7 @@ export function CotizacionEditForm({
         origen: payload["origen"],
         destinos: destino ? [destino] : [],
         fecha_despacho: payload["fecha_despacho"],
+        presupuesto_referencial_cliente_clp: payload["presupuesto_referencial_cliente_clp"],
         ...(precioEditable ? { precio_ofrecido_cliente_clp: payload["precio_ofrecido_cliente_clp"] } : {}),
       });
     } catch (err) {
@@ -228,6 +240,7 @@ export function CotizacionEditForm({
   return (
     <form onSubmit={(e) => void submit(e)} className="space-y-4 md:col-span-2">
       <div className="grid gap-3 sm:grid-cols-2">
+        {!soloCarga && (
         <div className="sm:col-span-2">
           <label className={labelCls} htmlFor="edit-contacto-q">
             Contacto {ficha.contacto_nombre ? `(actual: ${ficha.contacto_nombre})` : ""}
@@ -254,6 +267,7 @@ export function CotizacionEditForm({
             ))}
           </select>
         </div>
+        )}
 
         <div>
           <label className={labelCls} htmlFor="edit-origen">Origen</label>
@@ -393,6 +407,25 @@ export function CotizacionEditForm({
         )}
 
         <div className="sm:col-span-2">
+          <label className={labelCls} htmlFor="edit-presupuesto">
+            Presupuesto referencial del cliente (opcional)
+          </label>
+          <input
+            id="edit-presupuesto"
+            type="number"
+            min={0}
+            step={1}
+            value={presupuesto}
+            onChange={(e) => setPresupuesto(e.target.value)}
+            className={inputCls}
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Lo que el cliente comentó estar dispuesto a pagar — ayuda a operaciones a negociar y a
+            definir el precio final.
+          </p>
+        </div>
+
+        <div className="sm:col-span-2">
           <label className={labelCls} htmlFor="edit-notas">Notas internas</label>
           <textarea
             id="edit-notas"
@@ -450,7 +483,9 @@ export function CotizacionEditForm({
 
       {!precioEditable && (
         <p className="text-[11px] text-muted-foreground">
-          El precio, la condición de pago y la validez se pueden editar desde el estado “Cotizada” en adelante.
+          {soloCarga
+            ? "El precio al cliente, la condición de pago y la validez los define administración o el líder de cuenta."
+            : "El precio, la condición de pago y la validez se pueden editar desde el estado “Cotizada” en adelante."}
         </p>
       )}
 

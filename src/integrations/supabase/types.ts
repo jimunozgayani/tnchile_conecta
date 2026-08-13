@@ -312,6 +312,7 @@ export type Database = {
           peso_kg: number | null
           precio_maximo_proveedor_clp: number | null
           precio_ofrecido_cliente_clp: number | null
+          presupuesto_referencial_cliente_clp: number | null
           propuesta_ganadora_id: string | null
           rechazada_at: string | null
           revision_count: number
@@ -359,6 +360,7 @@ export type Database = {
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
+          presupuesto_referencial_cliente_clp?: number | null
           propuesta_ganadora_id?: string | null
           rechazada_at?: string | null
           revision_count?: number
@@ -406,6 +408,7 @@ export type Database = {
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
+          presupuesto_referencial_cliente_clp?: number | null
           propuesta_ganadora_id?: string | null
           rechazada_at?: string | null
           revision_count?: number
