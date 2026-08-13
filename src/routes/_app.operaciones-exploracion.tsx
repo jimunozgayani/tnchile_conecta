@@ -302,7 +302,7 @@ function ExploracionPage() {
       supabase
         .from("cotizaciones")
         .select(
-          "id, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, fotos, exploracion_abierta_at, exploracion_limite_at",
+          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, fotos, exploracion_abierta_at, exploracion_limite_at",
         )
         .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
         .order("created_at", { ascending: false }),
