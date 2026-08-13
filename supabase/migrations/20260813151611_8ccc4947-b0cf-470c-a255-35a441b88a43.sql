@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "anon sube archivos carga publica" ON storage.objects;
