@@ -33,6 +33,8 @@ const ACCEPTED = ["image/jpeg", "image/jpg", "image/png", "image/webp", "applica
 
 function NuevaCargaPage() {
   const navigate = useNavigate();
+  const subirArchivo = useServerFn(subirArchivoCargaPublica);
+
   const [step, setStep] = useState(1);
   const [enviando, setEnviando] = useState(false);
   const [tipos, setTipos] = useState<TipoCamion[]>([]);
