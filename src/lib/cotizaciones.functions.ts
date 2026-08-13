@@ -273,3 +273,144 @@ export const actualizarCotizacion = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, notas_admin: notas || null };
   });
+
+// ─────────────────────────────────────────────────────────────
+// Edición completa (admin / lider_cuenta) — cualquier estado
+// ─────────────────────────────────────────────────────────────
+
+const completoSchema = z.object({
+  id: z.string().uuid(),
+  contacto_id: z.string().uuid().optional().nullable(),
+  origen: z.string().trim().max(300).optional().nullable(),
+  destino: z.string().trim().max(300).optional().nullable(),
+  tipo_camion_id: z.string().uuid().optional().nullable(),
+  tipo_camion_otro: z.string().trim().max(120).optional().nullable(),
+  peso_kg: z.coerce.number().nonnegative().max(1_000_000).optional().nullable(),
+  largo_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
+  ancho_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
+  alto_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
+  fecha_despacho: z.string().trim().max(10).optional().nullable(),
+  notas_admin: z.string().trim().max(4000).optional().nullable(),
+  precio_ofrecido_cliente_clp: z.coerce.number().nonnegative().max(1_000_000_000).optional().nullable(),
+  tipo_pago: z.enum(["contado", "50_50", "15_dias", "30_dias"]).optional().nullable(),
+  validez_hasta: z.string().trim().max(10).optional().nullable(),
+  fotos: z.array(z.string().trim().max(500)).max(20).optional(),
+});
+
+const ESTADOS_CON_PRECIO = [
+  "cotizada",
+  "aceptada",
+  "lista_para_operar",
+  "confirmada",
+  "en_operacion",
+  "finalizada",
+  "cobro_pendiente",
+  "cerrada",
+  "rechazada",
+];
+
+/** Edición completa de la ficha: solo admin / lider_cuenta, en cualquier estado. */
+export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => completoSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!ADMINISH.some((r) => roles.includes(r))) {
+      throw new Error("Solo admin o líder de cuenta pueden editar la cotización completa.");
+    }
+
+    const { data: actual, error: rErr } = await supabase
+      .from("cotizaciones")
+      .select("id, estado, destinos")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (rErr) throw new Error(rErr.message);
+    if (!actual) throw new Error("Cotización no encontrada.");
+    const row = actual as { estado: string; destinos: unknown };
+
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+    if (data.contacto_id !== undefined && data.contacto_id !== null) {
+      const { data: c, error: cErr } = await supabase
+        .from("contactos")
+        .select("id, nombre, telefono, email")
+        .eq("id", data.contacto_id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (cErr) throw new Error(cErr.message);
+      if (!c) throw new Error("Contacto no encontrado.");
+      const ct = c as { nombre: string; telefono: string | null; email: string | null };
+      patch["contacto_id"] = data.contacto_id;
+      patch["contacto_nombre"] = ct.nombre;
+      patch["contacto_telefono"] = ct.telefono;
+      patch["contacto_email"] = ct.email;
+    }
+
+    if (data.origen !== undefined) patch["origen"] = clean(data.origen);
+    if (data.destino !== undefined) {
+      const resto = Array.isArray(row.destinos) ? (row.destinos as unknown[]).slice(1) : [];
+      const d = clean(data.destino);
+      patch["destinos"] = d ? [d, ...resto] : resto;
+    }
+
+    if (data.tipo_camion_id !== undefined) {
+      patch["tipo_camion_id"] = data.tipo_camion_id ?? null;
+      if (data.tipo_camion_id) {
+        const { data: t } = await supabase
+          .from("tipos_camion")
+          .select("nombre")
+          .eq("id", data.tipo_camion_id)
+          .maybeSingle();
+        patch["tipo_camion"] = (t as { nombre: string } | null)?.nombre ?? null;
+      } else if (data.tipo_camion_otro === undefined) {
+        patch["tipo_camion"] = null;
+      }
+    }
+    if (data.tipo_camion_otro !== undefined) {
+      const otro = clean(data.tipo_camion_otro);
+      patch["tipo_camion_otro"] = otro;
+      if (otro && !data.tipo_camion_id) patch["tipo_camion"] = otro;
+    }
+
+    for (const k of ["peso_kg", "largo_cm", "ancho_cm", "alto_cm"] as const) {
+      if (data[k] !== undefined) patch[k] = data[k] ?? null;
+    }
+    if (data.fecha_despacho !== undefined) patch["fecha_despacho"] = clean(data.fecha_despacho);
+    if (data.notas_admin !== undefined) patch["notas_admin"] = clean(data.notas_admin);
+    if (data.fotos !== undefined) patch["fotos"] = data.fotos;
+
+    const precioEditable = ESTADOS_CON_PRECIO.includes(row.estado);
+    const pidePrecio =
+      data.precio_ofrecido_cliente_clp !== undefined ||
+      data.tipo_pago !== undefined ||
+      data.validez_hasta !== undefined;
+    if (pidePrecio) {
+      if (!precioEditable) {
+        throw new Error("El precio solo puede editarse desde el estado 'cotizada' en adelante.");
+      }
+      if (data.precio_ofrecido_cliente_clp !== undefined)
+        patch["precio_ofrecido_cliente_clp"] = data.precio_ofrecido_cliente_clp ?? null;
+      if (data.tipo_pago !== undefined) patch["tipo_pago"] = data.tipo_pago ?? null;
+      if (data.validez_hasta !== undefined) patch["validez_hasta"] = clean(data.validez_hasta);
+    }
+
+    const { error } = await supabase
+      .from("cotizaciones")
+      .update(patch as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { updated_at: _omit, ...campos } = patch;
+    const { error: aErr } = await supabaseAdmin.from("audit_log").insert({
+      tabla_nombre: "cotizaciones",
+      registro_id: data.id,
+      accion: "edicion_completa",
+      datos_nuevos: { estado_al_editar: row.estado, campos },
+      usuario_id: userId,
+    } as never);
+    if (aErr) console.error("audit_log insert failed", aErr.message);
+
+    return { ok: true, campos };
+  });
