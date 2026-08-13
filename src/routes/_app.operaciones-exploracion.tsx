@@ -810,9 +810,11 @@ function GanadoraModal({
 
   // Comparar el tipo de camión propuesto vs el pedido por el cliente.
   const tipoPedidoId = carga?.tipo_camion_id ?? null;
-  const tipoPedidoNombre = tipoPedidoId
+  const tipoPedidoCatalogo = tipoPedidoId
     ? tipos.find((t) => t.id === tipoPedidoId)?.nombre ?? null
-    : carga?.tipo_camion_otro ?? null;
+    : null;
+  const tipoPedidoNombre =
+    tipoPedidoCatalogo ?? carga?.tipo_camion_otro ?? carga?.tipo_camion ?? null;
   const tipoPropuestoId = propuesta.tipo_camion_id;
   const tipoPropuestoNombre = tipoPropuestoId
     ? tipos.find((t) => t.id === tipoPropuestoId)?.nombre ?? null
@@ -1075,7 +1077,9 @@ function PropuestaModal({
               ? `Tipo de camión (cliente pidió: ${pedidoNombre})`
               : pedidoOtro
                 ? `Tipo de camión (cliente pidió: ${pedidoOtro})`
-                : "Tipo de camión (cliente no especificó)";
+                : carga.tipo_camion
+                  ? `Tipo de camión (cliente pidió: ${carga.tipo_camion})`
+                  : "Tipo de camión (cliente no especificó)";
             return etiqueta;
           })()}
           <select
