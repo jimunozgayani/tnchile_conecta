@@ -48,6 +48,8 @@ type Carga = {
   origen: string;
   destinos: unknown;
   tipo_camion: string | null;
+  tipo_camion_id: string | null;
+  tipo_camion_otro: string | null;
   fecha_despacho: string | null;
   estado: string;
   peso_kg: number | null;
