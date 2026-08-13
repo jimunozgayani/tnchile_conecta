@@ -18,6 +18,10 @@ const cotizacionSchema = z.object({
   contacto_telefono: z.string().trim().max(40).optional().nullable(),
   contacto_email: z.string().trim().max(200).optional().nullable(),
   peso_kg: z.coerce.number().nonnegative().max(1_000_000).optional().nullable(),
+  largo_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
+  ancho_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
+  alto_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
+  fotos: z.array(z.string().trim().max(500)).max(5).optional(),
 });
 
 
@@ -65,12 +69,15 @@ export const createCotizacion = createServerFn({ method: "POST" })
         destinos: [data.destino],
         tipo_camion: clean(data.tipo_camion),
         peso_kg: data.peso_kg ?? null,
+        largo_cm: data.largo_cm ?? null,
+        ancho_cm: data.ancho_cm ?? null,
+        alto_cm: data.alto_cm ?? null,
         fecha_despacho: clean(data.fecha_despacho),
         notas_admin: clean(data.notas_admin),
         modalidad: "completo",
         estado: "nueva",
         asignado_a: userId,
-        fotos: [],
+        fotos: data.fotos ?? [],
       } as never)
 
       .select("id, estado")

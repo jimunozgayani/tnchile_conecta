@@ -785,6 +785,10 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [peso, setPeso] = useState("");
+  const [largo, setLargo] = useState("");
+  const [ancho, setAncho] = useState("");
+  const [alto, setAlto] = useState("");
+  const [fotos, setFotos] = useState<File[]>([]);
 
   const [inlineOpen, setInlineOpen] = useState(false);
   const [inlineBusy, setInlineBusy] = useState(false);
@@ -870,6 +874,18 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
     }
     setSaving(true);
     try {
+      const rutas: string[] = [];
+      if (fotos.length > 0) {
+        const { data: authData } = await supabase.auth.getUser();
+        const uid = authData.user?.id;
+        if (!uid) throw new Error("Sesión expirada, vuelve a iniciar sesión.");
+        for (const f of fotos) {
+          const path = `${uid}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, "_")}`;
+          const { error } = await supabase.storage.from("cotizacion-fotos").upload(path, f);
+          if (error) throw new Error(error.message);
+          rutas.push(path);
+        }
+      }
       await crear({
         data: {
           contacto_id: contactoId,
@@ -881,6 +897,10 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           contacto_telefono: telefono || null,
           contacto_email: email || null,
           peso_kg: peso ? Number(peso) : null,
+          largo_cm: largo ? Number(largo) : null,
+          ancho_cm: ancho ? Number(ancho) : null,
+          alto_cm: alto ? Number(alto) : null,
+          fotos: rutas,
         },
       });
       toast.success("Cotización creada");
@@ -1115,6 +1135,77 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             />
           </div>
+        </div>
+
+        <div>
+          <p className="mb-1 text-xs font-medium">Dimensiones (opcional)</p>
+          <div className="grid grid-cols-3 gap-2">
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={largo}
+              onChange={(e) => setLargo(e.target.value)}
+              placeholder="Largo (cm)"
+              aria-label="Largo en centímetros"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={ancho}
+              onChange={(e) => setAncho(e.target.value)}
+              placeholder="Ancho (cm)"
+              aria-label="Ancho en centímetros"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={alto}
+              onChange={(e) => setAlto(e.target.value)}
+              placeholder="Alto (cm)"
+              aria-label="Alto en centímetros"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium" htmlFor="c-fotos">
+            Fotos (opcional, máx. 5)
+          </label>
+          <input
+            id="c-fotos"
+            type="file"
+            accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              const validos: File[] = [];
+              for (const f of files) {
+                const res = validateUpload(f);
+                if (!f.type.startsWith("image/") || !res.ok) {
+                  toast.error(`${f.name}: solo imágenes JPG o PNG de hasta 10 MB.`);
+                  continue;
+                }
+                validos.push(f);
+              }
+              if (validos.length > 5) {
+                toast.error("Máximo 5 fotos.");
+              }
+              setFotos(validos.slice(0, 5));
+            }}
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+          {fotos.length > 0 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {fotos.length} foto{fotos.length === 1 ? "" : "s"} seleccionada
+              {fotos.length === 1 ? "" : "s"}.
+            </p>
+          )}
         </div>
 
         <div>
