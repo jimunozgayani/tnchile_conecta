@@ -294,6 +294,12 @@ const completoSchema = z.object({
   precio_ofrecido_cliente_clp: z.coerce.number().nonnegative().max(1_000_000_000).optional().nullable(),
   tipo_pago: z.enum(["contado", "50_50", "15_dias", "30_dias"]).optional().nullable(),
   validez_hasta: z.string().trim().max(10).optional().nullable(),
+  presupuesto_referencial_cliente_clp: z.coerce
+    .number()
+    .nonnegative()
+    .max(1_000_000_000)
+    .optional()
+    .nullable(),
   fotos: z.array(z.string().trim().max(500)).max(20).optional(),
 });
 
@@ -309,25 +315,54 @@ const ESTADOS_CON_PRECIO = [
   "rechazada",
 ];
 
-/** Edición completa de la ficha: solo admin / lider_cuenta, en cualquier estado. */
+/** Estados en que un comercial puede corregir los datos de la carga de su propia cotización. */
+export const ESTADOS_EDITABLES_COMERCIAL = ["nueva", "pendiente", "cotizada"];
+
+/**
+ * Edición de la ficha.
+ * - admin / lider_cuenta: todos los campos, en cualquier estado.
+ * - comercial: solo datos de la carga + presupuesto referencial, en sus propias
+ *   cotizaciones y mientras estén en 'nueva' o 'cotizada'.
+ */
 export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => completoSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await rolesDe(supabase as never, userId);
-    if (!ADMINISH.some((r) => roles.includes(r))) {
-      throw new Error("Solo admin o líder de cuenta pueden editar la cotización completa.");
+    const esAdmin = ADMINISH.some((r) => roles.includes(r));
+    const esComercial = roles.includes("comercial");
+    if (!esAdmin && !esComercial) {
+      throw new Error("No tienes permisos para editar la cotización.");
     }
 
     const { data: actual, error: rErr } = await supabase
       .from("cotizaciones")
-      .select("id, estado, destinos")
+      .select("id, estado, destinos, asignado_a")
       .eq("id", data.id)
       .maybeSingle();
     if (rErr) throw new Error(rErr.message);
     if (!actual) throw new Error("Cotización no encontrada.");
-    const row = actual as { estado: string; destinos: unknown };
+    const row = actual as { estado: string; destinos: unknown; asignado_a: string | null };
+
+    if (!esAdmin) {
+      if (row.asignado_a !== userId) {
+        throw new Error("Solo puedes editar cotizaciones asignadas a ti.");
+      }
+      if (!ESTADOS_EDITABLES_COMERCIAL.includes(row.estado)) {
+        throw new Error(
+          "Los datos de la carga solo pueden editarse mientras la cotización está en 'Nueva' o 'Cotizada'.",
+        );
+      }
+      if (
+        data.contacto_id !== undefined ||
+        data.precio_ofrecido_cliente_clp !== undefined ||
+        data.tipo_pago !== undefined ||
+        data.validez_hasta !== undefined
+      ) {
+        throw new Error("Esos campos solo puede editarlos administración o el líder de cuenta.");
+      }
+    }
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
@@ -377,6 +412,8 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
       if (data[k] !== undefined) patch[k] = data[k] ?? null;
     }
     if (data.fecha_despacho !== undefined) patch["fecha_despacho"] = clean(data.fecha_despacho);
+    if (data.presupuesto_referencial_cliente_clp !== undefined)
+      patch["presupuesto_referencial_cliente_clp"] = data.presupuesto_referencial_cliente_clp ?? null;
     if (data.notas_admin !== undefined) patch["notas_admin"] = clean(data.notas_admin);
     if (data.fotos !== undefined) patch["fotos"] = data.fotos;
 
