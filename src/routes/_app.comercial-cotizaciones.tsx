@@ -190,6 +190,7 @@ export default function ComercialCotizacionesPage() {
         )
         .order("created_at", { ascending: false })
         .limit(500);
+      if (soloPropias) query = query.eq("asignado_a", uid);
       const term = q.trim();
       if (term) query = query.ilike("contacto_nombre", `%${term}%`);
       if (desde) query = query.gte("fecha_despacho", desde);
