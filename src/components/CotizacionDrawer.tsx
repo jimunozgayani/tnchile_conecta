@@ -20,8 +20,6 @@ import {
 
 /** Acciones de transición disponibles por estado (etiquetas visibles). */
 export const ACCIONES: Record<string, { estado: string; label: string }[]> = {
-  nueva: [{ estado: "cotizada", label: "Marcar como cotizada" }],
-  pendiente: [{ estado: "cotizada", label: "Marcar como cotizada" }],
   cotizada: [
     { estado: "aceptada", label: "Marcar como aceptada" },
     { estado: "en_revision", label: "Poner en revisión" },
