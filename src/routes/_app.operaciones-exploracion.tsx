@@ -670,12 +670,13 @@ function ExploracionPage() {
         </ul>
       )}
 
+      <DetallePropuestaModal
+        propuesta={detallePropuesta}
+        tipos={tipos}
+        onClose={() => setDetallePropuesta(null)}
+      />
+
       {modalCarga && (
-        <DetallePropuestaModal
-          propuesta={detallePropuesta}
-          tipos={tipos}
-          onClose={() => setDetallePropuesta(null)}
-        />
         <PropuestaModal
           carga={modalCarga}
           tipos={tipos}
