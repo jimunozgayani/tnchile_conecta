@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Logo } from "@/components/Logo";
+import { useServerFn } from "@tanstack/react-start";
+import { emailBloqueado } from "@/lib/public-rpc.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => pageHead("/login", "Iniciar sesión · TN Chile Conecta", "Ingresa a tu cuenta de TN Chile Conecta para gestionar camiones, choferes, documentos, tarifas y asignaciones de carga."),
@@ -17,6 +19,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const checkLock = useServerFn(emailBloqueado);
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
@@ -57,8 +60,8 @@ function LoginPage() {
     setLoading(true);
 
     // Check lockout BEFORE attempting sign-in
-    const { data: locked } = await supabase.rpc("is_email_locked", { _email: email });
-    if (locked === true) {
+    const { locked } = await checkLock({ data: { email } });
+    if (locked) {
       setLoading(false);
       toast.error("Cuenta bloqueada temporalmente. Intenta en 15 minutos.");
       return;
@@ -72,8 +75,8 @@ function LoginPage() {
     setLoading(false);
     if (error) {
       // Re-check lockout after this failure to surface the lockout message immediately
-      const { data: nowLocked } = await supabase.rpc("is_email_locked", { _email: email });
-      if (nowLocked === true) toast.error("Cuenta bloqueada temporalmente. Intenta en 15 minutos.");
+      const { locked: nowLocked } = await checkLock({ data: { email } });
+      if (nowLocked) toast.error("Cuenta bloqueada temporalmente. Intenta en 15 minutos.");
       else toast.error(error.message);
     } else {
       localStorage.setItem("tn_last_activity", String(Date.now()));
