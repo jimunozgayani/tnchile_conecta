@@ -17,6 +17,7 @@ export type Propuesta = {
   costo_clp: number;
   tipo_camion_id: string | null;
   notas: string | null;
+  tipo_pago: string | null;
   estado: string;
   creado_at: string;
   ronda: number;
@@ -93,6 +94,7 @@ const propuestaSchema = z.object({
   costo_clp: z.coerce.number().positive("El costo debe ser mayor a 0").max(999_999_999),
   tipo_camion_id: z.string().uuid().optional().nullable(),
   notas: z.string().trim().max(2000).optional().nullable(),
+  tipo_pago: z.enum(["contado", "50_50", "15_dias", "30_dias"]).optional().nullable(),
 });
 
 /** Registra una propuesta de proveedor (nombre libre, contacto opcional). */
@@ -129,6 +131,7 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
         costo_clp: data.costo_clp,
         tipo_camion_id: data.tipo_camion_id || null,
         notas: (data.notas ?? "").trim() || null,
+        tipo_pago: data.tipo_pago || null,
         estado: "propuesta",
         ronda,
       } as never)
@@ -214,7 +217,7 @@ export const listarPropuestas = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabase
       .from("propuestas_proveedor")
       .select(
-        "id, cotizacion_id, operador_id, proveedor_nombre, proveedor_contacto_id, costo_clp, tipo_camion_id, notas, estado, creado_at, ronda",
+        "id, cotizacion_id, operador_id, proveedor_nombre, proveedor_contacto_id, costo_clp, tipo_camion_id, notas, tipo_pago, estado, creado_at, ronda",
       )
       .in("cotizacion_id", data.cotizacion_ids)
       .order("costo_clp", { ascending: true });
