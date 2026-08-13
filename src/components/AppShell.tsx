@@ -57,18 +57,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { space, setSpace, canSwitch, roles, autoChange, dismissAutoChange } = useSpace();
   const isChofer = roles.includes("chofer");
   const isProveedor = roles.includes("proveedor");
-  // Active view: if switcher applies, follow `space`; otherwise fall back to role
-  const view: "admin" | "cliente" | "chofer" | "proveedor" =
+  // Display rule: any internal staff role hides the external portals (proveedor/cliente/chofer)
+  const isStaff = isAdmin || isLiderCuenta || isJefeOps || isComercial || isOperador;
+  // Badge/portal priority: admin > lider_cuenta / jefe_operaciones > comercial / operador > proveedor > chofer > cliente
+  const view: import("./ActiveSpaceBadge").ActiveSpaceView =
     isAdmin ? "admin"
-    : isCliente ? "cliente"
-    : canSwitch ? (space === "chofer" ? "chofer" : "proveedor")
+    : isLiderCuenta ? "lider_cuenta"
+    : isJefeOps ? "jefe_operaciones"
+    : isComercial ? "comercial"
+    : isOperador ? "operador"
+    : isProveedor ? (canSwitch ? (space === "chofer" ? "chofer" : "proveedor") : "proveedor")
     : isChofer ? "chofer"
+    : isCliente ? "cliente"
     : "proveedor";
-  const showChoferNav = view === "chofer";
-  const showProveedorNav = view === "proveedor";
-  const showClienteNav = view === "cliente";
+  const showChoferNav = !isStaff && view === "chofer";
+  const showProveedorNav = !isStaff && view === "proveedor";
+  const showClienteNav = !isStaff && view === "cliente";
   const showOperacionesNav = isAdmin || isJefeOps || isOperador;
   const showComercialNav = isAdmin || isLiderCuenta || isComercial;
+
 
   useEffect(() => {
     (async () => {
@@ -302,17 +309,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-3">
             <ActiveSpaceBadge
-              view={
-                view === "admin" ? "admin"
-                : view === "cliente" ? "cliente"
-                : view === "chofer" ? "chofer"
-                : "proveedor"
-              }
-              canSwitch={canSwitch}
+              view={view}
+              canSwitch={!isStaff && canSwitch}
               userEmail={userEmail}
             />
 
-            {(isChofer || isProveedor) && !isAdmin && !isCliente && (
+            {!isStaff && (isChofer || isProveedor) && !isCliente && (
               <SpaceSwitcher
                 space={space}
                 setSpace={setSpace}
@@ -321,6 +323,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="hidden sm:inline-flex"
               />
             )}
+
             <div className="hidden text-xs italic opacity-90 lg:block">La logística la hacemos juntos.</div>
             <ThemeToggle />
             <NotificationBell />
@@ -331,10 +334,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Footer />
       </div>
       <SessionExpiryWarning />
-      <MobileBottomNav
-        space={canSwitch ? space : undefined}
-        setSpace={canSwitch ? setSpace : undefined}
-      />
+      {!isStaff && (
+        <MobileBottomNav
+          space={canSwitch ? space : undefined}
+          setSpace={canSwitch ? setSpace : undefined}
+        />
+      )}
+
       <InstallPrompt />
       <CriticalAlertsListener />
     </div>
