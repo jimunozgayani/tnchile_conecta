@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { subirArchivoCargaPublica } from "@/lib/carga-publica.functions";
+
 import { Logo } from "@/components/Logo";
 import { pageHead } from "@/lib/page-head";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,8 @@ const ACCEPTED = ["image/jpeg", "image/jpg", "image/png", "image/webp", "applica
 
 function NuevaCargaPage() {
   const navigate = useNavigate();
+  const subirArchivo = useServerFn(subirArchivoCargaPublica);
+
   const [step, setStep] = useState(1);
   const [enviando, setEnviando] = useState(false);
   const [tipos, setTipos] = useState<TipoCamion[]>([]);
@@ -110,14 +115,26 @@ function NuevaCargaPage() {
         toast.error(`${file.name}: supera los 10MB.`);
         continue;
       }
-      const ext = file.name.split(".").pop() ?? "bin";
-      const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("carga-publica").upload(path, file, { contentType: file.type });
-      if (error) {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+        reader.onerror = () => reject(new Error("read"));
+        reader.readAsDataURL(file);
+      }).catch(() => "");
+      if (!base64) {
+        toast.error(`No se pudo leer ${file.name}.`);
+        continue;
+      }
+      let path: string;
+      try {
+        const res = await subirArchivo({ data: { contentType: file.type, base64 } });
+        path = res.path;
+      } catch {
         toast.error(`No se pudo subir ${file.name}.`);
         continue;
       }
       nuevos.push({ url: path, type: file.type === "application/pdf" ? "documento" : "foto", name: file.name });
+
     }
     setArchivos((prev) => [...prev, ...nuevos]);
     setSubiendo(false);
