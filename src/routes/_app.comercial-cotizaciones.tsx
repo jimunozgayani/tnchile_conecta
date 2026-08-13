@@ -173,12 +173,16 @@ export default function ComercialCotizacionesPage() {
   const puedeAsignar = ["admin", "lider_cuenta"].some((r) => roles.includes(r));
 
   const queryClient = useQueryClient();
-  const listKey = ["cotizaciones-pipeline", q, desde, hasta] as const;
+  // El rol `comercial` (sin admin/lider_cuenta) solo ve su propia cartera.
+  const soloPropias =
+    roles.includes("comercial") && !["admin", "lider_cuenta"].some((r) => roles.includes(r));
+  const listKey = ["cotizaciones-pipeline", q, desde, hasta, soloPropias] as const;
 
   const listQuery = useQuery({
+    enabled: rolesQuery.isSuccess,
     queryKey: listKey,
     queryFn: async () => {
-      // TODO: filtrar por asignado_a = auth.uid() para el rol `comercial`.
+      const uid = (await supabase.auth.getUser()).data.user?.id ?? "";
       let query = supabase
         .from("cotizaciones")
         .select(
