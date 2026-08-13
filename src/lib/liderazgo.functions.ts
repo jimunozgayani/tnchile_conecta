@@ -207,6 +207,15 @@ export const crearMeta = createServerFn({ method: "POST" })
       const permitido = roles.some((r) => ROL_POR_LIDER[r] === data.rol);
       if (!permitido) throw new Error("Solo puedes definir metas de tu propio equipo.");
     }
+    // Los líderes (lider_cuenta / jefe_operaciones) no pueden auto-asignarse metas
+    // individuales: solo un administrador puede asignar metas individuales a un líder.
+    if (
+      data.user_id &&
+      data.user_id === context.userId &&
+      !roles.includes("admin")
+    ) {
+      throw new Error("Solo un administrador puede asignarte metas individuales.");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: meta, error } = await supabaseAdmin
