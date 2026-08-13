@@ -307,7 +307,12 @@ function ExploracionPage() {
         .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
         .order("created_at", { ascending: false }),
       supabase.from("tipos_camion").select("id, nombre").eq("activo", true).order("orden"),
-      supabase.from("contactos").select("id, nombre, empresa").is("deleted_at", null).order("nombre"),
+      supabase
+        .from("contactos_operaciones" as never)
+        .select("id, nombre, empresa")
+        .is("deleted_at", null)
+        .order("nombre"),
+
     ]);
 
     setRoles(((rolRes.data ?? []) as { role: string }[]).map((r) => r.role));
