@@ -66,6 +66,7 @@ function MiPerfilComercialPage() {
       <MetasPersonales
         userId={userId}
         puedeCrear={isLeader}
+        puedeSelfAsignar={isAdmin}
         mostrarEquipo={isLeader}
         equipo={equipo ?? []}
       />
