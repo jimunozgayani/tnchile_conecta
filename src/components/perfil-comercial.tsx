@@ -312,11 +312,13 @@ export function CargaDeTrabajoHoy({ userId }: { userId: string | null }) {
 export function MetasPersonales({
   userId,
   puedeCrear,
+  puedeSelfAsignar,
   mostrarEquipo,
   equipo,
 }: {
   userId: string | null;
   puedeCrear: boolean;
+  puedeSelfAsignar: boolean;
   mostrarEquipo: boolean;
   equipo: MiembroComercial[];
 }) {
@@ -326,7 +328,7 @@ export function MetasPersonales({
   const crear = useServerFn(crearMeta);
 
   const [open, setOpen] = useState(false);
-  const [destino, setDestino] = useState<string>("mi");
+  const [destino, setDestino] = useState<string>(puedeSelfAsignar ? "mi" : "equipo");
   const [descripcion, setDescripcion] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [unidad, setUnidad] = useState<"operaciones" | "CLP" | "%">("operaciones");
@@ -436,7 +438,7 @@ export function MetasPersonales({
                 onChange={(e) => setDestino(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="mi">Para mí</option>
+                {puedeSelfAsignar && <option value="mi">Para mí</option>}
                 {equipo.map((m) => (
                   <option key={m.user_id} value={m.user_id}>
                     Para {m.nombre}
