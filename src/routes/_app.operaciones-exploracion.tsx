@@ -810,9 +810,11 @@ function GanadoraModal({
 
   // Comparar el tipo de camión propuesto vs el pedido por el cliente.
   const tipoPedidoId = carga?.tipo_camion_id ?? null;
-  const tipoPedidoNombre = tipoPedidoId
-    ? tipos.find((t) => t.id === tipoPedidoId)?.nombre ?? null
-    : carga?.tipo_camion_otro ?? null;
+  const tipoPedidoNombre =
+    (tipoPedidoId ? tipos.find((t) => t.id === tipoPedidoId)?.nombre ?? null : null) ??
+    carga?.tipo_camion_otro ??
+    carga?.tipo_camion ??
+    null;
   const tipoPropuestoId = propuesta.tipo_camion_id;
   const tipoPropuestoNombre = tipoPropuestoId
     ? tipos.find((t) => t.id === tipoPropuestoId)?.nombre ?? null
