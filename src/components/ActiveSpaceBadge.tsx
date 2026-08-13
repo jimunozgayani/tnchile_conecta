@@ -1,6 +1,14 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export type ActiveSpaceView = "admin" | "cliente" | "chofer" | "proveedor";
+export type ActiveSpaceView =
+  | "admin"
+  | "lider_cuenta"
+  | "jefe_operaciones"
+  | "comercial"
+  | "operador"
+  | "cliente"
+  | "chofer"
+  | "proveedor";
 
 type Props = {
   view: ActiveSpaceView;
@@ -10,18 +18,31 @@ type Props = {
 
 const LABELS: Record<ActiveSpaceView, string> = {
   admin: "Administración",
+  lider_cuenta: "Líder de Cuenta",
+  jefe_operaciones: "Jefe de Operaciones",
+  comercial: "Comercial",
+  operador: "Operador",
   cliente: "Portal Cliente",
   chofer: "Espacio Choferes",
   proveedor: "Portal Proveedor",
 };
 
+const STAFF_VIEWS: ActiveSpaceView[] = [
+  "admin",
+  "lider_cuenta",
+  "jefe_operaciones",
+  "comercial",
+  "operador",
+];
+
 function tooltipFor(view: ActiveSpaceView, canSwitch: boolean): string {
-  if (view === "admin") return "Estás en el panel de administración de TN Chile.";
+  if (STAFF_VIEWS.includes(view)) return "Estás en el espacio interno de TN Chile.";
   if (view === "cliente") return "Estás en el portal de clientes.";
   if (canSwitch)
     return "Tienes acceso a ambos espacios. Usa el selector para cambiar sin cerrar sesión.";
   return "Este es el espacio asignado a tu cuenta.";
 }
+
 
 export function ActiveSpaceBadge({ view, canSwitch = false, userEmail }: Props) {
   const label = LABELS[view];
