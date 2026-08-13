@@ -705,6 +705,8 @@ function ExploracionPage() {
       {ganadoraPara && (
         <GanadoraModal
           propuesta={ganadoraPara}
+          carga={cargas.find((c) => c.id === ganadoraPara.cotizacion_id) ?? null}
+          tipos={tipos}
           busy={busy === ganadoraPara.id}
           onClose={() => setGanadoraPara(null)}
           onConfirm={(precio, tipoPago, validez) =>
