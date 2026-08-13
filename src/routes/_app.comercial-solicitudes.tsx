@@ -22,8 +22,9 @@ async function guard() {
   if (!user) throw redirect({ to: "/login" });
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
   const roles = (data ?? []).map((r: { role: string }) => r.role);
-  if (!["admin", "lider_cuenta", "comercial"].some((r) => roles.includes(r))) {
-    throw redirect({ to: "/dashboard" });
+  // Bandeja restringida a admin y lider_cuenta; comercial va a su perfil.
+  if (!["admin", "lider_cuenta"].some((r) => roles.includes(r))) {
+    throw redirect({ to: roles.includes("comercial") ? "/comercial" : "/dashboard" });
   }
 }
 
