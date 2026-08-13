@@ -1016,7 +1016,19 @@ function PropuestaModal({
         </label>
 
         <label className="mt-3 block text-sm font-medium">
-          Tipo de camión
+          {(() => {
+            const pedidoId = carga.tipo_camion_id;
+            const pedidoOtro = carga.tipo_camion_otro;
+            const pedidoNombre = pedidoId
+              ? tipos.find((t) => t.id === pedidoId)?.nombre
+              : null;
+            const etiqueta = pedidoNombre
+              ? `Tipo de camión (cliente pidió: ${pedidoNombre})`
+              : pedidoOtro
+                ? `Tipo de camión (cliente pidió: ${pedidoOtro})`
+                : "Tipo de camión (cliente no especificó)";
+            return etiqueta;
+          })()}
           <select
             value={tipoId}
             onChange={(e) => setTipoId(e.target.value)}
