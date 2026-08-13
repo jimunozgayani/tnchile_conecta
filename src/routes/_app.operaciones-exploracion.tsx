@@ -1077,7 +1077,9 @@ function PropuestaModal({
               ? `Tipo de camión (cliente pidió: ${pedidoNombre})`
               : pedidoOtro
                 ? `Tipo de camión (cliente pidió: ${pedidoOtro})`
-                : "Tipo de camión (cliente no especificó)";
+                : carga.tipo_camion
+                  ? `Tipo de camión (cliente pidió: ${carga.tipo_camion})`
+                  : "Tipo de camión (cliente no especificó)";
             return etiqueta;
           })()}
           <select
