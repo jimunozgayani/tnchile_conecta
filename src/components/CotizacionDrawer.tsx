@@ -6,6 +6,7 @@ import { X, UserCircle2, AlertTriangle, Loader2, Download, CheckCircle2 } from "
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedUrl } from "@/lib/signed-url";
 import { Gate3Actions } from "@/components/Gate3Actions";
+import { CotizacionEditForm } from "@/components/CotizacionEditForm";
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
@@ -148,13 +149,19 @@ export function ReasignarModal({
 type Ficha = {
   id: string;
   estado: string;
+  contacto_id: string | null;
   contacto_nombre: string | null;
   contacto_telefono: string | null;
   contacto_email: string | null;
   origen: string | null;
   destinos: unknown;
   tipo_camion: string | null;
+  tipo_camion_id: string | null;
+  tipo_camion_otro: string | null;
   peso_kg: number | null;
+  largo_cm: number | null;
+  ancho_cm: number | null;
+  alto_cm: number | null;
   fecha_despacho: string | null;
   notas_admin: string | null;
   comentarios_revision: string | null;
@@ -162,9 +169,12 @@ type Ficha = {
   revision_count: number | null;
   asignado_a: string | null;
   precio_ofrecido_cliente_clp: number | null;
+  tipo_pago: string | null;
+  validez_hasta: string | null;
   fotos: unknown;
   created_at: string;
 };
+
 
 export function CotizacionDrawer({
   id,
@@ -196,6 +206,7 @@ export function CotizacionDrawer({
   const [pdfBusy, setPdfBusy] = useState(false);
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
   const [prep, setPrep] = useState(false);
+  const [editando, setEditando] = useState(false);
 
   const fichaQuery = useQuery({
     queryKey: ["cotizacion-ficha", id],
@@ -203,7 +214,7 @@ export function CotizacionDrawer({
       const { data, error } = await supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_nombre, contacto_telefono, contacto_email, origen, destinos, tipo_camion, peso_kg, fecha_despacho, notas_admin, comentarios_revision, comentarios_rechazo, revision_count, asignado_a, precio_ofrecido_cliente_clp, fotos, created_at",
+          "id, estado, contacto_id, contacto_nombre, contacto_telefono, contacto_email, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, comentarios_revision, comentarios_rechazo, revision_count, asignado_a, precio_ofrecido_cliente_clp, tipo_pago, validez_hasta, fotos, created_at",
         )
         .eq("id", id)
         .maybeSingle();
@@ -297,15 +308,38 @@ export function CotizacionDrawer({
       >
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-card px-5 py-3">
           <h2 className="text-base font-bold">Ficha de cotización</h2>
+          <div className="flex items-center gap-2">
+            {puedeTodo && !editando && (
+              <button
+                type="button"
+                onClick={() => setEditando(true)}
+                className="rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+              >
+                Editar
+              </button>
+            )}
           <button type="button" aria-label="Cerrar" onClick={onClose} className="rounded p-1 hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
+          </div>
         </header>
 
         {fichaQuery.isLoading || !f ? (
           <div className="space-y-3 p-5">
             <div className="h-6 w-1/2 animate-pulse rounded bg-muted" />
             <div className="h-24 animate-pulse rounded bg-muted" />
+          </div>
+        ) : editando ? (
+          <div className="grid gap-6 p-5 md:grid-cols-2">
+            <CotizacionEditForm
+              ficha={f}
+              onCancel={() => setEditando(false)}
+              onSaved={(patch) => {
+                onChanged(patch);
+                setEditando(false);
+                void fichaQuery.refetch();
+              }}
+            />
           </div>
         ) : (
           <div className="grid gap-6 p-5 md:grid-cols-2">
