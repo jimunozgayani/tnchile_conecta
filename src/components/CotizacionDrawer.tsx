@@ -148,13 +148,19 @@ export function ReasignarModal({
 type Ficha = {
   id: string;
   estado: string;
+  contacto_id: string | null;
   contacto_nombre: string | null;
   contacto_telefono: string | null;
   contacto_email: string | null;
   origen: string | null;
   destinos: unknown;
   tipo_camion: string | null;
+  tipo_camion_id: string | null;
+  tipo_camion_otro: string | null;
   peso_kg: number | null;
+  largo_cm: number | null;
+  ancho_cm: number | null;
+  alto_cm: number | null;
   fecha_despacho: string | null;
   notas_admin: string | null;
   comentarios_revision: string | null;
@@ -162,9 +168,12 @@ type Ficha = {
   revision_count: number | null;
   asignado_a: string | null;
   precio_ofrecido_cliente_clp: number | null;
+  tipo_pago: string | null;
+  validez_hasta: string | null;
   fotos: unknown;
   created_at: string;
 };
+
 
 export function CotizacionDrawer({
   id,
