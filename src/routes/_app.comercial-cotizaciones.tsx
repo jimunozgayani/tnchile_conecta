@@ -22,6 +22,7 @@ import { Gate3Actions } from "@/components/Gate3Actions";
 
 import { createContacto } from "@/lib/contactos.functions";
 import { fmtCLP } from "@/lib/regiones-capitales";
+import { validateUpload } from "@/lib/upload-validation";
 import {
   FileText,
   Plus,
