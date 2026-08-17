@@ -423,6 +423,28 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
     if (data.notas_admin !== undefined) patch["notas_admin"] = clean(data.notas_admin);
     if (data.fotos !== undefined) patch["fotos"] = data.fotos;
 
+    // Ventanas horarias de carga y descarga.
+    for (const k of [
+      "carga_hora_desde",
+      "carga_hora_hasta",
+      "descarga_fecha",
+      "descarga_hora_desde",
+      "descarga_hora_hasta",
+      "descarga_notas",
+    ] as const) {
+      if (data[k] !== undefined) patch[k] = clean(data[k]);
+    }
+
+    // Única validación: la descarga no puede ser ANTES de la carga (mismo día o
+    // días posteriores son válidos).
+    const fechaCargaFinal =
+      (patch["fecha_despacho"] as string | null | undefined) ??
+      (row as { fecha_despacho: string | null }).fecha_despacho;
+    const fechaDescargaFinal = patch["descarga_fecha"] as string | null | undefined;
+    if (fechaCargaFinal && fechaDescargaFinal && fechaDescargaFinal < fechaCargaFinal) {
+      throw new Error("La fecha de descarga no puede ser anterior a la fecha de carga.");
+    }
+
     const precioEditable = ESTADOS_CON_PRECIO.includes(row.estado);
     const pidePrecio =
       data.precio_ofrecido_cliente_clp !== undefined ||
