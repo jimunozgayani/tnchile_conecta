@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ALLOWED_UPLOAD_ACCEPT, validateUpload } from "@/lib/upload-validation";
 import { CameraOrFileInput } from "@/components/CameraOrFileInput";
+import { useServerFn } from "@tanstack/react-start";
+import { enviarConfirmacionDocumento } from "@/lib/emails.functions";
 
 
 export const Route = createFileRoute("/_app/documentos")({
