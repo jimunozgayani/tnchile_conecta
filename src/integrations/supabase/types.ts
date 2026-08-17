@@ -1873,6 +1873,87 @@ export type Database = {
           },
         ]
       }
+      pagos_proveedor_operaciones: {
+        Row: {
+          asignacion_id: string | null
+          autorizado_at: string | null
+          autorizado_por: string | null
+          comprobante_path: string | null
+          comprobante_subido_at: string | null
+          comprobante_subido_por: string | null
+          created_at: string | null
+          deleted_at: string | null
+          estado: string | null
+          fecha_vencimiento: string | null
+          id: string | null
+          monto_clp: number | null
+          notas: string | null
+          numero_cuota: number | null
+          operacion_id: string | null
+          proveedor_nombre: string | null
+          proveedor_rut: string | null
+          tipo_pago: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          asignacion_id?: string | null
+          autorizado_at?: string | null
+          autorizado_por?: string | null
+          comprobante_path?: string | null
+          comprobante_subido_at?: string | null
+          comprobante_subido_por?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          estado?: string | null
+          fecha_vencimiento?: string | null
+          id?: string | null
+          monto_clp?: number | null
+          notas?: string | null
+          numero_cuota?: number | null
+          operacion_id?: string | null
+          proveedor_nombre?: string | null
+          proveedor_rut?: string | null
+          tipo_pago?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          asignacion_id?: string | null
+          autorizado_at?: string | null
+          autorizado_por?: string | null
+          comprobante_path?: string | null
+          comprobante_subido_at?: string | null
+          comprobante_subido_por?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          estado?: string | null
+          fecha_vencimiento?: string | null
+          id?: string | null
+          monto_clp?: number | null
+          notas?: string | null
+          numero_cuota?: number | null
+          operacion_id?: string | null
+          proveedor_nombre?: string | null
+          proveedor_rut?: string | null
+          tipo_pago?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_proveedor_asignacion_id_fkey"
+            columns: ["asignacion_id"]
+            isOneToOne: false
+            referencedRelation: "asignaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_operacion_id_fkey"
+            columns: ["operacion_id"]
+            isOneToOne: false
+            referencedRelation: "operaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cerrar_exploraciones_vencidas: { Args: never; Returns: undefined }
