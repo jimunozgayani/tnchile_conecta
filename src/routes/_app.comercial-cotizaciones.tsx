@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
+import { sellarCierre } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -439,7 +439,7 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
 function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
-  const sellar = useServerFn(sellarCierreYCrearOperacion);
+  const sellar = useServerFn(sellarCierre);
   const [menu, setMenu] = useState(false);
   const [chip, setChip] = useState(false);
   const [reasignarOpen, setReasignarOpen] = useState(false);

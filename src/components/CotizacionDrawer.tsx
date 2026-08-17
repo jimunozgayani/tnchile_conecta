@@ -13,7 +13,7 @@ import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOper
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
-import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
+import { sellarCierre } from "@/lib/operaciones.functions";
 import {
   actualizarCotizacion,
   actualizarEstadoCotizacion,
@@ -218,7 +218,7 @@ export function CotizacionDrawer({
 
   const guardarNotas = useServerFn(actualizarCotizacion);
   const actualizarEstado = useServerFn(actualizarEstadoCotizacion);
-  const sellar = useServerFn(sellarCierreYCrearOperacion);
+  const sellar = useServerFn(sellarCierre);
 
   const [reasignar, setReasignar] = useState(false);
   const [asignadoNombre, setAsignadoNombre] = useState(nombreAsignado ?? "");
