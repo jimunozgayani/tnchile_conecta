@@ -799,6 +799,8 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
   const [ancho, setAncho] = useState("");
   const [alto, setAlto] = useState("");
   const [fotos, setFotos] = useState<File[]>([]);
+  const [horario, setHorario] = useState<HorarioValues>(horarioVacio);
+
 
   const [inlineOpen, setInlineOpen] = useState(false);
   const [inlineBusy, setInlineBusy] = useState(false);
