@@ -1248,6 +1248,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bienvenida_enviada_at: string | null
           cargo: string | null
           certificado_sii_url: string | null
           correo: string | null
@@ -1267,6 +1268,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bienvenida_enviada_at?: string | null
           cargo?: string | null
           certificado_sii_url?: string | null
           correo?: string | null
@@ -1286,6 +1288,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bienvenida_enviada_at?: string | null
           cargo?: string | null
           certificado_sii_url?: string | null
           correo?: string | null
