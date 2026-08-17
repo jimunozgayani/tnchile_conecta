@@ -104,6 +104,17 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
       precio_ofrecido_cliente_clp: c["precio_ofrecido_cliente_clp"] ?? null,
       precio_maximo_proveedor_clp: c["precio_maximo_proveedor_clp"] ?? null,
       tipo_pago: c["tipo_pago"] ?? null,
+      chofer_id: prop?.chofer_id ?? null,
+      chofer_nombre_libre: prop?.chofer_nombre_libre ?? null,
+      chofer_rut_libre: prop?.chofer_rut_libre ?? null,
+      patente_principal: prop?.patente_principal ?? null,
+      patente_secundaria: prop?.patente_secundaria ?? null,
+      carga_hora_desde: c["carga_hora_desde"] ?? null,
+      carga_hora_hasta: c["carga_hora_hasta"] ?? null,
+      descarga_fecha: c["descarga_fecha"] ?? null,
+      descarga_hora_desde: c["descarga_hora_desde"] ?? null,
+      descarga_hora_hasta: c["descarga_hora_hasta"] ?? null,
+      descarga_notas: c["descarga_notas"] ?? null,
       pasada_a_operaciones_at: now,
       pasada_a_operaciones_por: userId,
       creado_por: userId,
@@ -122,5 +133,74 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
   } as never);
   if (aErr) console.error("audit_log insert failed", aErr.message);
 
-  return { operacion_id: op.id, numero_operacion: op.numero_operacion, creada: true };
+  // Asignación automática: solo con chofer registrado. Best-effort — un fallo
+  // nunca bloquea la creación de la operación (queda para asignación manual).
+  let asignacion_id: string | null = null;
+  if (prop?.chofer_id) {
+    try {
+      let camion_id: string | null = null;
+      const patente = (prop.patente_principal ?? "").trim();
+      if (patente) {
+        const { data: truck } = await supabaseAdmin
+          .from("trucks")
+          .select("id")
+          .ilike("patente", patente)
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        camion_id = (truck as { id: string } | null)?.id ?? null;
+      }
+
+      const { data: asig, error: asErr } = await supabaseAdmin
+        .from("asignaciones")
+        .insert({
+          proveedor_id: prop.operador_id,
+          creado_por: prop.operador_id,
+          chofer_id: prop.chofer_id,
+          camion_id,
+          cotizacion_id: cotizacionId,
+          estado_viaje: "por_iniciar",
+          activa: true,
+        } as never)
+        .select("id")
+        .single();
+      if (asErr) throw new Error(asErr.message);
+      asignacion_id = (asig as { id: string }).id;
+
+      const { error: uErr } = await supabaseAdmin
+        .from("operaciones")
+        .update({ asignacion_id, updated_at: now } as never)
+        .eq("id", op.id);
+      if (uErr) throw new Error(uErr.message);
+
+      await supabaseAdmin.from("audit_log").insert({
+        tabla_nombre: "operaciones",
+        registro_id: op.id,
+        accion: "asignacion_automatica_gate3",
+        datos_nuevos: { asignacion_id, operador_responsable: prop.operador_id },
+        usuario_id: userId,
+      } as never);
+    } catch (e) {
+      asignacion_id = null;
+      console.error(
+        "asignacion automatica gate3 failed",
+        e instanceof Error ? e.message : String(e),
+      );
+      await supabaseAdmin.from("audit_log").insert({
+        tabla_nombre: "operaciones",
+        registro_id: op.id,
+        accion: "asignacion_automatica_gate3_fallida",
+        datos_nuevos: { error: e instanceof Error ? e.message : String(e) },
+        usuario_id: userId,
+      } as never);
+    }
+  }
+
+  return {
+    operacion_id: op.id,
+    numero_operacion: op.numero_operacion,
+    creada: true,
+    asignacion_id,
+  };
+
 }
