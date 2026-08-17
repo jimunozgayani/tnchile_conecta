@@ -59,7 +59,7 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
   }
 
   // Datos del chofer/camión adjudicados en la propuesta ganadora.
-  let prop: {
+  type PropuestaGanadora = {
     id: string;
     operador_id: string;
     chofer_id: string | null;
@@ -67,7 +67,8 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
     chofer_rut_libre: string | null;
     patente_principal: string | null;
     patente_secundaria: string | null;
-  } | null = null;
+  };
+  let prop: PropuestaGanadora | null = null;
   if (c["propuesta_ganadora_id"]) {
     const { data: p } = await supabaseAdmin
       .from("propuestas_proveedor")
@@ -76,7 +77,7 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
       )
       .eq("id", c["propuesta_ganadora_id"] as string)
       .maybeSingle();
-    prop = (p as typeof prop) ?? null;
+    prop = (p as PropuestaGanadora | null) ?? null;
   }
 
 
