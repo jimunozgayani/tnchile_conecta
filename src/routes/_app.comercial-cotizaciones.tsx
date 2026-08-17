@@ -485,13 +485,13 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
       });
       if (estado === "lista_para_operar") {
         try {
-          const op = await sellar({ data: { cotizacion_id: c.id } });
+          await sellar({ data: { cotizacion_id: c.id } });
           toast.success(
-            `Cierre sellado. Operación N° ${op.numero_operacion} creada y enviada a Operaciones.`,
+            "Cierre sellado. Pendiente de autorización de Admin/Líder de Cuenta para pasar a Operaciones.",
           );
         } catch (e) {
           toast.error(
-            e instanceof Error ? e.message : "Cierre sellado, pero no se pudo crear la operación.",
+            e instanceof Error ? e.message : "No se pudo sellar el cierre.",
           );
         }
       } else {
