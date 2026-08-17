@@ -36,7 +36,7 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
   const { data: cot, error: cErr } = await supabaseAdmin
     .from("cotizaciones")
     .select(
-      "id, estado, contacto_id, origen, destinos, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, precio_ofrecido_cliente_clp, precio_maximo_proveedor_clp, tipo_pago",
+      "id, estado, contacto_id, origen, destinos, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, precio_ofrecido_cliente_clp, precio_maximo_proveedor_clp, tipo_pago, propuesta_ganadora_id, carga_hora_desde, carga_hora_hasta, descarga_fecha, descarga_hora_desde, descarga_hora_hasta, descarga_notas",
     )
     .eq("id", cotizacionId)
     .maybeSingle();
@@ -57,6 +57,28 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
     const e = existente as { id: string; numero_operacion: number };
     return { operacion_id: e.id, numero_operacion: e.numero_operacion, creada: false };
   }
+
+  // Datos del chofer/camión adjudicados en la propuesta ganadora.
+  let prop: {
+    id: string;
+    operador_id: string;
+    chofer_id: string | null;
+    chofer_nombre_libre: string | null;
+    chofer_rut_libre: string | null;
+    patente_principal: string | null;
+    patente_secundaria: string | null;
+  } | null = null;
+  if (c["propuesta_ganadora_id"]) {
+    const { data: p } = await supabaseAdmin
+      .from("propuestas_proveedor")
+      .select(
+        "id, operador_id, chofer_id, chofer_nombre_libre, chofer_rut_libre, patente_principal, patente_secundaria",
+      )
+      .eq("id", c["propuesta_ganadora_id"] as string)
+      .maybeSingle();
+    prop = (p as typeof prop) ?? null;
+  }
+
 
   const dims = [c["largo_cm"], c["ancho_cm"], c["alto_cm"]];
   const dimensiones = dims.some((v) => v != null)
