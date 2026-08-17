@@ -352,6 +352,15 @@ export function CotizacionDrawer({
                 Editar
               </button>
             )}
+            {puedeEditarHorario && !editandoHorario && (
+              <button
+                type="button"
+                onClick={() => setEditandoHorario(true)}
+                className="rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+              >
+                Editar horario
+              </button>
+            )}
           <button type="button" aria-label="Cerrar" onClick={onClose} className="rounded p-1 hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
@@ -376,7 +385,20 @@ export function CotizacionDrawer({
               }}
             />
           </div>
+        ) : editandoHorario ? (
+          <div className="p-5">
+            <HorarioEditForm
+              ficha={f}
+              onCancel={() => setEditandoHorario(false)}
+              onSaved={(patch) => {
+                onChanged(patch);
+                setEditandoHorario(false);
+                void fichaQuery.refetch();
+              }}
+            />
+          </div>
         ) : (
+
           <div className="grid gap-6 p-5 md:grid-cols-2">
             {/* IZQUIERDA — contacto y carga */}
             <section className="space-y-3 text-sm">
