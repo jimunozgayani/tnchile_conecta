@@ -41,7 +41,7 @@ export function OrdenCompraPDF({
   conLogo?: boolean;
 }) {
   const d = data;
-  const ruta = `${d.origen ?? "Origen no especificado"} → ${d.destino ?? "Destino no especificado"}`;
+  const ruta = `${d.origen ?? "Origen no especificado"} - ${d.destino ?? "Destino no especificado"}`;
   const neto = Math.round(d.costo_clp ?? 0);
   const descripcion = [
     "Servicio de transporte de carga",
