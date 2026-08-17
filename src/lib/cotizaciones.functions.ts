@@ -338,11 +338,28 @@ const ESTADOS_CON_PRECIO = [
 /** Estados en que un comercial puede corregir los datos de la carga de su propia cotización. */
 export const ESTADOS_EDITABLES_COMERCIAL = ["nueva", "pendiente", "cotizada"];
 
+/** Columnas de ventana horaria de carga/descarga. */
+export const CAMPOS_HORARIO = [
+  "carga_hora_desde",
+  "carga_hora_hasta",
+  "descarga_fecha",
+  "descarga_hora_desde",
+  "descarga_hora_hasta",
+  "descarga_notas",
+] as const;
+
+/** Estados en que el comercial puede seguir ajustando SOLO el horario. */
+export const ESTADOS_HORARIO_COMERCIAL = [...ESTADOS_EDITABLES_COMERCIAL, "aceptada"];
+
+/** Estados en que el operador puede ajustar SOLO el horario durante la exploración. */
+export const ESTADOS_HORARIO_OPERADOR = ["en_exploracion", "costo_fijado"];
+
 /**
  * Edición de la ficha.
  * - admin / lider_cuenta: todos los campos, en cualquier estado.
- * - comercial: solo datos de la carga + presupuesto referencial, en sus propias
- *   cotizaciones y mientras estén en 'nueva' o 'cotizada'.
+ * - comercial: datos de la carga + presupuesto referencial en sus propias
+ *   cotizaciones ('nueva' / 'cotizada'); solo el horario también en 'aceptada'.
+ * - operador / jefe_operaciones: solo el horario, en 'en_exploracion' / 'costo_fijado'.
  */
 export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -352,9 +369,17 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
     const roles = await rolesDe(supabase as never, userId);
     const esAdmin = ADMINISH.some((r) => roles.includes(r));
     const esComercial = roles.includes("comercial");
-    if (!esAdmin && !esComercial) {
+    const esOperador = roles.includes("operador") || roles.includes("jefe_operaciones");
+    if (!esAdmin && !esComercial && !esOperador) {
       throw new Error("No tienes permisos para editar la cotización.");
     }
+
+    const camposEnviados = Object.keys(data).filter(
+      (k) => k !== "id" && (data as Record<string, unknown>)[k] !== undefined,
+    );
+    const soloHorario =
+      camposEnviados.length > 0 &&
+      camposEnviados.every((k) => (CAMPOS_HORARIO as readonly string[]).includes(k));
 
     const { data: actual, error: rErr } = await supabase
       .from("cotizaciones")
@@ -370,13 +395,25 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
       fecha_despacho: string | null;
     };
 
-    if (!esAdmin) {
+    if (!esAdmin && !esComercial && esOperador) {
+      if (!soloHorario) {
+        throw new Error("Operaciones solo puede ajustar el horario de carga y descarga.");
+      }
+      if (!ESTADOS_HORARIO_OPERADOR.includes(row.estado)) {
+        throw new Error(
+          "El horario solo puede ajustarse mientras la cotización está en exploración o con costo fijado.",
+        );
+      }
+    } else if (!esAdmin) {
       if (row.asignado_a !== userId) {
         throw new Error("Solo puedes editar cotizaciones asignadas a ti.");
       }
-      if (!ESTADOS_EDITABLES_COMERCIAL.includes(row.estado)) {
+      const estadosOk = soloHorario ? ESTADOS_HORARIO_COMERCIAL : ESTADOS_EDITABLES_COMERCIAL;
+      if (!estadosOk.includes(row.estado)) {
         throw new Error(
-          "Los datos de la carga solo pueden editarse mientras la cotización está en 'Nueva' o 'Cotizada'.",
+          soloHorario
+            ? "El horario solo puede editarse hasta el estado 'Aceptada'."
+            : "Los datos de la carga solo pueden editarse mientras la cotización está en 'Nueva' o 'Cotizada'.",
         );
       }
       if (
@@ -388,6 +425,7 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
         throw new Error("Esos campos solo puede editarlos administración o el líder de cuenta.");
       }
     }
+
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
