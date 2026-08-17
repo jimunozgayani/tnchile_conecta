@@ -631,7 +631,17 @@ function ExploracionPage() {
                   {abierto ? "Ocultar detalle" : "Ver detalle completo"}
                 </button>
 
-                {abierto && <DetalleCarga c={c} />}
+                {abierto && (
+                  <DetalleCarga
+                    c={c}
+                    puedeEditarHorario={
+                      puedeEditarHorarioRol &&
+                      ["en_exploracion", "costo_fijado"].includes(c.estado)
+                    }
+                    onHorarioGuardado={() => void cargar()}
+                  />
+                )}
+
 
                 {c.estado === "nueva" && puedeAbrir && (
                   <div className="mt-4">
