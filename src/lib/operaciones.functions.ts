@@ -74,8 +74,11 @@ async function audit(
   if (error) console.error("audit_log insert failed", error.message);
 }
 
-/** Sella el cierre comercial y crea (idempotente) la ficha de operación. */
-export const sellarCierreYCrearOperacion = createServerFn({ method: "POST" })
+/**
+ * Sella el cierre comercial: solo deja la cotización en `lista_para_operar`.
+ * NO crea operación ni asignación — eso ocurre únicamente en el Gate 3.
+ */
+export const sellarCierre = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ cotizacion_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
@@ -83,8 +86,18 @@ export const sellarCierreYCrearOperacion = createServerFn({ method: "POST" })
     const roles = await rolesDe(supabase as never, userId);
     if (!COMERCIAL_SELLA.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
 
-    const { crearOperacionDesdeCotizacion } = await import("@/lib/operaciones-crear.server");
-    return await crearOperacionDesdeCotizacion(data.cotizacion_id, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin
+      .from("cotizaciones")
+      .update({ estado: "lista_para_operar", updated_at: now } as never)
+      .eq("id", data.cotizacion_id);
+    if (error) throw new Error(error.message);
+
+    const { auditCotizacion } = await import("@/lib/operaciones-crear.server");
+    await auditCotizacion(data.cotizacion_id, "cierre_sellado", { estado: "lista_para_operar" }, userId);
+
+    return { ok: true, estado: "lista_para_operar" as const };
   });
 
 
