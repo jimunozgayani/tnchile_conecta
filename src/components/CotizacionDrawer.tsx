@@ -287,10 +287,12 @@ export function CotizacionDrawer({
       onChanged({ estado: res.estado, revision_count: res.revision_count });
       if (estado === "lista_para_operar") {
         try {
-          const op = await sellar({ data: { cotizacion_id: id } });
-          toast.success(`Cierre sellado. Operación N° ${op.numero_operacion} creada.`);
+          await sellar({ data: { cotizacion_id: id } });
+          toast.success(
+            "Cierre sellado. Pendiente de autorización de Admin/Líder de Cuenta para pasar a Operaciones.",
+          );
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Cierre sellado, pero no se creó la operación.");
+          toast.error(e instanceof Error ? e.message : "No se pudo sellar el cierre.");
         }
       } else {
         toast.success("Estado actualizado");
