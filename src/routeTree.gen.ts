@@ -24,6 +24,7 @@ import { Route as InvitacionChoferTokenRouteImport } from './routes/invitacion-c
 import { Route as AppTarifasRouteImport } from './routes/_app.tarifas'
 import { Route as AppProveedoresRouteImport } from './routes/_app.proveedores'
 import { Route as AppPerfilRouteImport } from './routes/_app.perfil'
+import { Route as AppOperacionesListaRouteImport } from './routes/_app.operaciones-lista'
 import { Route as AppOperacionesExploracionRouteImport } from './routes/_app.operaciones-exploracion'
 import { Route as AppOperacionesDisponibilidadSemanaRouteImport } from './routes/_app.operaciones-disponibilidad-semana'
 import { Route as AppOperacionesDisponibilidadMapaRouteImport } from './routes/_app.operaciones-disponibilidad-mapa'
@@ -126,6 +127,11 @@ const AppProveedoresRoute = AppProveedoresRouteImport.update({
 const AppPerfilRoute = AppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOperacionesListaRoute = AppOperacionesListaRouteImport.update({
+  id: '/operaciones-lista',
+  path: '/operaciones-lista',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOperacionesExploracionRoute =
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/operaciones-disponibilidad-semana': typeof AppOperacionesDisponibilidadSemanaRoute
   '/operaciones-exploracion': typeof AppOperacionesExploracionRoute
+  '/operaciones-lista': typeof AppOperacionesListaRoute
   '/perfil': typeof AppPerfilRoute
   '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/operaciones-disponibilidad-semana': typeof AppOperacionesDisponibilidadSemanaRoute
   '/operaciones-exploracion': typeof AppOperacionesExploracionRoute
+  '/operaciones-lista': typeof AppOperacionesListaRoute
   '/perfil': typeof AppPerfilRoute
   '/proveedores': typeof AppProveedoresRoute
   '/tarifas': typeof AppTarifasRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/_app/operaciones-disponibilidad-mapa': typeof AppOperacionesDisponibilidadMapaRoute
   '/_app/operaciones-disponibilidad-semana': typeof AppOperacionesDisponibilidadSemanaRoute
   '/_app/operaciones-exploracion': typeof AppOperacionesExploracionRoute
+  '/_app/operaciones-lista': typeof AppOperacionesListaRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/proveedores': typeof AppProveedoresRoute
   '/_app/tarifas': typeof AppTarifasRoute
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
     | '/operaciones-disponibilidad-mapa'
     | '/operaciones-disponibilidad-semana'
     | '/operaciones-exploracion'
+    | '/operaciones-lista'
     | '/perfil'
     | '/proveedores'
     | '/tarifas'
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/operaciones-disponibilidad-mapa'
     | '/operaciones-disponibilidad-semana'
     | '/operaciones-exploracion'
+    | '/operaciones-lista'
     | '/perfil'
     | '/proveedores'
     | '/tarifas'
@@ -550,6 +561,7 @@ export interface FileRouteTypes {
     | '/_app/operaciones-disponibilidad-mapa'
     | '/_app/operaciones-disponibilidad-semana'
     | '/_app/operaciones-exploracion'
+    | '/_app/operaciones-lista'
     | '/_app/perfil'
     | '/_app/proveedores'
     | '/_app/tarifas'
@@ -681,6 +693,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/operaciones-lista': {
+      id: '/_app/operaciones-lista'
+      path: '/operaciones-lista'
+      fullPath: '/operaciones-lista'
+      preLoaderRoute: typeof AppOperacionesListaRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/operaciones-exploracion': {
@@ -917,6 +936,7 @@ interface AppRouteChildren {
   AppOperacionesDisponibilidadMapaRoute: typeof AppOperacionesDisponibilidadMapaRoute
   AppOperacionesDisponibilidadSemanaRoute: typeof AppOperacionesDisponibilidadSemanaRoute
   AppOperacionesExploracionRoute: typeof AppOperacionesExploracionRoute
+  AppOperacionesListaRoute: typeof AppOperacionesListaRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppProveedoresRoute: typeof AppProveedoresRoute
   AppTarifasRoute: typeof AppTarifasRoute
@@ -952,6 +972,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOperacionesDisponibilidadSemanaRoute:
     AppOperacionesDisponibilidadSemanaRoute,
   AppOperacionesExploracionRoute: AppOperacionesExploracionRoute,
+  AppOperacionesListaRoute: AppOperacionesListaRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppProveedoresRoute: AppProveedoresRoute,
   AppTarifasRoute: AppTarifasRoute,
