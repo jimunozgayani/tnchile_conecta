@@ -1007,11 +1007,20 @@ export type Database = {
       operaciones: {
         Row: {
           asignacion_id: string | null
+          carga_hora_desde: string | null
+          carga_hora_hasta: string | null
+          chofer_id: string | null
+          chofer_nombre_libre: string | null
+          chofer_rut_libre: string | null
           contacto_id: string | null
           cotizacion_id: string | null
           creado_por: string | null
           created_at: string
           deleted_at: string | null
+          descarga_fecha: string | null
+          descarga_hora_desde: string | null
+          descarga_hora_hasta: string | null
+          descarga_notas: string | null
           descripcion_exacta: string | null
           destino: string | null
           dimensiones: string | null
@@ -1036,6 +1045,8 @@ export type Database = {
           origen: string | null
           pasada_a_operaciones_at: string | null
           pasada_a_operaciones_por: string | null
+          patente_principal: string | null
+          patente_secundaria: string | null
           peso_kg: number | null
           precio_maximo_proveedor_clp: number | null
           precio_ofrecido_cliente_clp: number | null
@@ -1048,11 +1059,20 @@ export type Database = {
         }
         Insert: {
           asignacion_id?: string | null
+          carga_hora_desde?: string | null
+          carga_hora_hasta?: string | null
+          chofer_id?: string | null
+          chofer_nombre_libre?: string | null
+          chofer_rut_libre?: string | null
           contacto_id?: string | null
           cotizacion_id?: string | null
           creado_por?: string | null
           created_at?: string
           deleted_at?: string | null
+          descarga_fecha?: string | null
+          descarga_hora_desde?: string | null
+          descarga_hora_hasta?: string | null
+          descarga_notas?: string | null
           descripcion_exacta?: string | null
           destino?: string | null
           dimensiones?: string | null
@@ -1077,6 +1097,8 @@ export type Database = {
           origen?: string | null
           pasada_a_operaciones_at?: string | null
           pasada_a_operaciones_por?: string | null
+          patente_principal?: string | null
+          patente_secundaria?: string | null
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
@@ -1089,11 +1111,20 @@ export type Database = {
         }
         Update: {
           asignacion_id?: string | null
+          carga_hora_desde?: string | null
+          carga_hora_hasta?: string | null
+          chofer_id?: string | null
+          chofer_nombre_libre?: string | null
+          chofer_rut_libre?: string | null
           contacto_id?: string | null
           cotizacion_id?: string | null
           creado_por?: string | null
           created_at?: string
           deleted_at?: string | null
+          descarga_fecha?: string | null
+          descarga_hora_desde?: string | null
+          descarga_hora_hasta?: string | null
+          descarga_notas?: string | null
           descripcion_exacta?: string | null
           destino?: string | null
           dimensiones?: string | null
@@ -1118,6 +1149,8 @@ export type Database = {
           origen?: string | null
           pasada_a_operaciones_at?: string | null
           pasada_a_operaciones_por?: string | null
+          patente_principal?: string | null
+          patente_secundaria?: string | null
           peso_kg?: number | null
           precio_maximo_proveedor_clp?: number | null
           precio_ofrecido_cliente_clp?: number | null
@@ -1134,6 +1167,13 @@ export type Database = {
             columns: ["asignacion_id"]
             isOneToOne: false
             referencedRelation: "asignaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operaciones_chofer_id_fkey"
+            columns: ["chofer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
             referencedColumns: ["id"]
           },
           {
