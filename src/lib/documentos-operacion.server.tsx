@@ -326,12 +326,34 @@ export async function generarYSubirDocumento(
 
 /** Best-effort: nunca interrumpe la autorización del Gate 3. */
 export async function generarDocumentosSeguro(operacionId: string) {
-  const resultados: { folio_oc: string | null; folio_ov: string | null; errores: string[] } = {
+  const resultados: {
+    folio_oc: string | null;
+    folio_ov: string | null;
+    errores: string[];
+    omitidos: string[];
+  } = {
     folio_oc: null,
     folio_ov: null,
     errores: [],
+    omitidos: [],
   };
+
+  // La OV solo aplica a ventas a crédito; al contado no se emite ni se envía.
+  const { data: opRow } = await supabaseAdmin
+    .from("operaciones")
+    .select("tipo_pago, cotizaciones(tipo_pago)")
+    .eq("id", operacionId)
+    .maybeSingle();
+  const row = (opRow as Record<string, any> | null) ?? null;
+  const tipoPago: string | null =
+    (row?.["cotizaciones"]?.tipo_pago as string | null) ?? (row?.["tipo_pago"] as string | null) ?? null;
+  const ovAplica = tipoPago !== "contado";
+
   for (const tipo of ["oc", "ov"] as TipoDoc[]) {
+    if (tipo === "ov" && !ovAplica) {
+      resultados.omitidos.push("ov: no aplica (pago al contado)");
+      continue;
+    }
     try {
       const r = await generarYSubirDocumento(operacionId, tipo);
       if (tipo === "oc") resultados.folio_oc = r.folio;
