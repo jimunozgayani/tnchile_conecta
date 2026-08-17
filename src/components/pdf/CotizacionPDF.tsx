@@ -1,4 +1,7 @@
-import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
+
+/** Logo servido desde el mismo origen (evita problemas de CORS al renderizar). */
+const LOGO_SRC = "/tn-chile-logo.png";
 
 /** Colores corporativos TN Chile. */
 const VERDE = "#2D7A45";
@@ -107,6 +110,8 @@ const parseLineas = (raw: unknown, fallbackPrecio: number): LineaServicio[] => {
 const styles = StyleSheet.create({
   page: { paddingTop: 32, paddingBottom: 56, paddingHorizontal: 36, fontSize: 9, color: "#1F2937" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  marcaBloque: { flexDirection: "row", alignItems: "center", gap: 8 },
+  logo: { width: 44, height: 44, borderRadius: 22, objectFit: "contain" },
   marca: { fontSize: 24, fontWeight: "bold", color: VERDE, letterSpacing: 1 },
   tagline: { fontSize: 8, fontStyle: "italic", color: GRIS, marginTop: 3 },
   docTitulo: { fontSize: 18, fontWeight: "bold", textAlign: "right" },
@@ -188,9 +193,12 @@ export function CotizacionPDF({
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.marca}>TN CHILE</Text>
-            <Text style={styles.tagline}>La logística la hacemos juntos.</Text>
+          <View style={styles.marcaBloque}>
+            <Image src={LOGO_SRC} style={styles.logo} />
+            <View>
+              <Text style={styles.marca}>TN CHILE</Text>
+              <Text style={styles.tagline}>La logística la hacemos juntos.</Text>
+            </View>
           </View>
           <View>
             <Text style={styles.docTitulo}>COTIZACIÓN</Text>
@@ -284,10 +292,10 @@ export function CotizacionPDF({
         {/* Datos de pago */}
         <View style={styles.pago}>
           <Text style={styles.seccionTitulo}>DATOS DE TRANSFERENCIA TN CHILE</Text>
-          <Fila etiqueta="Banco:" valor="Banco BCI" />
-          <Fila etiqueta="Cuenta cte.:" valor="123456789" />
-          <Fila etiqueta="RUT:" valor="76.XXX.XXX-X" />
-          <Fila etiqueta="Email:" valor="contacto@tnchile.cl" />
+          <Fila etiqueta="Banco:" valor="Banco Santander" />
+          <Fila etiqueta="Cuenta cte.:" valor="0-000-9417458-9" />
+          <Fila etiqueta="RUT:" valor="77.867.614-1" />
+          <Fila etiqueta="Email:" valor="nicolas.garcia@tnchile.com" />
         </View>
 
         {/* Footer */}

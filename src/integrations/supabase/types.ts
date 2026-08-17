@@ -598,6 +598,50 @@ export type Database = {
         }
         Relationships: []
       }
+      documentos_operacion: {
+        Row: {
+          confirmado_at: string | null
+          confirmado_ip: string | null
+          created_at: string | null
+          enviado_at: string | null
+          folio: string
+          id: string
+          operacion_id: string | null
+          pdf_storage_path: string | null
+          tipo: string | null
+        }
+        Insert: {
+          confirmado_at?: string | null
+          confirmado_ip?: string | null
+          created_at?: string | null
+          enviado_at?: string | null
+          folio: string
+          id?: string
+          operacion_id?: string | null
+          pdf_storage_path?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          confirmado_at?: string | null
+          confirmado_ip?: string | null
+          created_at?: string | null
+          enviado_at?: string | null
+          folio?: string
+          id?: string
+          operacion_id?: string | null
+          pdf_storage_path?: string | null
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_operacion_operacion_id_fkey"
+            columns: ["operacion_id"]
+            isOneToOne: false
+            referencedRelation: "operaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -1843,6 +1887,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      generar_folio: { Args: { p_tipo: string }; Returns: string }
       get_admin_dashboard_stats: {
         Args: never
         Returns: unknown
