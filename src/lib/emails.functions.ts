@@ -9,21 +9,29 @@ export const enviarBienvenidaProveedor = createServerFn({ method: "POST" })
     const { supabase, userId, claims } = context;
     const { data: perfil } = await supabase
       .from("profiles")
-      .select("razon_social, nombre_contacto, correo")
+      .select("razon_social, nombre_contacto, correo, bienvenida_enviada_at")
       .eq("id", userId)
       .maybeSingle();
+    // Solo la primera activación de cuenta recibe la bienvenida.
+    if (!perfil || perfil.bienvenida_enviada_at) return { ok: false, skipped: true };
 
-    const email = (perfil?.correo as string | null) || (claims as { email?: string }).email || null;
+    const email = (perfil.correo as string | null) || (claims as { email?: string }).email || null;
     const { bienvenidaProveedor } = await import("./email/templates.server");
     const { enviarCorreoSeguro } = await import("./email/send.server");
-    return enviarCorreoSeguro(
+    const res = await enviarCorreoSeguro(
       email,
       bienvenidaProveedor({
-        nombre_contacto: (perfil?.nombre_contacto as string | null) ?? null,
-        razon_social: (perfil?.razon_social as string | null) ?? null,
+        nombre_contacto: (perfil.nombre_contacto as string | null) ?? null,
+        razon_social: (perfil.razon_social as string | null) ?? null,
       }),
     );
+    await supabase
+      .from("profiles")
+      .update({ bienvenida_enviada_at: new Date().toISOString() })
+      .eq("id", userId);
+    return res;
   });
+
 
 /** Aviso por correo de un mensaje interno recién creado. */
 export const enviarNotificacionMensaje = createServerFn({ method: "POST" })
