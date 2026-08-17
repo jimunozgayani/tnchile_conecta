@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSignedUrl } from "@/lib/signed-url";
 import { Gate3Actions } from "@/components/Gate3Actions";
 import { CotizacionEditForm } from "@/components/CotizacionEditForm";
+import { HorarioEditForm } from "@/components/HorarioEditForm";
+
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
