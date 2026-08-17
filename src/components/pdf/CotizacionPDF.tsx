@@ -1,4 +1,7 @@
-import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
+
+/** Logo servido desde el mismo origen (evita problemas de CORS al renderizar). */
+const LOGO_SRC = "/tn-chile-logo.png";
 
 /** Colores corporativos TN Chile. */
 const VERDE = "#2D7A45";
