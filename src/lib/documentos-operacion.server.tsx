@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Correo } from "@/lib/email/templates.server";
 
 const BUCKET = "documentos-operacion";
 const TTL = 3600;
@@ -277,7 +278,7 @@ export async function generarYSubirDocumento(
   const destino = str(o["destino"]);
 
   let destinatario: string | null;
-  let correo: t.Correo;
+  let correo: Correo;
   if (tipo === "oc") {
     const pc = ctx.proveedorContacto;
     destinatario = pc ? str(pc["email"]) : null;
