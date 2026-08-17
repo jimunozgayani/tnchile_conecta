@@ -22,6 +22,13 @@ const cotizacionSchema = z.object({
   ancho_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
   alto_cm: z.coerce.number().nonnegative().max(100_000).optional().nullable(),
   fotos: z.array(z.string().trim().max(500)).max(5).optional(),
+  carga_hora_desde: z.string().trim().max(8).optional().nullable(),
+  carga_hora_hasta: z.string().trim().max(8).optional().nullable(),
+  descarga_fecha: z.string().trim().max(10).optional().nullable(),
+  descarga_hora_desde: z.string().trim().max(8).optional().nullable(),
+  descarga_hora_hasta: z.string().trim().max(8).optional().nullable(),
+  descarga_notas: z.string().trim().max(2000).optional().nullable(),
+
 });
 
 
