@@ -444,7 +444,7 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
     // días posteriores son válidos).
     const fechaCargaFinal =
       (patch["fecha_despacho"] as string | null | undefined) ??
-      (row as { fecha_despacho: string | null }).fecha_despacho;
+      row.fecha_despacho;
     const fechaDescargaFinal = patch["descarga_fecha"] as string | null | undefined;
     if (fechaCargaFinal && fechaDescargaFinal && fechaDescargaFinal < fechaCargaFinal) {
       throw new Error("La fecha de descarga no puede ser anterior a la fecha de carga.");
