@@ -515,7 +515,7 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
     if (estado === "lista_para_operar") {
       if (
         !window.confirm(
-          "¿Confirmas el cierre? Se generarán la OC y la Orden de Venta automáticamente al completar este paso.",
+          "¿Confirmas el cierre? La cotización pasará a 'Cierre sellado', pendiente de autorización de Admin/Líder de Cuenta para pasar a Operaciones.",
         )
       )
         return;
