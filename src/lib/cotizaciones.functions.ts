@@ -85,6 +85,13 @@ export const createCotizacion = createServerFn({ method: "POST" })
         estado: "nueva",
         asignado_a: userId,
         fotos: data.fotos ?? [],
+        carga_hora_desde: clean(data.carga_hora_desde),
+        carga_hora_hasta: clean(data.carga_hora_hasta),
+        descarga_fecha: clean(data.descarga_fecha),
+        descarga_hora_desde: clean(data.descarga_hora_desde),
+        descarga_hora_hasta: clean(data.descarga_hora_hasta),
+        descarga_notas: clean(data.descarga_notas),
+
       } as never)
 
       .select("id, estado")
