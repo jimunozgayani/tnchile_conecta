@@ -8,6 +8,8 @@ import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
 import { getSignedUrl } from "@/lib/signed-url";
 import { CountdownBadge } from "@/components/ExploracionCountdown";
+import { HorarioEditForm } from "@/components/HorarioEditForm";
+
 import {
   abrirExploracion,
   agregarPropuesta,
