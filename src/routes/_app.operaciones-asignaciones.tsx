@@ -10,4 +10,5 @@ export const Route = createFileRoute("/_app/operaciones-asignaciones")({
   beforeLoad: () => {
     throw redirect({ to: "/operaciones-lista" });
   },
+  component: () => null,
 });
