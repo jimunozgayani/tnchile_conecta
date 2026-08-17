@@ -349,7 +349,12 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
       .maybeSingle();
     if (rErr) throw new Error(rErr.message);
     if (!actual) throw new Error("Cotización no encontrada.");
-    const row = actual as { estado: string; destinos: unknown; asignado_a: string | null };
+    const row = actual as {
+      estado: string;
+      destinos: unknown;
+      asignado_a: string | null;
+      fecha_despacho: string | null;
+    };
 
     if (!esAdmin) {
       if (row.asignado_a !== userId) {
