@@ -1613,6 +1613,28 @@ function DetallePropuestaModal({
             <dd>{tipoNombre}</dd>
           </div>
           <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Chofer</dt>
+            <dd>
+              {p.chofer_nombre_libre
+                ? `${p.chofer_nombre_libre}${p.chofer_rut_libre ? ` · ${p.chofer_rut_libre}` : ""}`
+                : p.chofer_id
+                  ? "Chofer registrado del proveedor"
+                  : "Sin definir"}
+              {p.proveedor_es_chofer && (
+                <span className="block text-xs text-muted-foreground">
+                  El proveedor es el mismo chofer.
+                </span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Patente(s)</dt>
+            <dd>
+              {[p.patente_principal, p.patente_secundaria].filter(Boolean).join(" / ") ||
+                "Sin definir"}
+            </dd>
+          </div>
+          <div>
             <dt className="text-xs uppercase tracking-wide text-muted-foreground">
               Condición de pago al proveedor
             </dt>
