@@ -8,6 +8,8 @@ import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
 import { getSignedUrl } from "@/lib/signed-url";
 import { CountdownBadge } from "@/components/ExploracionCountdown";
+import { HorarioEditForm } from "@/components/HorarioEditForm";
+
 import {
   abrirExploracion,
   agregarPropuesta,
@@ -149,10 +151,20 @@ const ESTADO_PROPUESTA: Record<string, { label: string; cls: string }> = {
   descartada: { label: "Descartada", cls: "bg-destructive/10 text-destructive" },
 };
 
-function DetalleCarga({ c }: { c: Carga }) {
+function DetalleCarga({
+  c,
+  puedeEditarHorario = false,
+  onHorarioGuardado,
+}: {
+  c: Carga;
+  puedeEditarHorario?: boolean;
+  onHorarioGuardado?: () => void;
+}) {
   const paths = useMemo(() => fotoPaths(c.fotos), [c.fotos]);
   const [urls, setUrls] = useState<string[]>([]);
   const [zoom, setZoom] = useState<string | null>(null);
+  const [editHorario, setEditHorario] = useState(false);
+
 
   useEffect(() => {
     let cancel = false;
@@ -202,6 +214,19 @@ function DetalleCarga({ c }: { c: Carga }) {
         )}
       </div>
 
+      {editHorario ? (
+        <div className="rounded-md border bg-background p-3">
+          <HorarioEditForm
+            ficha={c}
+            titulo="Ajustar horario de carga y descarga"
+            onCancel={() => setEditHorario(false)}
+            onSaved={() => {
+              setEditHorario(false);
+              onHorarioGuardado?.();
+            }}
+          />
+        </div>
+      ) : (
       <div className="grid gap-2 sm:grid-cols-2">
         <p>
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -224,7 +249,20 @@ function DetalleCarga({ c }: { c: Carga }) {
             <span className="block text-xs text-muted-foreground">{c.descarga_notas}</span>
           )}
         </p>
+        {puedeEditarHorario && (
+          <div className="sm:col-span-2">
+            <button
+              type="button"
+              onClick={() => setEditHorario(true)}
+              className="rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+            >
+              Editar horario
+            </button>
+          </div>
+        )}
       </div>
+      )}
+
 
       {c.notas_admin && (
         <div>
@@ -346,6 +384,13 @@ function ExploracionPage() {
 
   const puedeAbrir = roles.includes("admin") || roles.includes("jefe_operaciones");
   const puedeElegir = roles.includes("admin") || roles.includes("lider_cuenta");
+  // Operaciones puede afinar el horario con el proveedor durante la exploración.
+  const puedeEditarHorarioRol =
+    roles.includes("admin") ||
+    roles.includes("lider_cuenta") ||
+    roles.includes("jefe_operaciones") ||
+    roles.includes("operador");
+
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -595,7 +640,17 @@ function ExploracionPage() {
                   {abierto ? "Ocultar detalle" : "Ver detalle completo"}
                 </button>
 
-                {abierto && <DetalleCarga c={c} />}
+                {abierto && (
+                  <DetalleCarga
+                    c={c}
+                    puedeEditarHorario={
+                      puedeEditarHorarioRol &&
+                      ["en_exploracion", "costo_fijado"].includes(c.estado)
+                    }
+                    onHorarioGuardado={() => void cargar()}
+                  />
+                )}
+
 
                 {c.estado === "nueva" && puedeAbrir && (
                   <div className="mt-4">

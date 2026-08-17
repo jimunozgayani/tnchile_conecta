@@ -7,6 +7,12 @@ import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  HorarioCargaDescargaFields,
+  horarioVacio,
+  type HorarioValues,
+} from "@/components/HorarioCargaDescargaFields";
+
+import {
   createCotizacion,
   actualizarEstadoCotizacion,
   asignarCotizacion,
@@ -793,6 +799,8 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
   const [ancho, setAncho] = useState("");
   const [alto, setAlto] = useState("");
   const [fotos, setFotos] = useState<File[]>([]);
+  const [horario, setHorario] = useState<HorarioValues>(horarioVacio);
+
 
   const [inlineOpen, setInlineOpen] = useState(false);
   const [inlineBusy, setInlineBusy] = useState(false);
@@ -905,6 +913,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           ancho_cm: ancho ? Number(ancho) : null,
           alto_cm: alto ? Number(alto) : null,
           fotos: rutas,
+          carga_hora_desde: horario.carga_hora_desde || null,
+          carga_hora_hasta: horario.carga_hora_hasta || null,
+          descarga_fecha: horario.descarga_fecha || null,
+          descarga_hora_desde: horario.descarga_hora_desde || null,
+          descarga_hora_hasta: horario.descarga_hora_hasta || null,
+          descarga_notas: horario.descarga_notas || null,
+
         },
       });
       toast.success("Cotización creada");
@@ -1211,6 +1226,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
             </p>
           )}
         </div>
+
+        <HorarioCargaDescargaFields
+          idPrefix="c"
+          value={horario}
+          onChange={(p) => setHorario((prev) => ({ ...prev, ...p }))}
+        />
+
 
         <div>
           <label className="mb-1 block text-xs font-medium" htmlFor="c-notas">

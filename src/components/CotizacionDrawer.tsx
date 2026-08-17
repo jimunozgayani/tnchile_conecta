@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSignedUrl } from "@/lib/signed-url";
 import { Gate3Actions } from "@/components/Gate3Actions";
 import { CotizacionEditForm } from "@/components/CotizacionEditForm";
+import { HorarioEditForm } from "@/components/HorarioEditForm";
+
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
@@ -225,6 +227,8 @@ export function CotizacionDrawer({
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
   const [prep, setPrep] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [editandoHorario, setEditandoHorario] = useState(false);
+
 
   const uidQuery = useQuery({
     queryKey: ["auth-uid"],
@@ -313,13 +317,13 @@ export function CotizacionDrawer({
 
   // El comercial puede corregir los datos de la carga de su propia cotización
   // mientras no esté en manos de operaciones.
+  const esPropia = !!f && !!uid && f.asignado_a === uid;
   const puedeEditarCarga =
-    puedeTodo ||
-    (esComercial &&
-      !!f &&
-      ["nueva", "pendiente", "cotizada"].includes(f.estado) &&
-      !!uid &&
-      f.asignado_a === uid);
+    puedeTodo || (esComercial && !!f && ["nueva", "pendiente", "cotizada"].includes(f.estado) && esPropia);
+  // El horario puede seguir ajustándose con el cliente hasta 'aceptada'.
+  const puedeEditarHorario =
+    !puedeEditarCarga && esComercial && !!f && f.estado === "aceptada" && esPropia;
+
 
   const acciones = puedeTodo || roles.includes("comercial") ? (ACCIONES[f?.estado ?? ""] ?? []) : [];
   const revCount = f?.revision_count ?? 0;
@@ -352,6 +356,15 @@ export function CotizacionDrawer({
                 Editar
               </button>
             )}
+            {puedeEditarHorario && !editandoHorario && (
+              <button
+                type="button"
+                onClick={() => setEditandoHorario(true)}
+                className="rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+              >
+                Editar horario
+              </button>
+            )}
           <button type="button" aria-label="Cerrar" onClick={onClose} className="rounded p-1 hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
@@ -376,7 +389,20 @@ export function CotizacionDrawer({
               }}
             />
           </div>
+        ) : editandoHorario ? (
+          <div className="p-5">
+            <HorarioEditForm
+              ficha={f}
+              onCancel={() => setEditandoHorario(false)}
+              onSaved={(patch) => {
+                onChanged(patch);
+                setEditandoHorario(false);
+                void fichaQuery.refetch();
+              }}
+            />
+          </div>
         ) : (
+
           <div className="grid gap-6 p-5 md:grid-cols-2">
             {/* IZQUIERDA — contacto y carga */}
             <section className="space-y-3 text-sm">
