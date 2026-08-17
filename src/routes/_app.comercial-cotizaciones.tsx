@@ -913,6 +913,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           ancho_cm: ancho ? Number(ancho) : null,
           alto_cm: alto ? Number(alto) : null,
           fotos: rutas,
+          carga_hora_desde: horario.carga_hora_desde || null,
+          carga_hora_hasta: horario.carga_hora_hasta || null,
+          descarga_fecha: horario.descarga_fecha || null,
+          descarga_hora_desde: horario.descarga_hora_desde || null,
+          descarga_hora_hasta: horario.descarga_hora_hasta || null,
+          descarga_notas: horario.descarga_notas || null,
+
         },
       });
       toast.success("Cotización creada");
