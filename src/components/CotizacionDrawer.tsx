@@ -313,13 +313,13 @@ export function CotizacionDrawer({
 
   // El comercial puede corregir los datos de la carga de su propia cotización
   // mientras no esté en manos de operaciones.
+  const esPropia = !!f && !!uid && f.asignado_a === uid;
   const puedeEditarCarga =
-    puedeTodo ||
-    (esComercial &&
-      !!f &&
-      ["nueva", "pendiente", "cotizada"].includes(f.estado) &&
-      !!uid &&
-      f.asignado_a === uid);
+    puedeTodo || (esComercial && !!f && ["nueva", "pendiente", "cotizada"].includes(f.estado) && esPropia);
+  // El horario puede seguir ajustándose con el cliente hasta 'aceptada'.
+  const puedeEditarHorario =
+    !puedeEditarCarga && esComercial && !!f && f.estado === "aceptada" && esPropia;
+
 
   const acciones = puedeTodo || roles.includes("comercial") ? (ACCIONES[f?.estado ?? ""] ?? []) : [];
   const revCount = f?.revision_count ?? 0;
