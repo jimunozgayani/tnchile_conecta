@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSignedUrl } from "@/lib/signed-url";
 import { validateUpload } from "@/lib/upload-validation";
 import { actualizarCotizacionCompleta } from "@/lib/cotizaciones.functions";
+import { HorarioCargaDescargaFields } from "@/components/HorarioCargaDescargaFields";
+
 
 const ESTADOS_CON_PRECIO = [
   "cotizada",
