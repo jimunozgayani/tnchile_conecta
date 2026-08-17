@@ -455,84 +455,27 @@ export function CotizacionEditForm({
           </p>
         </div>
 
-        <div className="sm:col-span-2 rounded-md border bg-muted/30 p-3">
-          <p className="mb-2 text-sm font-semibold">Horario de carga</p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className={labelCls} htmlFor="edit-carga-desde">Hora desde</label>
-              <input
-                id="edit-carga-desde"
-                type="time"
-                value={cargaDesde}
-                onChange={(e) => setCargaDesde(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="edit-carga-hasta">Hora hasta</label>
-              <input
-                id="edit-carga-hasta"
-                type="time"
-                value={cargaHasta}
-                onChange={(e) => setCargaHasta(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-          </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            La fecha de carga es la fecha de despacho indicada arriba.
-          </p>
-        </div>
+        <HorarioCargaDescargaFields
+          className="sm:col-span-2"
+          idPrefix="edit"
+          value={{
+            carga_hora_desde: cargaDesde,
+            carga_hora_hasta: cargaHasta,
+            descarga_fecha: descargaFecha,
+            descarga_hora_desde: descargaDesde,
+            descarga_hora_hasta: descargaHasta,
+            descarga_notas: descargaNotas,
+          }}
+          onChange={(p) => {
+            if (p.carga_hora_desde !== undefined) setCargaDesde(p.carga_hora_desde);
+            if (p.carga_hora_hasta !== undefined) setCargaHasta(p.carga_hora_hasta);
+            if (p.descarga_fecha !== undefined) setDescargaFecha(p.descarga_fecha);
+            if (p.descarga_hora_desde !== undefined) setDescargaDesde(p.descarga_hora_desde);
+            if (p.descarga_hora_hasta !== undefined) setDescargaHasta(p.descarga_hora_hasta);
+            if (p.descarga_notas !== undefined) setDescargaNotas(p.descarga_notas);
+          }}
+        />
 
-        <div className="sm:col-span-2 rounded-md border bg-muted/30 p-3">
-          <p className="mb-2 text-sm font-semibold">Horario de descarga</p>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div>
-              <label className={labelCls} htmlFor="edit-descarga-fecha">Fecha</label>
-              <input
-                id="edit-descarga-fecha"
-                type="date"
-                value={descargaFecha}
-                onChange={(e) => setDescargaFecha(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="edit-descarga-desde">Hora desde</label>
-              <input
-                id="edit-descarga-desde"
-                type="time"
-                value={descargaDesde}
-                onChange={(e) => setDescargaDesde(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="edit-descarga-hasta">Hora hasta</label>
-              <input
-                id="edit-descarga-hasta"
-                type="time"
-                value={descargaHasta}
-                onChange={(e) => setDescargaHasta(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-          </div>
-          <div className="mt-2">
-            <label className={labelCls} htmlFor="edit-descarga-notas">Notas de descarga (opcional)</label>
-            <textarea
-              id="edit-descarga-notas"
-              rows={2}
-              value={descargaNotas}
-              onChange={(e) => setDescargaNotas(e.target.value)}
-              placeholder="Ej: destino solo recibe en horario hábil, puede ser el día siguiente"
-              className={inputCls}
-            />
-          </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            La descarga puede ser el mismo día o días posteriores a la carga.
-          </p>
-        </div>
 
         <div className="sm:col-span-2">
           <label className={labelCls} htmlFor="edit-notas">Notas internas</label>
