@@ -173,6 +173,23 @@ type Ficha = {
   validez_hasta: string | null;
   fotos: unknown;
   created_at: string;
+  carga_hora_desde: string | null;
+  carga_hora_hasta: string | null;
+  descarga_fecha: string | null;
+  descarga_hora_desde: string | null;
+  descarga_hora_hasta: string | null;
+  descarga_notas: string | null;
+};
+
+/** "HH:MM:SS" -> "HH:MM"; null -> "" */
+const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
+const rangoHoras = (desde: string | null, hasta: string | null) => {
+  const d = hhmm(desde);
+  const h = hhmm(hasta);
+  if (d && h) return `${d} a ${h}`;
+  if (d) return `desde ${d}`;
+  if (h) return `hasta ${h}`;
+  return "";
 };
 
 
@@ -221,7 +238,7 @@ export function CotizacionDrawer({
       const { data, error } = await supabase
         .from("cotizaciones")
         .select(
-          "id, estado, contacto_id, contacto_nombre, contacto_telefono, contacto_email, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, comentarios_revision, comentarios_rechazo, revision_count, asignado_a, precio_ofrecido_cliente_clp, presupuesto_referencial_cliente_clp, tipo_pago, validez_hasta, fotos, created_at",
+          "id, estado, contacto_id, contacto_nombre, contacto_telefono, contacto_email, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, peso_kg, largo_cm, ancho_cm, alto_cm, fecha_despacho, notas_admin, comentarios_revision, comentarios_rechazo, revision_count, asignado_a, precio_ofrecido_cliente_clp, presupuesto_referencial_cliente_clp, tipo_pago, validez_hasta, fotos, created_at, carga_hora_desde, carga_hora_hasta, descarga_fecha, descarga_hora_desde, descarga_hora_hasta, descarga_notas",
         )
         .eq("id", id)
         .maybeSingle();
@@ -406,6 +423,23 @@ export function CotizacionDrawer({
                 <div className="flex gap-2">
                   <dt className="w-24 shrink-0 text-xs text-muted-foreground">Despacho</dt>
                   <dd>{fmtFechaES(f.fecha_despacho)}</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-xs text-muted-foreground">Horario carga</dt>
+                  <dd>{rangoHoras(f.carga_hora_desde, f.carga_hora_hasta) || "—"}</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-xs text-muted-foreground">Descarga</dt>
+                  <dd>
+                    {f.descarga_fecha || f.descarga_hora_desde || f.descarga_hora_hasta
+                      ? [fmtFechaES(f.descarga_fecha), rangoHoras(f.descarga_hora_desde, f.descarga_hora_hasta)]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : "—"}
+                    {f.descarga_notas && (
+                      <span className="block text-xs text-muted-foreground">{f.descarga_notas}</span>
+                    )}
+                  </dd>
                 </div>
                 <div className="flex gap-2">
                   <dt className="w-24 shrink-0 text-xs text-muted-foreground">Precio</dt>
