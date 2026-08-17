@@ -122,8 +122,21 @@ export const retenerGate3 = createServerFn({ method: "POST" })
       .update({ deleted_at: now, updated_at: now } as never)
       .eq("cotizacion_id", data.id)
       .is("deleted_at", null)
-      .select("id");
+      .select("id,asignacion_id");
     if (oErr) throw new Error(oErr.message);
+
+    // Las asignaciones vinculadas a operaciones retenidas se desactivan para no
+    // dejar choferes "asignados" a una carga que volvió a comercial.
+    const asignacionIds = ((ops ?? []) as { asignacion_id: string | null }[])
+      .map((o) => o.asignacion_id)
+      .filter((v): v is string => !!v);
+    if (asignacionIds.length > 0) {
+      const { error: aErr } = await supabaseAdmin
+        .from("asignaciones")
+        .update({ activa: false, updated_at: now } as never)
+        .in("id", asignacionIds);
+      if (aErr) throw new Error(aErr.message);
+    }
 
     for (const op of (ops ?? []) as { id: string }[]) {
       await auditCotizacion(
