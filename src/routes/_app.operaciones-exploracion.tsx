@@ -212,6 +212,19 @@ function DetalleCarga({
         )}
       </div>
 
+      {editHorario ? (
+        <div className="rounded-md border bg-background p-3">
+          <HorarioEditForm
+            ficha={c}
+            titulo="Ajustar horario de carga y descarga"
+            onCancel={() => setEditHorario(false)}
+            onSaved={() => {
+              setEditHorario(false);
+              onHorarioGuardado?.();
+            }}
+          />
+        </div>
+      ) : (
       <div className="grid gap-2 sm:grid-cols-2">
         <p>
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -234,7 +247,20 @@ function DetalleCarga({
             <span className="block text-xs text-muted-foreground">{c.descarga_notas}</span>
           )}
         </p>
+        {puedeEditarHorario && (
+          <div className="sm:col-span-2">
+            <button
+              type="button"
+              onClick={() => setEditHorario(true)}
+              className="rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+            >
+              Editar horario
+            </button>
+          </div>
+        )}
       </div>
+      )}
+
 
       {c.notas_admin && (
         <div>
