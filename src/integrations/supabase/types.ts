@@ -283,6 +283,8 @@ export type Database = {
           alto_cm: number | null
           ancho_cm: number | null
           asignado_a: string | null
+          carga_hora_desde: string | null
+          carga_hora_hasta: string | null
           cliente_id: string | null
           comentarios_rechazo: string | null
           comentarios_revision: string | null
@@ -292,6 +294,10 @@ export type Database = {
           contacto_telefono: string | null
           costo_proveedor_fijado_clp: number | null
           created_at: string
+          descarga_fecha: string | null
+          descarga_hora_desde: string | null
+          descarga_hora_hasta: string | null
+          descarga_notas: string | null
           destinos: Json
           estado: string
           exploracion_abierta_at: string | null
@@ -331,6 +337,8 @@ export type Database = {
           alto_cm?: number | null
           ancho_cm?: number | null
           asignado_a?: string | null
+          carga_hora_desde?: string | null
+          carga_hora_hasta?: string | null
           cliente_id?: string | null
           comentarios_rechazo?: string | null
           comentarios_revision?: string | null
@@ -340,6 +348,10 @@ export type Database = {
           contacto_telefono?: string | null
           costo_proveedor_fijado_clp?: number | null
           created_at?: string
+          descarga_fecha?: string | null
+          descarga_hora_desde?: string | null
+          descarga_hora_hasta?: string | null
+          descarga_notas?: string | null
           destinos?: Json
           estado?: string
           exploracion_abierta_at?: string | null
@@ -379,6 +391,8 @@ export type Database = {
           alto_cm?: number | null
           ancho_cm?: number | null
           asignado_a?: string | null
+          carga_hora_desde?: string | null
+          carga_hora_hasta?: string | null
           cliente_id?: string | null
           comentarios_rechazo?: string | null
           comentarios_revision?: string | null
@@ -388,6 +402,10 @@ export type Database = {
           contacto_telefono?: string | null
           costo_proveedor_fijado_clp?: number | null
           created_at?: string
+          descarga_fecha?: string | null
+          descarga_hora_desde?: string | null
+          descarga_hora_hasta?: string | null
+          descarga_notas?: string | null
           destinos?: Json
           estado?: string
           exploracion_abierta_at?: string | null
@@ -1287,6 +1305,9 @@ export type Database = {
       propuestas_proveedor: {
         Row: {
           actualizado_at: string
+          chofer_id: string | null
+          chofer_nombre_libre: string | null
+          chofer_rut_libre: string | null
           costo_clp: number
           cotizacion_id: string
           creado_at: string
@@ -1294,7 +1315,10 @@ export type Database = {
           id: string
           notas: string | null
           operador_id: string
+          patente_principal: string | null
+          patente_secundaria: string | null
           proveedor_contacto_id: string | null
+          proveedor_es_chofer: boolean | null
           proveedor_nombre: string
           ronda: number
           tipo_camion_id: string | null
@@ -1302,6 +1326,9 @@ export type Database = {
         }
         Insert: {
           actualizado_at?: string
+          chofer_id?: string | null
+          chofer_nombre_libre?: string | null
+          chofer_rut_libre?: string | null
           costo_clp: number
           cotizacion_id: string
           creado_at?: string
@@ -1309,7 +1336,10 @@ export type Database = {
           id?: string
           notas?: string | null
           operador_id: string
+          patente_principal?: string | null
+          patente_secundaria?: string | null
           proveedor_contacto_id?: string | null
+          proveedor_es_chofer?: boolean | null
           proveedor_nombre: string
           ronda?: number
           tipo_camion_id?: string | null
@@ -1317,6 +1347,9 @@ export type Database = {
         }
         Update: {
           actualizado_at?: string
+          chofer_id?: string | null
+          chofer_nombre_libre?: string | null
+          chofer_rut_libre?: string | null
           costo_clp?: number
           cotizacion_id?: string
           creado_at?: string
@@ -1324,13 +1357,23 @@ export type Database = {
           id?: string
           notas?: string | null
           operador_id?: string
+          patente_principal?: string | null
+          patente_secundaria?: string | null
           proveedor_contacto_id?: string | null
+          proveedor_es_chofer?: boolean | null
           proveedor_nombre?: string
           ronda?: number
           tipo_camion_id?: string | null
           tipo_pago?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "propuestas_proveedor_chofer_id_fkey"
+            columns: ["chofer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "propuestas_proveedor_cotizacion_id_fkey"
             columns: ["cotizacion_id"]
