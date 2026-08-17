@@ -47,7 +47,28 @@ export const autorizarGate3 = createServerFn({ method: "POST" })
       userId,
     );
 
-    return op;
+    // OC y OV: generación best-effort — un fallo nunca revierte la autorización.
+    let docs = { folio_oc: null as string | null, folio_ov: null as string | null, errores: [] as string[] };
+    try {
+      const { generarDocumentosSeguro } = await import("@/lib/documentos-operacion.server");
+      docs = await generarDocumentosSeguro(op.operacion_id);
+    } catch (e) {
+      docs.errores.push(e instanceof Error ? e.message : "error al generar documentos");
+    }
+
+    await auditCotizacion(
+      data.id,
+      "documentos_generados",
+      {
+        operacion_id: op.operacion_id,
+        folio_oc: docs.folio_oc,
+        folio_ov: docs.folio_ov,
+        ...(docs.errores.length > 0 ? { errores: docs.errores } : {}),
+      },
+      userId,
+    );
+
+    return { ...op, folio_oc: docs.folio_oc, folio_ov: docs.folio_ov, errores: docs.errores };
   });
 
 export const retenerGate3 = createServerFn({ method: "POST" })

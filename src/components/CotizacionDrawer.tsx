@@ -9,6 +9,7 @@ import { getSignedUrl } from "@/lib/signed-url";
 import { Gate3Actions } from "@/components/Gate3Actions";
 import { CotizacionEditForm } from "@/components/CotizacionEditForm";
 import { HorarioEditForm } from "@/components/HorarioEditForm";
+import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
@@ -596,6 +597,11 @@ export function CotizacionDrawer({
                   <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Preparar para exploración
                 </button>
               )}
+              <DescargarDocumentoOperacion
+                cotizacionId={id}
+                tipo="ov_cliente"
+                visible={puedeTodo || esComercial}
+              />
               {puedePDF && (
                 <button
                   type="button"

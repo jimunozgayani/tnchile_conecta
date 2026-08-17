@@ -218,3 +218,63 @@ export function invitacionChofer(p: {
     `),
   };
 }
+
+/** 7. Orden de compra generada (al proveedor) */
+export function ocGenerada(p: {
+  proveedor: string | null;
+  folio: string;
+  numero_operacion: number | null;
+  origen: string | null;
+  destino: string | null;
+  monto_neto: number | null;
+  url: string;
+}): Correo {
+  const nombre = p.proveedor?.trim() || "proveedor";
+  const monto = p.monto_neto != null ? `$ ${Math.round(p.monto_neto).toLocaleString("es-CL")}` : "—";
+  return {
+    subject: `Orden de compra ${p.folio} — TN Chile`,
+    html: layout(`
+      <h1 style="margin:0 0 14px;font-size:21px;color:${VERDE_OSCURO}">Orden de compra ${esc(p.folio)}</h1>
+      <p style="margin:0 0 14px">Hola ${esc(nombre)}, emitimos la orden de compra del servicio que tomarás con nosotros.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 16px;font-size:14px;border:1px solid #eee;border-radius:8px">
+        <tr><td style="padding:10px 12px;color:#666">N° OC</td><td style="padding:10px 12px"><strong>${esc(p.folio)}</strong></td></tr>
+        ${p.numero_operacion != null ? `<tr><td style="padding:10px 12px;color:#666">Operación</td><td style="padding:10px 12px">N° ${esc(p.numero_operacion)}</td></tr>` : ""}
+        <tr><td style="padding:10px 12px;color:#666">Ruta</td><td style="padding:10px 12px">${esc(p.origen ?? "—")} → ${esc(p.destino ?? "—")}</td></tr>
+        <tr><td style="padding:10px 12px;color:#666">Monto neto</td><td style="padding:10px 12px"><strong>${esc(monto)}</strong></td></tr>
+      </table>
+      ${boton(p.url, "Descargar orden de compra (PDF)")}
+      <p style="margin:0 0 8px;font-size:13px;color:#555">Recuerda indicar el N° de OC ${esc(p.folio)} en tu factura para que podamos cursar el pago.</p>
+      <p style="margin:0;font-size:12px;color:#888">El enlace de descarga es válido por 1 hora. Si expira, responde este correo y te lo reenviamos.</p>
+    `),
+  };
+}
+
+/** 8. Orden de venta generada (al cliente) */
+export function ovGenerada(p: {
+  cliente: string | null;
+  folio: string;
+  numero_operacion: number | null;
+  origen: string | null;
+  destino: string | null;
+  monto_neto: number | null;
+  url: string;
+}): Correo {
+  const nombre = p.cliente?.trim() || "cliente";
+  const monto = p.monto_neto != null ? `$ ${Math.round(p.monto_neto).toLocaleString("es-CL")}` : "—";
+  return {
+    subject: `Orden de venta ${p.folio} — TN Chile`,
+    html: layout(`
+      <h1 style="margin:0 0 14px;font-size:21px;color:${VERDE_OSCURO}">Orden de venta ${esc(p.folio)}</h1>
+      <p style="margin:0 0 14px">Hola ${esc(nombre)}, confirmamos tu servicio de transporte y te enviamos la orden de venta correspondiente.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 16px;font-size:14px;border:1px solid #eee;border-radius:8px">
+        <tr><td style="padding:10px 12px;color:#666">N° OV</td><td style="padding:10px 12px"><strong>${esc(p.folio)}</strong></td></tr>
+        ${p.numero_operacion != null ? `<tr><td style="padding:10px 12px;color:#666">Operación</td><td style="padding:10px 12px">N° ${esc(p.numero_operacion)}</td></tr>` : ""}
+        <tr><td style="padding:10px 12px;color:#666">Ruta</td><td style="padding:10px 12px">${esc(p.origen ?? "—")} → ${esc(p.destino ?? "—")}</td></tr>
+        <tr><td style="padding:10px 12px;color:#666">Monto neto</td><td style="padding:10px 12px"><strong>${esc(monto)}</strong></td></tr>
+      </table>
+      ${boton(p.url, "Descargar orden de venta (PDF)")}
+      <p style="margin:0 0 8px;font-size:13px;color:#555">Nuestro equipo coordinará contigo el retiro y la entrega de la carga.</p>
+      <p style="margin:0;font-size:12px;color:#888">El enlace de descarga es válido por 1 hora. Si expira, responde este correo y te lo reenviamos.</p>
+    `),
+  };
+}

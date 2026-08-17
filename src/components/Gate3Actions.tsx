@@ -35,9 +35,21 @@ export function Gate3Actions({
     try {
       const op = await autorizar({ data: { id } });
       onDone({ gate3_autorizado_at: new Date().toISOString() });
-      toast.success(
-        `Autorizado. Operación N° ${op.numero_operacion} creada. OC y OV se generarán próximamente (funcionalidad en desarrollo — ver Tanda 4).`,
-      );
+      if (op.folio_oc && op.folio_ov) {
+        toast.success(
+          `Autorizado. Operación N° ${op.numero_operacion} creada. OC ${op.folio_oc} y OV ${op.folio_ov} generadas y enviadas.`,
+        );
+      } else {
+        const generadas = [
+          op.folio_oc ? `OC ${op.folio_oc}` : null,
+          op.folio_ov ? `OV ${op.folio_ov}` : null,
+        ]
+          .filter(Boolean)
+          .join(" y ");
+        toast.warning(
+          `Autorizado. Operación N° ${op.numero_operacion} creada.${generadas ? ` ${generadas} generada(s).` : ""} Advertencia: la generación de documentos falló, reintentar manualmente desde Admin.`,
+        );
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo autorizar el paso a Operaciones");
     } finally {
