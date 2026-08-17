@@ -384,6 +384,13 @@ function ExploracionPage() {
 
   const puedeAbrir = roles.includes("admin") || roles.includes("jefe_operaciones");
   const puedeElegir = roles.includes("admin") || roles.includes("lider_cuenta");
+  // Operaciones puede afinar el horario con el proveedor durante la exploración.
+  const puedeEditarHorarioRol =
+    roles.includes("admin") ||
+    roles.includes("lider_cuenta") ||
+    roles.includes("jefe_operaciones") ||
+    roles.includes("operador");
+
 
   const cargar = useCallback(async () => {
     setLoading(true);
