@@ -61,9 +61,40 @@ type Carga = {
   fotos: unknown;
   exploracion_abierta_at: string | null;
   exploracion_limite_at: string | null;
+  carga_hora_desde: string | null;
+  carga_hora_hasta: string | null;
+  descarga_fecha: string | null;
+  descarga_hora_desde: string | null;
+  descarga_hora_hasta: string | null;
+  descarga_notas: string | null;
 };
-type TipoCamion = { id: string; nombre: string };
-type Contacto = { id: string; nombre: string; empresa: string | null };
+type TipoCamion = { id: string; nombre: string; requiere_acople: boolean };
+type Contacto = {
+  id: string;
+  nombre: string;
+  empresa: string | null;
+  rut: string | null;
+  profile_id: string | null;
+};
+type Chofer = {
+  id: string;
+  nombre_completo: string;
+  rut: string | null;
+  camion_asignado_id: string | null;
+};
+
+/** "HH:MM:SS" -> "HH:MM" */
+const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
+const rangoHoras = (desde: string | null, hasta: string | null) => {
+  const d = hhmm(desde);
+  const h = hhmm(hasta);
+  if (d && h) return `${d} a ${h}`;
+  if (d) return `desde ${d}`;
+  if (h) return `hasta ${h}`;
+  return "";
+};
+const fmtFecha = (f: string | null) =>
+  f ? new Date(`${f}T12:00:00`).toLocaleDateString("es-CL") : "";
 
 const clp = (n: number | null | undefined) =>
   n == null ? "—" : `$${Math.round(n).toLocaleString("es-CL")} CLP`;
@@ -168,6 +199,30 @@ function DetalleCarga({ c }: { c: Carga }) {
             {dims.map((d) => (d == null ? "?" : d)).join(" × ")}
           </p>
         )}
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Horario de carga
+          </span>
+          <br />
+          {[fmtFecha(c.fecha_despacho), rangoHoras(c.carga_hora_desde, c.carga_hora_hasta)]
+            .filter(Boolean)
+            .join(" · ") || "—"}
+        </p>
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Horario de descarga
+          </span>
+          <br />
+          {[fmtFecha(c.descarga_fecha), rangoHoras(c.descarga_hora_desde, c.descarga_hora_hasta)]
+            .filter(Boolean)
+            .join(" · ") || "—"}
+          {c.descarga_notas && (
+            <span className="block text-xs text-muted-foreground">{c.descarga_notas}</span>
+          )}
+        </p>
       </div>
 
       {c.notas_admin && (
@@ -303,14 +358,19 @@ function ExploracionPage() {
       supabase
         .from("cotizaciones")
         .select(
-          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, presupuesto_referencial_cliente_clp, fotos, exploracion_abierta_at, exploracion_limite_at",
+          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, presupuesto_referencial_cliente_clp, fotos, exploracion_abierta_at, exploracion_limite_at, carga_hora_desde, carga_hora_hasta, descarga_fecha, descarga_hora_desde, descarga_hora_hasta, descarga_notas",
         )
         .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
         .order("created_at", { ascending: false }),
-      supabase.from("tipos_camion").select("id, nombre").eq("activo", true).order("orden"),
+      supabase
+        .from("tipos_camion")
+        .select("id, nombre, requiere_acople")
+        .eq("activo", true)
+        .order("orden"),
       supabase
         .from("contactos_operaciones" as never)
-        .select("id, nombre, empresa")
+        .select("id, nombre, empresa, rut, profile_id, tipos")
+        .overlaps("tipos", ["proveedor"] as never)
         .is("deleted_at", null)
         .order("nombre"),
 
