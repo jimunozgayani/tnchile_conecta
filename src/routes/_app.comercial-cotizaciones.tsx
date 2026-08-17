@@ -7,6 +7,12 @@ import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  HorarioCargaDescargaFields,
+  horarioVacio,
+  type HorarioValues,
+} from "@/components/HorarioCargaDescargaFields";
+
+import {
   createCotizacion,
   actualizarEstadoCotizacion,
   asignarCotizacion,
