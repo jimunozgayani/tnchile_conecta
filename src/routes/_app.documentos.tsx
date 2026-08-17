@@ -87,7 +87,7 @@ function DocumentosPage() {
       await supabase.from("documents").update({ is_current: false }).eq("id", prevRow.id);
     }
 
-    const { error } = await supabase.from("documents").insert({
+    const { data: creado, error } = await supabase.from("documents").insert({
       user_id: userId,
       tipo,
       nombre: nombre || file.name,
@@ -96,11 +96,12 @@ function DocumentosPage() {
       is_current: true,
       version_number: (prevRow?.version_number ?? 0) + 1,
       previous_version_id: prevRow?.id ?? null,
-    });
+    }).select("id").single();
     setUploading(false);
     if (error) toast.error(error.message);
     else {
       toast.success(prevRow ? "Nueva versión cargada" : "Documento subido");
+      if (creado?.id) void confirmarDocumento({ data: { documento_id: creado.id } }).catch(() => {});
       setFile(null); setNombre(""); setVencimiento("");
       load();
     }

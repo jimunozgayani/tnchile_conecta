@@ -51,6 +51,7 @@ import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app.admin-usuarios'
 import { Route as AppAdminChoferesRouteImport } from './routes/_app.admin-choferes'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as ApiPublicAlertasVencimientoRouteImport } from './routes/api/public/alertas-vencimiento'
 import { Route as AppOperacionIdRouteImport } from './routes/_app.operacion.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -271,6 +272,12 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicAlertasVencimientoRoute =
+  ApiPublicAlertasVencimientoRouteImport.update({
+    id: '/api/public/alertas-vencimiento',
+    path: '/api/public/alertas-vencimiento',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppOperacionIdRoute = AppOperacionIdRouteImport.update({
   id: '/operacion/$id',
   path: '/operacion/$id',
@@ -320,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/nueva-carga/gracias': typeof NuevaCargaGraciasRoute
   '/nueva-carga/': typeof NuevaCargaIndexRoute
   '/operacion/$id': typeof AppOperacionIdRoute
+  '/api/public/alertas-vencimiento': typeof ApiPublicAlertasVencimientoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -364,6 +372,7 @@ export interface FileRoutesByTo {
   '/nueva-carga/gracias': typeof NuevaCargaGraciasRoute
   '/nueva-carga': typeof NuevaCargaIndexRoute
   '/operacion/$id': typeof AppOperacionIdRoute
+  '/api/public/alertas-vencimiento': typeof ApiPublicAlertasVencimientoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -410,6 +419,7 @@ export interface FileRoutesById {
   '/nueva-carga/gracias': typeof NuevaCargaGraciasRoute
   '/nueva-carga/': typeof NuevaCargaIndexRoute
   '/_app/operacion/$id': typeof AppOperacionIdRoute
+  '/api/public/alertas-vencimiento': typeof ApiPublicAlertasVencimientoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -456,6 +466,7 @@ export interface FileRouteTypes {
     | '/nueva-carga/gracias'
     | '/nueva-carga/'
     | '/operacion/$id'
+    | '/api/public/alertas-vencimiento'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -500,6 +511,7 @@ export interface FileRouteTypes {
     | '/nueva-carga/gracias'
     | '/nueva-carga'
     | '/operacion/$id'
+    | '/api/public/alertas-vencimiento'
   id:
     | '__root__'
     | '/'
@@ -545,6 +557,7 @@ export interface FileRouteTypes {
     | '/nueva-carga/gracias'
     | '/nueva-carga/'
     | '/_app/operacion/$id'
+    | '/api/public/alertas-vencimiento'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -560,6 +573,7 @@ export interface RootRouteChildren {
   InvitacionChoferTokenRoute: typeof InvitacionChoferTokenRoute
   NuevaCargaGraciasRoute: typeof NuevaCargaGraciasRoute
   NuevaCargaIndexRoute: typeof NuevaCargaIndexRoute
+  ApiPublicAlertasVencimientoRoute: typeof ApiPublicAlertasVencimientoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -858,6 +872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/alertas-vencimiento': {
+      id: '/api/public/alertas-vencimiento'
+      path: '/api/public/alertas-vencimiento'
+      fullPath: '/api/public/alertas-vencimiento'
+      preLoaderRoute: typeof ApiPublicAlertasVencimientoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/operacion/$id': {
       id: '/_app/operacion/$id'
       path: '/operacion/$id'
@@ -952,6 +973,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvitacionChoferTokenRoute: InvitacionChoferTokenRoute,
   NuevaCargaGraciasRoute: NuevaCargaGraciasRoute,
   NuevaCargaIndexRoute: NuevaCargaIndexRoute,
+  ApiPublicAlertasVencimientoRoute: ApiPublicAlertasVencimientoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
