@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   page: { paddingTop: 32, paddingBottom: 56, paddingHorizontal: 36, fontSize: 9, color: "#1F2937" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   marcaBloque: { flexDirection: "row", alignItems: "center", gap: 8 },
-  logo: { width: 44, height: 44, borderRadius: 22, objectFit: "contain" },
+  logo: { width: 60, height: 60, borderRadius: 30, objectFit: "contain" },
   marca: { fontSize: 24, fontWeight: "bold", color: VERDE, letterSpacing: 1 },
   tagline: { fontSize: 8, fontStyle: "italic", color: GRIS, marginTop: 3 },
   docTitulo: { fontSize: 18, fontWeight: "bold", textAlign: "right" },
@@ -196,7 +196,6 @@ export function CotizacionPDF({
           <View style={styles.marcaBloque}>
             <Image src={LOGO_SRC} style={styles.logo} />
             <View>
-              <Text style={styles.marca}>TN CHILE</Text>
               <Text style={styles.tagline}>La logística la hacemos juntos.</Text>
             </View>
           </View>

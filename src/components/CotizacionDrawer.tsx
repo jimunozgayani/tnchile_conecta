@@ -13,7 +13,7 @@ import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOper
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
-import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
+import { sellarCierre } from "@/lib/operaciones.functions";
 import {
   actualizarCotizacion,
   actualizarEstadoCotizacion,
@@ -218,7 +218,7 @@ export function CotizacionDrawer({
 
   const guardarNotas = useServerFn(actualizarCotizacion);
   const actualizarEstado = useServerFn(actualizarEstadoCotizacion);
-  const sellar = useServerFn(sellarCierreYCrearOperacion);
+  const sellar = useServerFn(sellarCierre);
 
   const [reasignar, setReasignar] = useState(false);
   const [asignadoNombre, setAsignadoNombre] = useState(nombreAsignado ?? "");
@@ -287,10 +287,12 @@ export function CotizacionDrawer({
       onChanged({ estado: res.estado, revision_count: res.revision_count });
       if (estado === "lista_para_operar") {
         try {
-          const op = await sellar({ data: { cotizacion_id: id } });
-          toast.success(`Cierre sellado. Operación N° ${op.numero_operacion} creada.`);
+          await sellar({ data: { cotizacion_id: id } });
+          toast.success(
+            "Cierre sellado. Pendiente de autorización de Admin/Líder de Cuenta para pasar a Operaciones.",
+          );
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Cierre sellado, pero no se creó la operación.");
+          toast.error(e instanceof Error ? e.message : "No se pudo sellar el cierre.");
         }
       } else {
         toast.success("Estado actualizado");

@@ -137,7 +137,50 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
   // Asignación automática: solo con chofer registrado. Best-effort — un fallo
   // nunca bloquea la creación de la operación (queda para asignación manual).
   let asignacion_id: string | null = null;
-  if (prop?.chofer_id) {
+  // Si la propuesta ganadora trae chofer en texto libre, se registra como
+  // chofer ocasional para que la asignación apunte a un chofer real.
+  let choferId: string | null = prop?.chofer_id ?? null;
+  if (prop && !choferId && (prop.chofer_nombre_libre ?? "").trim()) {
+    try {
+      const { data: nuevoChofer, error: dErr } = await supabaseAdmin
+        .from("drivers")
+        .insert({
+          nombre_completo: prop.chofer_nombre_libre!.trim(),
+          rut: (prop.chofer_rut_libre ?? "").trim() || null,
+          origen_registro: "operaciones",
+          creado_por: prop.operador_id,
+        } as never)
+        .select("id")
+        .single();
+      if (dErr) throw new Error(dErr.message);
+      choferId = (nuevoChofer as { id: string }).id;
+
+      await supabaseAdmin
+        .from("operaciones")
+        .update({ chofer_id: choferId, updated_at: now } as never)
+        .eq("id", op.id);
+
+      await supabaseAdmin.from("audit_log").insert({
+        tabla_nombre: "drivers",
+        registro_id: choferId,
+        accion: "chofer_ocasional_autocreado_gate3",
+        datos_nuevos: { operacion_id: op.id, propuesta_id: prop.id, operador_responsable: prop.operador_id },
+        usuario_id: userId,
+      } as never);
+    } catch (e) {
+      choferId = null;
+      console.error("autocreación chofer ocasional falló", e instanceof Error ? e.message : String(e));
+      await supabaseAdmin.from("audit_log").insert({
+        tabla_nombre: "operaciones",
+        registro_id: op.id,
+        accion: "chofer_ocasional_autocreado_fallido",
+        datos_nuevos: { error: e instanceof Error ? e.message : String(e) },
+        usuario_id: userId,
+      } as never);
+    }
+  }
+
+  if (prop && choferId) {
     try {
       let camion_id: string | null = null;
       const patente = (prop.patente_principal ?? "").trim();
@@ -157,7 +200,7 @@ export async function crearOperacionDesdeCotizacion(cotizacionId: string, userId
         .insert({
           proveedor_id: prop.operador_id,
           creado_por: prop.operador_id,
-          chofer_id: prop.chofer_id,
+          chofer_id: choferId,
           camion_id,
           cotizacion_id: cotizacionId,
           estado_viaje: "por_iniciar",

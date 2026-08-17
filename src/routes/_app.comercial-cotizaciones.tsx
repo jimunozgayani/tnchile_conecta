@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { sellarCierreYCrearOperacion } from "@/lib/operaciones.functions";
+import { sellarCierre } from "@/lib/operaciones.functions";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -439,7 +439,7 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
 function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
-  const sellar = useServerFn(sellarCierreYCrearOperacion);
+  const sellar = useServerFn(sellarCierre);
   const [menu, setMenu] = useState(false);
   const [chip, setChip] = useState(false);
   const [reasignarOpen, setReasignarOpen] = useState(false);
@@ -485,13 +485,13 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
       });
       if (estado === "lista_para_operar") {
         try {
-          const op = await sellar({ data: { cotizacion_id: c.id } });
+          await sellar({ data: { cotizacion_id: c.id } });
           toast.success(
-            `Cierre sellado. Operación N° ${op.numero_operacion} creada y enviada a Operaciones.`,
+            "Cierre sellado. Pendiente de autorización de Admin/Líder de Cuenta para pasar a Operaciones.",
           );
         } catch (e) {
           toast.error(
-            e instanceof Error ? e.message : "Cierre sellado, pero no se pudo crear la operación.",
+            e instanceof Error ? e.message : "No se pudo sellar el cierre.",
           );
         }
       } else {
@@ -515,7 +515,7 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
     if (estado === "lista_para_operar") {
       if (
         !window.confirm(
-          "¿Confirmas el cierre? Se generarán la OC y la Orden de Venta automáticamente al completar este paso.",
+          "¿Confirmas el cierre? La cotización pasará a 'Cierre sellado', pendiente de autorización de Admin/Líder de Cuenta para pasar a Operaciones.",
         )
       )
         return;
