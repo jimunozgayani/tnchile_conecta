@@ -17,9 +17,10 @@ export type Database = {
       asignaciones: {
         Row: {
           activa: boolean
-          camion_id: string
+          camion_id: string | null
           chofer_id: string
           cotizacion_id: string | null
+          creado_por: string | null
           created_at: string
           estado_viaje: string
           fecha_desde: string
@@ -31,9 +32,10 @@ export type Database = {
         }
         Insert: {
           activa?: boolean
-          camion_id: string
+          camion_id?: string | null
           chofer_id: string
           cotizacion_id?: string | null
+          creado_por?: string | null
           created_at?: string
           estado_viaje?: string
           fecha_desde?: string
@@ -45,9 +47,10 @@ export type Database = {
         }
         Update: {
           activa?: boolean
-          camion_id?: string
+          camion_id?: string | null
           chofer_id?: string
           cotizacion_id?: string | null
+          creado_por?: string | null
           created_at?: string
           estado_viaje?: string
           fecha_desde?: string
