@@ -139,7 +139,7 @@ export const enviarCorreoPrueba = createServerFn({ method: "POST" })
 
     const t = await import("./email/templates.server");
     const { enviarCorreo } = await import("./email/send.server");
-    const correos: Record<string, t.Correo> = {
+    const correos: Record<string, { subject: string; html: string }> = {
       bienvenida_proveedor: t.bienvenidaProveedor({
         nombre_contacto: "Juan Ignacio",
         razon_social: "Transportes Demo SpA",
