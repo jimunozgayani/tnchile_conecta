@@ -51,6 +51,7 @@ import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app.admin-usuarios'
 import { Route as AppAdminChoferesRouteImport } from './routes/_app.admin-choferes'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as ApiPublicTmpDocsTestRouteImport } from './routes/api/public/tmp-docs-test'
 import { Route as ApiPublicAlertasVencimientoRouteImport } from './routes/api/public/alertas-vencimiento'
 import { Route as AppOperacionIdRouteImport } from './routes/_app.operacion.$id'
 
@@ -272,6 +273,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicTmpDocsTestRoute = ApiPublicTmpDocsTestRouteImport.update({
+  id: '/api/public/tmp-docs-test',
+  path: '/api/public/tmp-docs-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAlertasVencimientoRoute =
   ApiPublicAlertasVencimientoRouteImport.update({
     id: '/api/public/alertas-vencimiento',
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/nueva-carga/': typeof NuevaCargaIndexRoute
   '/operacion/$id': typeof AppOperacionIdRoute
   '/api/public/alertas-vencimiento': typeof ApiPublicAlertasVencimientoRoute
+  '/api/public/tmp-docs-test': typeof ApiPublicTmpDocsTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -373,6 +380,7 @@ export interface FileRoutesByTo {
   '/nueva-carga': typeof NuevaCargaIndexRoute
   '/operacion/$id': typeof AppOperacionIdRoute
   '/api/public/alertas-vencimiento': typeof ApiPublicAlertasVencimientoRoute
+  '/api/public/tmp-docs-test': typeof ApiPublicTmpDocsTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/nueva-carga/': typeof NuevaCargaIndexRoute
   '/_app/operacion/$id': typeof AppOperacionIdRoute
   '/api/public/alertas-vencimiento': typeof ApiPublicAlertasVencimientoRoute
+  '/api/public/tmp-docs-test': typeof ApiPublicTmpDocsTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -467,6 +476,7 @@ export interface FileRouteTypes {
     | '/nueva-carga/'
     | '/operacion/$id'
     | '/api/public/alertas-vencimiento'
+    | '/api/public/tmp-docs-test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -512,6 +522,7 @@ export interface FileRouteTypes {
     | '/nueva-carga'
     | '/operacion/$id'
     | '/api/public/alertas-vencimiento'
+    | '/api/public/tmp-docs-test'
   id:
     | '__root__'
     | '/'
@@ -558,6 +569,7 @@ export interface FileRouteTypes {
     | '/nueva-carga/'
     | '/_app/operacion/$id'
     | '/api/public/alertas-vencimiento'
+    | '/api/public/tmp-docs-test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -574,6 +586,7 @@ export interface RootRouteChildren {
   NuevaCargaGraciasRoute: typeof NuevaCargaGraciasRoute
   NuevaCargaIndexRoute: typeof NuevaCargaIndexRoute
   ApiPublicAlertasVencimientoRoute: typeof ApiPublicAlertasVencimientoRoute
+  ApiPublicTmpDocsTestRoute: typeof ApiPublicTmpDocsTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -872,6 +885,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/tmp-docs-test': {
+      id: '/api/public/tmp-docs-test'
+      path: '/api/public/tmp-docs-test'
+      fullPath: '/api/public/tmp-docs-test'
+      preLoaderRoute: typeof ApiPublicTmpDocsTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/alertas-vencimiento': {
       id: '/api/public/alertas-vencimiento'
       path: '/api/public/alertas-vencimiento'
@@ -974,6 +994,7 @@ const rootRouteChildren: RootRouteChildren = {
   NuevaCargaGraciasRoute: NuevaCargaGraciasRoute,
   NuevaCargaIndexRoute: NuevaCargaIndexRoute,
   ApiPublicAlertasVencimientoRoute: ApiPublicAlertasVencimientoRoute,
+  ApiPublicTmpDocsTestRoute: ApiPublicTmpDocsTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
