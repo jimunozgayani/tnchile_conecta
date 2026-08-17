@@ -128,5 +128,22 @@ export const activateDriverInvitation = createServerFn({ method: "POST" })
       .update({ estado: "usada", used_at: new Date().toISOString() })
       .eq("id", inv.id);
 
+    // Bienvenida al chofer (best-effort, no interrumpe la activación)
+    let proveedorNombre: string | null = null;
+    if (drv.user_id) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("razon_social")
+        .eq("id", drv.user_id)
+        .maybeSingle();
+      proveedorNombre = prof?.razon_social ?? null;
+    }
+    const { bienvenidaChofer } = await import("./email/templates.server");
+    const { enviarCorreoSeguro } = await import("./email/send.server");
+    await enviarCorreoSeguro(
+      drv.email,
+      bienvenidaChofer({ nombre_completo: drv.nombre_completo ?? null, proveedor: proveedorNombre }),
+    );
+
     return { ok: true, email: drv.email };
   });

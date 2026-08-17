@@ -25,6 +25,24 @@ function siteUrl() {
 }
 
 async function sendInvite(email: string, company: string | null, rut: string | null) {
+  const { data: link, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+    type: "invite",
+    email,
+    options: { redirectTo: `${siteUrl()}/reset-password` },
+  });
+  if (!linkErr && link?.properties?.action_link) {
+    const { invitacionProveedor } = await import("./email/templates.server");
+    const { enviarCorreo } = await import("./email/send.server");
+    await enviarCorreo(
+      email,
+      invitacionProveedor({
+        nombre: company,
+        empresa: company,
+        link: link.properties.action_link,
+      }),
+    );
+    return;
+  }
   const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
     data: {
       company_name: company,

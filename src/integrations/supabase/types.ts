@@ -801,6 +801,24 @@ export type Database = {
           },
         ]
       }
+      job_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           attempted_at: string
@@ -899,6 +917,7 @@ export type Database = {
           created_at: string
           dias_restantes: number
           doc_tipo: string
+          email_enviada_at: string | null
           entity_id: string
           entity_name: string | null
           entity_tipo: string
@@ -913,6 +932,7 @@ export type Database = {
           created_at?: string
           dias_restantes: number
           doc_tipo: string
+          email_enviada_at?: string | null
           entity_id: string
           entity_name?: string | null
           entity_tipo: string
@@ -927,6 +947,7 @@ export type Database = {
           created_at?: string
           dias_restantes?: number
           doc_tipo?: string
+          email_enviada_at?: string | null
           entity_id?: string
           entity_name?: string | null
           entity_tipo?: string
@@ -1245,6 +1266,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bienvenida_enviada_at: string | null
           cargo: string | null
           certificado_sii_url: string | null
           correo: string | null
@@ -1264,6 +1286,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bienvenida_enviada_at?: string | null
           cargo?: string | null
           certificado_sii_url?: string | null
           correo?: string | null
@@ -1283,6 +1306,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bienvenida_enviada_at?: string | null
           cargo?: string | null
           certificado_sii_url?: string | null
           correo?: string | null

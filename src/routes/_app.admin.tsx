@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { diasHasta, estadoVencimiento, REGIONES_CHILE } from "@/lib/regions";
 import { inviteSupplier, resendInvitation, setSupplierSuspension } from "@/lib/invitations.functions";
+import { enviarNotificacionMensaje } from "@/lib/emails.functions";
 import { calcCompleteness, completionTone } from "@/lib/completeness";
 import { exportFichaProveedorPDF } from "@/lib/ficha-pdf";
 import { fetchAdminDashboardStats, type AdminDashboardStats } from "@/lib/admin-stats";
@@ -84,6 +85,7 @@ function AdminPage() {
   const navigate = useNavigate();
   const invite = useServerFn(inviteSupplier);
   const resend = useServerFn(resendInvitation);
+  const avisarMensaje = useServerFn(enviarNotificacionMensaje);
   const toggleSuspend = useServerFn(setSupplierSuspension);
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -219,13 +221,14 @@ function AdminPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No autenticado");
-      const { error } = await (supabase as any).from("mensajes").insert({
+      const { data: nuevo, error } = await (supabase as any).from("mensajes").insert({
         de_usuario_id: user.id,
         para_proveedor_id: msgTarget.id,
         asunto: msgAsunto.trim(),
         contenido: msgContenido.trim(),
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (nuevo?.id) await avisarMensaje({ data: { mensaje_id: nuevo.id } }).catch(() => {});
       toast.success("Mensaje enviado correctamente.");
       setMsgTarget(null);
       loadAll();
