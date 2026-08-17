@@ -344,7 +344,7 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
 
     const { data: actual, error: rErr } = await supabase
       .from("cotizaciones")
-      .select("id, estado, destinos, asignado_a")
+      .select("id, estado, destinos, asignado_a, fecha_despacho")
       .eq("id", data.id)
       .maybeSingle();
     if (rErr) throw new Error(rErr.message);
