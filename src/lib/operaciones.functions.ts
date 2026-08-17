@@ -339,6 +339,7 @@ export const listarMisOperaciones = createServerFn({ method: "POST" })
     if (!verTodo) {
       permitidas = new Set<string>();
       const cotIds = rows.map((o) => o["cotizacion_id"]).filter(Boolean) as string[];
+      const cotOk = new Set<string>();
       if (cotIds.length > 0) {
         const { data: cots } = await supabaseAdmin
           .from("cotizaciones")
@@ -356,16 +357,16 @@ export const listarMisOperaciones = createServerFn({ method: "POST" })
             .eq("operador_id", userId);
           for (const p of ((props ?? []) as Record<string, any>[])) misPropuestas.add(p["id"] as string);
         }
-        const cotOk = new Set<string>(
-          ((cots ?? []) as Record<string, any>[])
-            .filter((c) => c["propuesta_ganadora_id"] && misPropuestas.has(c["propuesta_ganadora_id"]))
-            .map((c) => c["id"] as string),
-        );
-        for (const o of rows) {
-          const porPropuesta = o["cotizacion_id"] && cotOk.has(o["cotizacion_id"] as string);
-          const porAsignacion = o["asignaciones"]?.creado_por === userId;
-          if (porPropuesta || porAsignacion) permitidas.add(o["id"] as string);
+        for (const c of ((cots ?? []) as Record<string, any>[])) {
+          if (c["propuesta_ganadora_id"] && misPropuestas.has(c["propuesta_ganadora_id"])) {
+            cotOk.add(c["id"] as string);
+          }
         }
+      }
+      for (const o of rows) {
+        const porPropuesta = !!o["cotizacion_id"] && cotOk.has(o["cotizacion_id"] as string);
+        const porAsignacion = o["asignaciones"]?.creado_por === userId;
+        if (porPropuesta || porAsignacion) permitidas.add(o["id"] as string);
       }
     }
 
