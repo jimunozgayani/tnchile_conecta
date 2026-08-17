@@ -1,0 +1,1 @@
+CREATE POLICY "jefe_operaciones actualiza cotizaciones" ON public.cotizaciones FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'jefe_operaciones')) WITH CHECK (public.has_role(auth.uid(), 'jefe_operaciones'));
