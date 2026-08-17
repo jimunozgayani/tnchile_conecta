@@ -1212,6 +1212,13 @@ function NuevaCotizacionModal({ onClose, onSaved }: { onClose: () => void; onSav
           )}
         </div>
 
+        <HorarioCargaDescargaFields
+          idPrefix="c"
+          value={horario}
+          onChange={(p) => setHorario((prev) => ({ ...prev, ...p }))}
+        />
+
+
         <div>
           <label className="mb-1 block text-xs font-medium" htmlFor="c-notas">
             Notas internas
