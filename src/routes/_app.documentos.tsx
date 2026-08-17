@@ -47,6 +47,8 @@ function DocumentosPage() {
   const [vencimiento, setVencimiento] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const confirmarDocumento = useServerFn(enviarConfirmacionDocumento);
+
   const [userId, setUserId] = useState("");
   const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({});
 
