@@ -225,6 +225,8 @@ export function CotizacionDrawer({
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
   const [prep, setPrep] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [editandoHorario, setEditandoHorario] = useState(false);
+
 
   const uidQuery = useQuery({
     queryKey: ["auth-uid"],
