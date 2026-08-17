@@ -42,7 +42,12 @@ export const createContacto = createServerFn({ method: "POST" })
       .select("role")
       .eq("user_id", userId);
     const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
-    if (!["admin", "lider_cuenta", "comercial"].some((r) => roles.includes(r))) {
+    // Operaciones también crea contactos de proveedor al registrar propuestas.
+    if (
+      !["admin", "lider_cuenta", "comercial", "jefe_operaciones", "operador"].some((r) =>
+        roles.includes(r),
+      )
+    ) {
       throw new Error("No tienes permisos para crear contactos.");
     }
 

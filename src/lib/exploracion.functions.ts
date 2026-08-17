@@ -21,6 +21,12 @@ export type Propuesta = {
   estado: string;
   creado_at: string;
   ronda: number;
+  chofer_id: string | null;
+  chofer_nombre_libre: string | null;
+  chofer_rut_libre: string | null;
+  proveedor_es_chofer: boolean | null;
+  patente_principal: string | null;
+  patente_secundaria: string | null;
 };
 
 /** Abre la exploración de proveedores para una cotización en estado 'nueva'. */
@@ -95,6 +101,12 @@ const propuestaSchema = z.object({
   tipo_camion_id: z.string().uuid().optional().nullable(),
   notas: z.string().trim().max(2000).optional().nullable(),
   tipo_pago: z.enum(["contado", "50_50", "15_dias", "30_dias"]).optional().nullable(),
+  chofer_id: z.string().uuid().optional().nullable(),
+  chofer_nombre_libre: z.string().trim().max(200).optional().nullable(),
+  chofer_rut_libre: z.string().trim().max(30).optional().nullable(),
+  proveedor_es_chofer: z.boolean().optional().default(false),
+  patente_principal: z.string().trim().max(20).optional().nullable(),
+  patente_secundaria: z.string().trim().max(20).optional().nullable(),
 });
 
 /** Registra una propuesta de proveedor (nombre libre, contacto opcional). */
@@ -134,6 +146,12 @@ export const agregarPropuesta = createServerFn({ method: "POST" })
         tipo_pago: data.tipo_pago || null,
         estado: "propuesta",
         ronda,
+        chofer_id: data.chofer_id || null,
+        chofer_nombre_libre: (data.chofer_nombre_libre ?? "").trim() || null,
+        chofer_rut_libre: (data.chofer_rut_libre ?? "").trim() || null,
+        proveedor_es_chofer: data.proveedor_es_chofer ?? false,
+        patente_principal: (data.patente_principal ?? "").trim().toUpperCase() || null,
+        patente_secundaria: (data.patente_secundaria ?? "").trim().toUpperCase() || null,
       } as never)
       .select("id")
       .single();
@@ -217,7 +235,7 @@ export const listarPropuestas = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabase
       .from("propuestas_proveedor")
       .select(
-        "id, cotizacion_id, operador_id, proveedor_nombre, proveedor_contacto_id, costo_clp, tipo_camion_id, notas, tipo_pago, estado, creado_at, ronda",
+        "id, cotizacion_id, operador_id, proveedor_nombre, proveedor_contacto_id, costo_clp, tipo_camion_id, notas, tipo_pago, estado, creado_at, ronda, chofer_id, chofer_nombre_libre, chofer_rut_libre, proveedor_es_chofer, patente_principal, patente_secundaria",
       )
       .in("cotizacion_id", data.cotizacion_ids)
       .order("costo_clp", { ascending: true });

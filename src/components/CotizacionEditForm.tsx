@@ -47,7 +47,16 @@ export type FichaEditable = {
   tipo_pago: string | null;
   validez_hasta: string | null;
   fotos: unknown;
+  carga_hora_desde: string | null;
+  carga_hora_hasta: string | null;
+  descarga_fecha: string | null;
+  descarga_hora_desde: string | null;
+  descarga_hora_hasta: string | null;
+  descarga_notas: string | null;
 };
+
+/** Postgres devuelve time como "HH:MM:SS"; el input[type=time] usa "HH:MM". */
+const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
 
 const num = (n: number | null) => (n === null || n === undefined ? "" : String(n));
 
@@ -117,6 +126,12 @@ export function CotizacionEditForm({
   const [presupuesto, setPresupuesto] = useState(num(ficha.presupuesto_referencial_cliente_clp));
   const [tipoPago, setTipoPago] = useState(ficha.tipo_pago ?? "");
   const [validez, setValidez] = useState(ficha.validez_hasta ?? "");
+  const [cargaDesde, setCargaDesde] = useState(hhmm(ficha.carga_hora_desde));
+  const [cargaHasta, setCargaHasta] = useState(hhmm(ficha.carga_hora_hasta));
+  const [descargaFecha, setDescargaFecha] = useState(ficha.descarga_fecha ?? "");
+  const [descargaDesde, setDescargaDesde] = useState(hhmm(ficha.descarga_hora_desde));
+  const [descargaHasta, setDescargaHasta] = useState(hhmm(ficha.descarga_hora_hasta));
+  const [descargaNotas, setDescargaNotas] = useState(ficha.descarga_notas ?? "");
   const [paths, setPaths] = useState<string[]>(fotoPathsOf(ficha.fotos));
   const [nuevas, setNuevas] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
@@ -212,7 +227,16 @@ export function CotizacionEditForm({
         notas_admin: notas || null,
         presupuesto_referencial_cliente_clp: presupuesto === "" ? null : Number(presupuesto),
         fotos: rutas,
+        carga_hora_desde: cargaDesde || null,
+        carga_hora_hasta: cargaHasta || null,
+        descarga_fecha: descargaFecha || null,
+        descarga_hora_desde: descargaDesde || null,
+        descarga_hora_hasta: descargaHasta || null,
+        descarga_notas: descargaNotas || null,
       };
+      if (fecha && descargaFecha && descargaFecha < fecha) {
+        throw new Error("La fecha de descarga no puede ser anterior a la fecha de despacho.");
+      }
       if (!soloCarga && contactoId && contactoId !== ficha.contacto_id)
         payload["contacto_id"] = contactoId;
       if (precioEditable) {
@@ -227,6 +251,12 @@ export function CotizacionEditForm({
         origen: payload["origen"],
         destinos: destino ? [destino] : [],
         fecha_despacho: payload["fecha_despacho"],
+        carga_hora_desde: payload["carga_hora_desde"],
+        carga_hora_hasta: payload["carga_hora_hasta"],
+        descarga_fecha: payload["descarga_fecha"],
+        descarga_hora_desde: payload["descarga_hora_desde"],
+        descarga_hora_hasta: payload["descarga_hora_hasta"],
+        descarga_notas: payload["descarga_notas"],
         presupuesto_referencial_cliente_clp: payload["presupuesto_referencial_cliente_clp"],
         ...(precioEditable ? { precio_ofrecido_cliente_clp: payload["precio_ofrecido_cliente_clp"] } : {}),
       });
@@ -422,6 +452,85 @@ export function CotizacionEditForm({
           <p className="mt-1 text-[11px] text-muted-foreground">
             Lo que el cliente comentó estar dispuesto a pagar — ayuda a operaciones a negociar y a
             definir el precio final.
+          </p>
+        </div>
+
+        <div className="sm:col-span-2 rounded-md border bg-muted/30 p-3">
+          <p className="mb-2 text-sm font-semibold">Horario de carga</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={labelCls} htmlFor="edit-carga-desde">Hora desde</label>
+              <input
+                id="edit-carga-desde"
+                type="time"
+                value={cargaDesde}
+                onChange={(e) => setCargaDesde(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="edit-carga-hasta">Hora hasta</label>
+              <input
+                id="edit-carga-hasta"
+                type="time"
+                value={cargaHasta}
+                onChange={(e) => setCargaHasta(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            La fecha de carga es la fecha de despacho indicada arriba.
+          </p>
+        </div>
+
+        <div className="sm:col-span-2 rounded-md border bg-muted/30 p-3">
+          <p className="mb-2 text-sm font-semibold">Horario de descarga</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div>
+              <label className={labelCls} htmlFor="edit-descarga-fecha">Fecha</label>
+              <input
+                id="edit-descarga-fecha"
+                type="date"
+                value={descargaFecha}
+                onChange={(e) => setDescargaFecha(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="edit-descarga-desde">Hora desde</label>
+              <input
+                id="edit-descarga-desde"
+                type="time"
+                value={descargaDesde}
+                onChange={(e) => setDescargaDesde(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="edit-descarga-hasta">Hora hasta</label>
+              <input
+                id="edit-descarga-hasta"
+                type="time"
+                value={descargaHasta}
+                onChange={(e) => setDescargaHasta(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+          </div>
+          <div className="mt-2">
+            <label className={labelCls} htmlFor="edit-descarga-notas">Notas de descarga (opcional)</label>
+            <textarea
+              id="edit-descarga-notas"
+              rows={2}
+              value={descargaNotas}
+              onChange={(e) => setDescargaNotas(e.target.value)}
+              placeholder="Ej: destino solo recibe en horario hábil, puede ser el día siguiente"
+              className={inputCls}
+            />
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            La descarga puede ser el mismo día o días posteriores a la carga.
           </p>
         </div>
 

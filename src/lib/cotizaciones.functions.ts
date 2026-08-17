@@ -301,6 +301,12 @@ const completoSchema = z.object({
     .optional()
     .nullable(),
   fotos: z.array(z.string().trim().max(500)).max(20).optional(),
+  carga_hora_desde: z.string().trim().max(8).optional().nullable(),
+  carga_hora_hasta: z.string().trim().max(8).optional().nullable(),
+  descarga_fecha: z.string().trim().max(10).optional().nullable(),
+  descarga_hora_desde: z.string().trim().max(8).optional().nullable(),
+  descarga_hora_hasta: z.string().trim().max(8).optional().nullable(),
+  descarga_notas: z.string().trim().max(2000).optional().nullable(),
 });
 
 const ESTADOS_CON_PRECIO = [
@@ -338,12 +344,17 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
 
     const { data: actual, error: rErr } = await supabase
       .from("cotizaciones")
-      .select("id, estado, destinos, asignado_a")
+      .select("id, estado, destinos, asignado_a, fecha_despacho")
       .eq("id", data.id)
       .maybeSingle();
     if (rErr) throw new Error(rErr.message);
     if (!actual) throw new Error("Cotización no encontrada.");
-    const row = actual as { estado: string; destinos: unknown; asignado_a: string | null };
+    const row = actual as {
+      estado: string;
+      destinos: unknown;
+      asignado_a: string | null;
+      fecha_despacho: string | null;
+    };
 
     if (!esAdmin) {
       if (row.asignado_a !== userId) {
@@ -416,6 +427,28 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
       patch["presupuesto_referencial_cliente_clp"] = data.presupuesto_referencial_cliente_clp ?? null;
     if (data.notas_admin !== undefined) patch["notas_admin"] = clean(data.notas_admin);
     if (data.fotos !== undefined) patch["fotos"] = data.fotos;
+
+    // Ventanas horarias de carga y descarga.
+    for (const k of [
+      "carga_hora_desde",
+      "carga_hora_hasta",
+      "descarga_fecha",
+      "descarga_hora_desde",
+      "descarga_hora_hasta",
+      "descarga_notas",
+    ] as const) {
+      if (data[k] !== undefined) patch[k] = clean(data[k]);
+    }
+
+    // Única validación: la descarga no puede ser ANTES de la carga (mismo día o
+    // días posteriores son válidos).
+    const fechaCargaFinal =
+      (patch["fecha_despacho"] as string | null | undefined) ??
+      row.fecha_despacho;
+    const fechaDescargaFinal = patch["descarga_fecha"] as string | null | undefined;
+    if (fechaCargaFinal && fechaDescargaFinal && fechaDescargaFinal < fechaCargaFinal) {
+      throw new Error("La fecha de descarga no puede ser anterior a la fecha de carga.");
+    }
 
     const precioEditable = ESTADOS_CON_PRECIO.includes(row.estado);
     const pidePrecio =

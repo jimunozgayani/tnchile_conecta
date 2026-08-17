@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { createContacto } from "@/lib/contactos.functions";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
 import { getSignedUrl } from "@/lib/signed-url";
@@ -61,9 +62,40 @@ type Carga = {
   fotos: unknown;
   exploracion_abierta_at: string | null;
   exploracion_limite_at: string | null;
+  carga_hora_desde: string | null;
+  carga_hora_hasta: string | null;
+  descarga_fecha: string | null;
+  descarga_hora_desde: string | null;
+  descarga_hora_hasta: string | null;
+  descarga_notas: string | null;
 };
-type TipoCamion = { id: string; nombre: string };
-type Contacto = { id: string; nombre: string; empresa: string | null };
+type TipoCamion = { id: string; nombre: string; requiere_acople: boolean };
+type Contacto = {
+  id: string;
+  nombre: string;
+  empresa: string | null;
+  rut: string | null;
+  profile_id: string | null;
+};
+type Chofer = {
+  id: string;
+  nombre_completo: string;
+  rut: string | null;
+  camion_asignado_id: string | null;
+};
+
+/** "HH:MM:SS" -> "HH:MM" */
+const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
+const rangoHoras = (desde: string | null, hasta: string | null) => {
+  const d = hhmm(desde);
+  const h = hhmm(hasta);
+  if (d && h) return `${d} a ${h}`;
+  if (d) return `desde ${d}`;
+  if (h) return `hasta ${h}`;
+  return "";
+};
+const fmtFecha = (f: string | null) =>
+  f ? new Date(`${f}T12:00:00`).toLocaleDateString("es-CL") : "";
 
 const clp = (n: number | null | undefined) =>
   n == null ? "—" : `$${Math.round(n).toLocaleString("es-CL")} CLP`;
@@ -168,6 +200,30 @@ function DetalleCarga({ c }: { c: Carga }) {
             {dims.map((d) => (d == null ? "?" : d)).join(" × ")}
           </p>
         )}
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Horario de carga
+          </span>
+          <br />
+          {[fmtFecha(c.fecha_despacho), rangoHoras(c.carga_hora_desde, c.carga_hora_hasta)]
+            .filter(Boolean)
+            .join(" · ") || "—"}
+        </p>
+        <p>
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Horario de descarga
+          </span>
+          <br />
+          {[fmtFecha(c.descarga_fecha), rangoHoras(c.descarga_hora_desde, c.descarga_hora_hasta)]
+            .filter(Boolean)
+            .join(" · ") || "—"}
+          {c.descarga_notas && (
+            <span className="block text-xs text-muted-foreground">{c.descarga_notas}</span>
+          )}
+        </p>
       </div>
 
       {c.notas_admin && (
@@ -303,14 +359,19 @@ function ExploracionPage() {
       supabase
         .from("cotizaciones")
         .select(
-          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, presupuesto_referencial_cliente_clp, fotos, exploracion_abierta_at, exploracion_limite_at",
+          "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, presupuesto_referencial_cliente_clp, fotos, exploracion_abierta_at, exploracion_limite_at, carga_hora_desde, carga_hora_hasta, descarga_fecha, descarga_hora_desde, descarga_hora_hasta, descarga_notas",
         )
         .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
         .order("created_at", { ascending: false }),
-      supabase.from("tipos_camion").select("id, nombre").eq("activo", true).order("orden"),
+      supabase
+        .from("tipos_camion")
+        .select("id, nombre, requiere_acople")
+        .eq("activo", true)
+        .order("orden"),
       supabase
         .from("contactos_operaciones" as never)
-        .select("id, nombre, empresa")
+        .select("id, nombre, empresa, rut, profile_id, tipos")
+        .overlaps("tipos", ["proveedor"] as never)
         .is("deleted_at", null)
         .order("nombre"),
 
@@ -939,6 +1000,12 @@ type PropuestaForm = {
   tipo_camion_id: string | null;
   notas: string | null;
   tipo_pago: string | null;
+  proveedor_es_chofer: boolean;
+  chofer_id: string | null;
+  chofer_nombre_libre: string | null;
+  chofer_rut_libre: string | null;
+  patente_principal: string | null;
+  patente_secundaria: string | null;
 };
 
 function PropuestaModal({
@@ -954,7 +1021,14 @@ function PropuestaModal({
   onClose: () => void;
   onSave: (p: PropuestaForm) => Promise<void>;
 }) {
-  const [nombre, setNombre] = useState("");
+  const crearContacto = useServerFn(createContacto);
+
+  const [nuevosContactos, setNuevosContactos] = useState<Contacto[]>([]);
+  const todosContactos = useMemo(
+    () => [...nuevosContactos, ...contactos],
+    [nuevosContactos, contactos],
+  );
+
   const [contactoId, setContactoId] = useState("");
   const [buscar, setBuscar] = useState("");
   const [costo, setCosto] = useState("");
@@ -964,32 +1038,165 @@ function PropuestaModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Creación inline de proveedor.
+  const [creando, setCreando] = useState(false);
+  const [nvNombre, setNvNombre] = useState("");
+  const [nvTelefono, setNvTelefono] = useState("");
+  const [nvEmail, setNvEmail] = useState("");
+  const [creandoBusy, setCreandoBusy] = useState(false);
+
+  // Chofer.
+  const [esChofer, setEsChofer] = useState(false);
+  const [editandoChoferAuto, setEditandoChoferAuto] = useState(false);
+  const [choferId, setChoferId] = useState("");
+  const [choferLibre, setChoferLibre] = useState(false);
+  const [choferNombre, setChoferNombre] = useState("");
+  const [choferRut, setChoferRut] = useState("");
+  const [choferes, setChoferes] = useState<Chofer[]>([]);
+  const [cargandoChoferes, setCargandoChoferes] = useState(false);
+
+  // Patentes.
+  const [patente1, setPatente1] = useState("");
+  const [patente2, setPatente2] = useState("");
+
+  const proveedor = useMemo(
+    () => todosContactos.find((c) => c.id === contactoId) ?? null,
+    [todosContactos, contactoId],
+  );
+  const registrado = !!proveedor?.profile_id;
+  const requiereAcople = useMemo(
+    () => tipos.find((t) => t.id === tipoId)?.requiere_acople ?? false,
+    [tipos, tipoId],
+  );
+
   const filtrados = useMemo(() => {
     const q = buscar.trim().toLowerCase();
     const base = q
-      ? contactos.filter(
+      ? todosContactos.filter(
           (c) =>
             c.nombre.toLowerCase().includes(q) || (c.empresa ?? "").toLowerCase().includes(q),
         )
-      : contactos;
+      : todosContactos;
     return base.slice(0, 50);
-  }, [buscar, contactos]);
+  }, [buscar, todosContactos]);
+
+  // Choferes del proveedor seleccionado. RLS no acota por proveedor para
+  // operaciones: el filtro por user_id es obligatorio aquí.
+  useEffect(() => {
+    const pid = proveedor?.profile_id ?? null;
+    if (!pid || esChofer) {
+      setChoferes([]);
+      setChoferId("");
+      return;
+    }
+    let cancel = false;
+    setCargandoChoferes(true);
+    void (async () => {
+      const { data } = await supabase
+        .from("drivers")
+        .select("id, nombre_completo, rut, camion_asignado_id")
+        .eq("user_id", pid)
+        .is("deleted_at", null)
+        .order("nombre_completo");
+      if (cancel) return;
+      setChoferes((data ?? []) as Chofer[]);
+      setCargandoChoferes(false);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [proveedor?.profile_id, esChofer]);
+
+  // Autocompletar chofer cuando el proveedor es el mismo chofer.
+  useEffect(() => {
+    if (!esChofer) return;
+    setChoferId("");
+    setChoferLibre(false);
+    setEditandoChoferAuto(false);
+    setChoferNombre(proveedor?.nombre ?? "");
+    setChoferRut(proveedor?.rut ?? "");
+  }, [esChofer, proveedor?.id, proveedor?.nombre, proveedor?.rut]);
+
+  // Autofill de patente principal desde el camión asignado al chofer.
+  useEffect(() => {
+    const ch = choferes.find((c) => c.id === choferId);
+    const camion = ch?.camion_asignado_id ?? null;
+    if (!camion) return;
+    let cancel = false;
+    void (async () => {
+      const { data } = await supabase.from("trucks").select("patente").eq("id", camion).maybeSingle();
+      const pat = (data as { patente: string } | null)?.patente;
+      if (!cancel && pat) setPatente1(pat);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [choferId, choferes]);
+
+  async function crearProveedor() {
+    if (!nvNombre.trim()) return setError("Ingresa el nombre del proveedor nuevo.");
+    setCreandoBusy(true);
+    setError(null);
+    try {
+      const res = await crearContacto({
+        data: {
+          nombre: nvNombre.trim(),
+          telefono: nvTelefono.trim() || null,
+          email: nvEmail.trim() || null,
+          tipos: ["proveedor"],
+        } as never,
+      });
+      const nuevo: Contacto = {
+        id: res.id,
+        nombre: nvNombre.trim(),
+        empresa: null,
+        rut: null,
+        profile_id: null,
+      };
+      setNuevosContactos((prev) => [nuevo, ...prev]);
+      setContactoId(res.id);
+      setCreando(false);
+      setNvNombre("");
+      setNvTelefono("");
+      setNvEmail("");
+      toast.success("Proveedor creado y seleccionado.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear el proveedor.");
+    } finally {
+      setCreandoBusy(false);
+    }
+  }
+
+  const usaChoferLibre = esChofer || !registrado || choferLibre;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const monto = Number(costo);
-    if (!nombre.trim()) return setError("Ingresa el nombre del proveedor.");
+    if (!proveedor) return setError("Selecciona un proveedor o crea uno nuevo.");
     if (!Number.isFinite(monto) || monto <= 0) return setError("Ingresa un costo válido.");
+    if (usaChoferLibre) {
+      if (!choferNombre.trim()) return setError("Ingresa el nombre del chofer.");
+      if (!choferRut.trim()) return setError("Ingresa el RUT del chofer.");
+    } else if (!choferId) {
+      return setError("Selecciona el chofer o registra uno nuevo.");
+    }
+
     setSaving(true);
     try {
       await onSave({
-        proveedor_nombre: nombre.trim(),
-        proveedor_contacto_id: contactoId || null,
+        proveedor_nombre: proveedor.empresa || proveedor.nombre,
+        proveedor_contacto_id: proveedor.id,
         costo_clp: monto,
         tipo_camion_id: tipoId || null,
         notas: notas.trim() || null,
         tipo_pago: tipoPago || null,
+        proveedor_es_chofer: esChofer,
+        chofer_id: usaChoferLibre ? null : choferId,
+        chofer_nombre_libre: usaChoferLibre ? choferNombre.trim() : null,
+        chofer_rut_libre: usaChoferLibre ? choferRut.trim() : null,
+        patente_principal: patente1.trim() || null,
+        patente_secundaria: requiereAcople ? patente2.trim() || null : null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar la propuesta.");
@@ -997,6 +1204,8 @@ function PropuestaModal({
       setSaving(false);
     }
   }
+
+  const inputCls = "mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm";
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
@@ -1017,34 +1226,23 @@ function PropuestaModal({
           </button>
         </div>
 
-        <label className="block text-sm font-medium">
-          Proveedor *
-          <input
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Nombre libre del proveedor"
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-
-        <div className="mt-3">
-          <p className="text-sm font-medium">Contacto registrado (opcional)</p>
+        {/* PROVEEDOR */}
+        <div className="rounded-md border bg-muted/30 p-3">
+          <p className="text-sm font-semibold">Proveedor *</p>
           <input
             value={buscar}
             onChange={(e) => setBuscar(e.target.value)}
-            placeholder="Buscar contacto…"
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            placeholder="Buscar proveedor…"
+            aria-label="Buscar proveedor"
+            className={inputCls}
           />
           <select
+            aria-label="Seleccionar proveedor"
             value={contactoId}
-            onChange={(e) => {
-              setContactoId(e.target.value);
-              const c = contactos.find((x) => x.id === e.target.value);
-              if (c && !nombre.trim()) setNombre(c.empresa || c.nombre);
-            }}
-            className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            onChange={(e) => setContactoId(e.target.value)}
+            className={inputCls}
           >
-            <option value="">Sin vincular</option>
+            <option value="">— Selecciona un proveedor —</option>
             {filtrados.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nombre}
@@ -1052,6 +1250,164 @@ function PropuestaModal({
               </option>
             ))}
           </select>
+
+          {!creando ? (
+            <button
+              type="button"
+              onClick={() => setCreando(true)}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <Plus className="h-3.5 w-3.5" /> Agregar proveedor nuevo
+            </button>
+          ) : (
+            <div className="mt-2 space-y-2 rounded-md border bg-background p-3">
+              <p className="text-xs font-semibold">Proveedor nuevo</p>
+              <input
+                value={nvNombre}
+                onChange={(e) => setNvNombre(e.target.value)}
+                placeholder="Nombre o razón social *"
+                aria-label="Nombre del proveedor nuevo"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              <input
+                value={nvTelefono}
+                onChange={(e) => setNvTelefono(e.target.value)}
+                placeholder="Teléfono"
+                aria-label="Teléfono del proveedor nuevo"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              <input
+                value={nvEmail}
+                onChange={(e) => setNvEmail(e.target.value)}
+                placeholder="Email"
+                aria-label="Email del proveedor nuevo"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={creandoBusy}
+                  onClick={() => void crearProveedor()}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                >
+                  {creandoBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Crear y usar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreando(false)}
+                  className="rounded-md border px-3 py-1.5 text-xs"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={esChofer}
+              onChange={(e) => setEsChofer(e.target.checked)}
+              className="h-4 w-4"
+            />
+            El proveedor es el mismo que el chofer
+          </label>
+        </div>
+
+        {/* CHOFER */}
+        <div className="mt-3 rounded-md border bg-muted/30 p-3">
+          <p className="text-sm font-semibold">Chofer</p>
+
+          {esChofer ? (
+            <div className="mt-1 space-y-2">
+              {editandoChoferAuto ? (
+                <>
+                  <input
+                    value={choferNombre}
+                    onChange={(e) => setChoferNombre(e.target.value)}
+                    placeholder="Nombre del chofer *"
+                    aria-label="Nombre del chofer"
+                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={choferRut}
+                    onChange={(e) => setChoferRut(e.target.value)}
+                    placeholder="RUT del chofer *"
+                    aria-label="RUT del chofer"
+                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  />
+                </>
+              ) : (
+                <p className="text-sm">
+                  {choferNombre || "Sin nombre"} · RUT {choferRut || "sin dato"}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setEditandoChoferAuto((v) => !v)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {editandoChoferAuto ? "Listo" : "Editar"}
+              </button>
+            </div>
+          ) : registrado && !choferLibre ? (
+            <>
+              <select
+                aria-label="Seleccionar chofer del proveedor"
+                value={choferId}
+                onChange={(e) => setChoferId(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">
+                  {cargandoChoferes ? "Cargando choferes…" : "— Selecciona un chofer —"}
+                </option>
+                {choferes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre_completo}
+                    {c.rut ? ` · ${c.rut}` : ""}
+                  </option>
+                ))}
+              </select>
+              {!cargandoChoferes && choferes.length === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Este proveedor no tiene choferes registrados.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setChoferLibre(true)}
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" /> Chofer nuevo
+              </button>
+            </>
+          ) : (
+            <div className="mt-1 space-y-2">
+              <input
+                value={choferNombre}
+                onChange={(e) => setChoferNombre(e.target.value)}
+                placeholder="Nombre del chofer *"
+                aria-label="Nombre del chofer"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              <input
+                value={choferRut}
+                onChange={(e) => setChoferRut(e.target.value)}
+                placeholder="RUT del chofer *"
+                aria-label="RUT del chofer"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              {registrado && (
+                <button
+                  type="button"
+                  onClick={() => setChoferLibre(false)}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Volver a elegir un chofer registrado
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <label className="mt-3 block text-sm font-medium">
@@ -1062,7 +1418,7 @@ function PropuestaModal({
             step={1}
             value={costo}
             onChange={(e) => setCosto(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className={inputCls}
           />
         </label>
 
@@ -1085,7 +1441,7 @@ function PropuestaModal({
           <select
             value={tipoId}
             onChange={(e) => setTipoId(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className={inputCls}
           >
             <option value="">Sin especificar</option>
             {tipos.map((t) => (
@@ -1096,12 +1452,39 @@ function PropuestaModal({
           </select>
         </label>
 
+        {/* PATENTES */}
+        <div className="mt-3 rounded-md border bg-muted/30 p-3">
+          <p className="text-sm font-semibold">
+            {requiereAcople ? "Patentes (tracto + rampla)" : "Patente"}
+          </p>
+          <label className="mt-1 block text-xs font-medium">
+            {requiereAcople ? "Patente tracto/camión" : "Patente"}
+            <input
+              value={patente1}
+              onChange={(e) => setPatente1(e.target.value.toUpperCase())}
+              placeholder="AABB12"
+              className={inputCls}
+            />
+          </label>
+          {requiereAcople && (
+            <label className="mt-2 block text-xs font-medium">
+              Patente rampla/carro
+              <input
+                value={patente2}
+                onChange={(e) => setPatente2(e.target.value.toUpperCase())}
+                placeholder="CCDD34"
+                className={inputCls}
+              />
+            </label>
+          )}
+        </div>
+
         <label className="mt-3 block text-sm font-medium">
           Condición de pago al proveedor
           <select
             value={tipoPago}
             onChange={(e) => setTipoPago(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className={inputCls}
           >
             <option value="">Sin especificar</option>
             {TIPOS_PAGO.map((t) => (
@@ -1118,7 +1501,7 @@ function PropuestaModal({
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className={inputCls}
           />
         </label>
 
@@ -1228,6 +1611,28 @@ function DetallePropuestaModal({
           <div>
             <dt className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de camión</dt>
             <dd>{tipoNombre}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Chofer</dt>
+            <dd>
+              {p.chofer_nombre_libre
+                ? `${p.chofer_nombre_libre}${p.chofer_rut_libre ? ` · ${p.chofer_rut_libre}` : ""}`
+                : p.chofer_id
+                  ? "Chofer registrado del proveedor"
+                  : "Sin definir"}
+              {p.proveedor_es_chofer && (
+                <span className="block text-xs text-muted-foreground">
+                  El proveedor es el mismo chofer.
+                </span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Patente(s)</dt>
+            <dd>
+              {[p.patente_principal, p.patente_secundaria].filter(Boolean).join(" / ") ||
+                "Sin definir"}
+            </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-muted-foreground">
