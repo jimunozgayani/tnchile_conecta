@@ -8,12 +8,20 @@ export const Route = createFileRoute("/api/public/alertas-vencimiento")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env["EMAIL_CRON_SECRET"];
-        if (!secret || request.headers.get("x-cron-secret") !== secret) {
-          return new Response("Unauthorized", { status: 401 });
-        }
+        const enviado = request.headers.get("x-cron-secret");
+        if (!enviado) return new Response("Unauthorized", { status: 401 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: jobSecret } = await supabaseAdmin
+          .from("job_secrets")
+          .select("value")
+          .eq("name", "email_alertas")
+          .maybeSingle();
+        const envSecret = process.env["EMAIL_CRON_SECRET"];
+        const valido =
+          (jobSecret?.value && enviado === jobSecret.value) || (envSecret && enviado === envSecret);
+        if (!valido) return new Response("Unauthorized", { status: 401 });
+
         const { alertaVencimiento } = await import("@/lib/email/templates.server");
         const { enviarCorreoSeguro } = await import("@/lib/email/send.server");
 
