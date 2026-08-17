@@ -149,10 +149,20 @@ const ESTADO_PROPUESTA: Record<string, { label: string; cls: string }> = {
   descartada: { label: "Descartada", cls: "bg-destructive/10 text-destructive" },
 };
 
-function DetalleCarga({ c }: { c: Carga }) {
+function DetalleCarga({
+  c,
+  puedeEditarHorario = false,
+  onHorarioGuardado,
+}: {
+  c: Carga;
+  puedeEditarHorario?: boolean;
+  onHorarioGuardado?: () => void;
+}) {
   const paths = useMemo(() => fotoPaths(c.fotos), [c.fotos]);
   const [urls, setUrls] = useState<string[]>([]);
   const [zoom, setZoom] = useState<string | null>(null);
+  const [editHorario, setEditHorario] = useState(false);
+
 
   useEffect(() => {
     let cancel = false;
