@@ -1,0 +1,1 @@
+ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS email_enviada_at timestamptz;

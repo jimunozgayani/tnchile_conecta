@@ -899,6 +899,7 @@ export type Database = {
           created_at: string
           dias_restantes: number
           doc_tipo: string
+          email_enviada_at: string | null
           entity_id: string
           entity_name: string | null
           entity_tipo: string
@@ -913,6 +914,7 @@ export type Database = {
           created_at?: string
           dias_restantes: number
           doc_tipo: string
+          email_enviada_at?: string | null
           entity_id: string
           entity_name?: string | null
           entity_tipo: string
@@ -927,6 +929,7 @@ export type Database = {
           created_at?: string
           dias_restantes?: number
           doc_tipo?: string
+          email_enviada_at?: string | null
           entity_id?: string
           entity_name?: string | null
           entity_tipo?: string
