@@ -191,9 +191,12 @@ export function CotizacionPDF({
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.marca}>TN CHILE</Text>
-            <Text style={styles.tagline}>La logística la hacemos juntos.</Text>
+          <View style={styles.marcaBloque}>
+            <Image src={LOGO_SRC} style={styles.logo} />
+            <View>
+              <Text style={styles.marca}>TN CHILE</Text>
+              <Text style={styles.tagline}>La logística la hacemos juntos.</Text>
+            </View>
           </View>
           <View>
             <Text style={styles.docTitulo}>COTIZACIÓN</Text>
