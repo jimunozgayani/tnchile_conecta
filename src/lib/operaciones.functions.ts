@@ -307,3 +307,79 @@ export const listarOperacionesPorAsignacion = createServerFn({ method: "POST" })
     }
     return out;
   });
+
+export type OperacionLista = OperacionResumen & { chofer_nombre: string | null };
+
+/**
+ * Operaciones visibles para "Mis Operaciones".
+ * admin / jefe_operaciones ven todas; el operador ve solo las que ganó
+ * (propuesta ganadora) o las que él asignó (asignaciones.creado_por).
+ */
+export const listarMisOperaciones = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<OperacionLista[]> => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!["admin", "jefe_operaciones", "operador"].some((r) => roles.includes(r))) return [];
+    const verTodo = roles.includes("admin") || roles.includes("jefe_operaciones");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("operaciones")
+      .select(
+        "id, numero_operacion, estado, origen, destino, fecha_carga, asignacion_id, cotizacion_id, chofer_nombre, contactos(nombre), asignaciones(creado_por, drivers(nombre_completo))",
+      )
+      .is("deleted_at", null)
+      .order("fecha_carga", { ascending: true, nullsFirst: false });
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []) as Record<string, any>[];
+
+    let permitidas: Set<string> | null = null;
+    if (!verTodo) {
+      permitidas = new Set<string>();
+      const cotIds = rows.map((o) => o["cotizacion_id"]).filter(Boolean) as string[];
+      if (cotIds.length > 0) {
+        const { data: cots } = await supabaseAdmin
+          .from("cotizaciones")
+          .select("id, propuesta_ganadora_id")
+          .in("id", cotIds);
+        const propIds = ((cots ?? []) as Record<string, any>[])
+          .map((c) => c["propuesta_ganadora_id"])
+          .filter(Boolean) as string[];
+        const misPropuestas = new Set<string>();
+        if (propIds.length > 0) {
+          const { data: props } = await supabaseAdmin
+            .from("propuestas_proveedor")
+            .select("id, operador_id")
+            .in("id", propIds)
+            .eq("operador_id", userId);
+          for (const p of ((props ?? []) as Record<string, any>[])) misPropuestas.add(p["id"] as string);
+        }
+        const cotOk = new Set<string>(
+          ((cots ?? []) as Record<string, any>[])
+            .filter((c) => c["propuesta_ganadora_id"] && misPropuestas.has(c["propuesta_ganadora_id"]))
+            .map((c) => c["id"] as string),
+        );
+        for (const o of rows) {
+          const porPropuesta = o["cotizacion_id"] && cotOk.has(o["cotizacion_id"] as string);
+          const porAsignacion = o["asignaciones"]?.creado_por === userId;
+          if (porPropuesta || porAsignacion) permitidas.add(o["id"] as string);
+        }
+      }
+    }
+
+    return rows
+      .filter((o) => permitidas === null || permitidas.has(o["id"] as string))
+      .map((o) => ({
+        id: o["id"],
+        numero_operacion: o["numero_operacion"],
+        estado: o["estado"],
+        contacto_nombre: o["contactos"]?.nombre ?? null,
+        origen: o["origen"] ?? null,
+        destino: o["destino"] ?? null,
+        fecha_carga: o["fecha_carga"] ?? null,
+        asignacion_id: o["asignacion_id"] ?? null,
+        chofer_nombre: o["asignaciones"]?.drivers?.nombre_completo ?? o["chofer_nombre"] ?? null,
+      }));
+  });
