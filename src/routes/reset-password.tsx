@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
+import { useServerFn } from "@tanstack/react-start";
+import { enviarBienvenidaProveedor } from "@/lib/emails.functions";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => pageHead("/reset-password", "Restablecer contraseña · TN Chile Conecta", "Define una nueva contraseña segura para tu cuenta de TN Chile Conecta de logística y transporte."),
@@ -12,6 +14,7 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPage() {
   const navigate = useNavigate();
+  const bienvenida = useServerFn(enviarBienvenidaProveedor);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +26,8 @@ function ResetPage() {
     if (error) toast.error(error.message);
     else {
       toast.success("Contraseña actualizada");
+      // Primera activación de cuenta: enviamos la bienvenida (best-effort).
+      void bienvenida({ data: undefined as never }).catch(() => {});
       navigate({ to: "/dashboard" });
     }
   };
