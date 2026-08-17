@@ -8,6 +8,7 @@ import { pageHead } from "@/lib/page-head";
 import { requireStaffInterno } from "@/lib/require-admin";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import { getSignedUrl } from "@/lib/signed-url";
+import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
 import {
   actualizarEstadoOperacion,
   guardarOperacion,
@@ -204,9 +205,18 @@ function FichaOperacion() {
             </div>
           </div>
         </div>
-        <Link to="/operaciones" className="text-sm text-primary hover:underline">
-          ← Operaciones
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <DescargarDocumentoOperacion
+            operacionId={id}
+            tipo="oc_proveedor"
+            visible={["admin", "jefe_operaciones", "operador", "lider_cuenta"].some((r) =>
+              roles.includes(r),
+            )}
+          />
+          <Link to="/operaciones" className="text-sm text-primary hover:underline">
+            ← Operaciones
+          </Link>
+        </div>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
