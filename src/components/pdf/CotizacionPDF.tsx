@@ -287,10 +287,10 @@ export function CotizacionPDF({
         {/* Datos de pago */}
         <View style={styles.pago}>
           <Text style={styles.seccionTitulo}>DATOS DE TRANSFERENCIA TN CHILE</Text>
-          <Fila etiqueta="Banco:" valor="Banco BCI" />
-          <Fila etiqueta="Cuenta cte.:" valor="123456789" />
-          <Fila etiqueta="RUT:" valor="76.XXX.XXX-X" />
-          <Fila etiqueta="Email:" valor="contacto@tnchile.cl" />
+          <Fila etiqueta="Banco:" valor="Banco Santander" />
+          <Fila etiqueta="Cuenta cte.:" valor="0-000-9417458-9" />
+          <Fila etiqueta="RUT:" valor="77.867.614-1" />
+          <Fila etiqueta="Email:" valor="nicolas.garcia@tnchile.com" />
         </View>
 
         {/* Footer */}
