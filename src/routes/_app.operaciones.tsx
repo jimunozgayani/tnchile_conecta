@@ -90,7 +90,7 @@ function JefeOperacionesView({ nombre, rolLabel }: { nombre: string; rolLabel: s
         <Link to="/operaciones-disponibilidad" className="text-primary hover:underline">
           Disponibilidad
         </Link>
-        <Link to="/operaciones-asignaciones" className="text-primary hover:underline">
+        <Link to="/operaciones-lista" className="text-primary hover:underline">
           Asignaciones
         </Link>
       </div>
@@ -150,7 +150,7 @@ function OperadorPersonalView({
 
       <SectionCard
         title="Operaciones activas"
-        linkTo="/operaciones-asignaciones"
+        linkTo="/operaciones-lista"
         empty={(data?.activas.length ?? 0) === 0}
       >
         {(data?.activas ?? []).map((r: OperacionResumen) => (
@@ -183,7 +183,7 @@ function OperadorPersonalView({
         <Link to="/operaciones-disponibilidad" className="text-primary hover:underline">
           Disponibilidad
         </Link>
-        <Link to="/operaciones-asignaciones" className="text-primary hover:underline">
+        <Link to="/operaciones-lista" className="text-primary hover:underline">
           Asignaciones
         </Link>
       </div>

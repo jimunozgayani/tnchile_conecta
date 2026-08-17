@@ -3,12 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowRight, FileText, Loader2, Truck, User } from "lucide-react";
+import { ArrowRight, FileText, Loader2 } from "lucide-react";
 import { pageHead } from "@/lib/page-head";
 import { requireStaffInterno } from "@/lib/require-admin";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import { getSignedUrl } from "@/lib/signed-url";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
+import { AsignarChoferPanel } from "@/components/AsignarChoferPanel";
 import {
   actualizarEstadoOperacion,
   guardarOperacion,
@@ -284,27 +285,13 @@ function FichaOperacion() {
             Asignación y precios
           </h2>
 
-          <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-            {op.asignacion_id ? (
-              <div className="space-y-1">
-                <p className="flex items-center gap-2 font-medium">
-                  <User className="h-4 w-4 text-primary" />
-                  {op.chofer_nombre ?? "Chofer sin nombre"}
-                </p>
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Truck className="h-4 w-4" />
-                  {op.camion_patente ?? "Camión sin patente"}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Sin asignar</span>
-                <Link to="/operaciones-asignaciones" className="text-primary hover:underline">
-                  Asignar chofer y camión
-                </Link>
-              </div>
-            )}
-          </div>
+          <AsignarChoferPanel
+            operacionId={id}
+            asignacionActiva={!!op.asignacion_id}
+            choferNombre={op.chofer_nombre}
+            camionPatente={op.camion_patente}
+            puedeEditar={puedeEditar}
+          />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Dato label="Precio cliente">{clp(op.precio_ofrecido_cliente_clp)}</Dato>
