@@ -33,7 +33,24 @@ export const autorizarGate3 = createServerFn({ method: "POST" })
       .eq("estado", "lista_para_operar");
     if (error) throw new Error(error.message);
 
-    const op = await crearOperacionDesdeCotizacion(data.id, userId);
+    // Idempotencia: si ya existe una operación activa (no eliminada) para esta
+    // cotización, no se vuelve a crear ni se re-asigna; se devuelve la existente.
+    const { data: existente, error: exErr } = await supabaseAdmin
+      .from("operaciones")
+      .select("id,numero_operacion")
+      .eq("cotizacion_id", data.id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (exErr) throw new Error(exErr.message);
+
+    const op = existente
+      ? {
+          operacion_id: (existente as { id: string }).id,
+          numero_operacion: (existente as { numero_operacion: number }).numero_operacion,
+        }
+      : await crearOperacionDesdeCotizacion(data.id, userId);
 
     await auditCotizacion(
       data.id,
