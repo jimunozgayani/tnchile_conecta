@@ -224,6 +224,15 @@ function FichaOperacion() {
             visible={["admin", "jefe_operaciones", "operador"].some((r) => roles.includes(r))}
           />
 
+          <AdminAcciones
+            tipo="operacion"
+            id={id}
+            nombre={`Operación N° ${op.numero_operacion}`}
+            esAdmin={roles.includes("admin")}
+            compact
+            onDone={() => void navigate({ to: "/operaciones-lista" })}
+          />
+
           <Link to="/operaciones" className="text-sm text-primary hover:underline">
             ← Operaciones
           </Link>

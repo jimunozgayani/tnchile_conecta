@@ -205,6 +205,8 @@ const rangoHoras = (desde: string | null, hasta: string | null) => {
 };
 
 
+import { AdminAcciones } from "@/components/AdminAcciones";
+
 export function CotizacionDrawer({
   id,
   roles,
@@ -386,6 +388,17 @@ export function CotizacionDrawer({
                 Editar horario
               </button>
             )}
+            <AdminAcciones
+              tipo="carga"
+              id={id}
+              nombre={f?.contacto_nombre ?? "esta carga"}
+              esAdmin={roles.includes("admin")}
+              compact
+              onDone={() => {
+                onChanged({ estado: "eliminada" });
+                onClose();
+              }}
+            />
           <button type="button" aria-label="Cerrar" onClick={onClose} className="rounded p-1 hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
