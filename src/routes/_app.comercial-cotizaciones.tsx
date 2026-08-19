@@ -490,8 +490,6 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
 };
 
 function Card({ c, progreso, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
-  const _dbg = (globalThis as any).__dbg ?? ((globalThis as any).__dbg = {});
-  _dbg[c.id] = { estado: c.estado, op: progreso[c.id]?.operacion_estado, avanzando: !!progreso[c.id]?.operacion_estado && ["confirmada", "en_operacion", "finalizada"].includes(progreso[c.id]!.operacion_estado!) };
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
   const sellar = useServerFn(sellarCierre);
