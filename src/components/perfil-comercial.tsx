@@ -250,6 +250,7 @@ export function CargaDeTrabajoHoy({ userId }: { userId: string | null }) {
       const { data, error } = await supabase
         .from("cotizaciones")
         .select("estado")
+        .is("deleted_at", null)
         .eq("asignado_a", userId!);
       if (error) throw new Error(error.message);
       const conteo: Record<string, number> = {};
@@ -549,6 +550,7 @@ export function ResumenHistorico({ userId }: { userId: string | null }) {
       let gestionadas = supabase
         .from("cotizaciones")
         .select("id", { count: "exact", head: true })
+        .is("deleted_at", null)
         .eq("asignado_a", userId!);
       if (desde) gestionadas = gestionadas.gte("created_at", desde);
 
