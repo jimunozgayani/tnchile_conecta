@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { AdminEntidad, AdminFila, StaffOpcion } from "@/lib/admin-super.server";
+import type { AdminEntidad, AdminFila, StaffOpcion } from "@/lib/admin-super";
 
 const entidad = z.enum(["usuario", "proveedor", "cliente", "chofer", "carga", "operacion"]);
 

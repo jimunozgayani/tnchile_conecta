@@ -6,31 +6,9 @@
  * registro operativo o comercial del sistema.
  */
 
-export type AdminEntidad =
-  | "usuario"
-  | "proveedor"
-  | "cliente"
-  | "chofer"
-  | "carga"
-  | "operacion";
+import type { AdminEntidad, AdminFila, StaffOpcion } from "@/lib/admin-super";
 
-export type AdminFila = {
-  id: string;
-  titulo: string;
-  subtitulo: string | null;
-  detalle: string | null;
-  eliminado: boolean;
-  extra: Record<string, string | number | boolean | null>;
-};
-
-export const ENTIDAD_LABEL: Record<AdminEntidad, string> = {
-  usuario: "Usuarios",
-  proveedor: "Proveedores",
-  cliente: "Clientes y contactos",
-  chofer: "Choferes",
-  carga: "Cargas (cotizaciones)",
-  operacion: "Operaciones",
-};
+export type { AdminEntidad, AdminFila, StaffOpcion };
 
 /** Tablas con borrado lógico (columna deleted_at). */
 const TABLA_POR_ENTIDAD: Record<Exclude<AdminEntidad, "usuario">, string> = {
@@ -338,8 +316,6 @@ export async function reasignarOperacionImpl(
   );
   return { ok: true };
 }
-
-export type StaffOpcion = { id: string; email: string; roles: string[] };
 
 /** Usuarios internos disponibles para reasignaciones. */
 export async function listarStaffImpl(admin: any): Promise<StaffOpcion[]> {

@@ -7,7 +7,7 @@ import { AlertTriangle, RotateCcw, Search, ShieldAlert, Trash2, UserCog } from "
 import { pageHead } from "@/lib/page-head";
 import { requireAdmin } from "@/lib/require-admin";
 import { SkeletonRows } from "@/components/SkeletonBlocks";
-import { ENTIDAD_LABEL, type AdminEntidad, type AdminFila } from "@/lib/admin-super.server";
+import { ENTIDAD_LABEL, type AdminEntidad, type AdminFila } from "@/lib/admin-super";
 import {
   listarAdminEntidad,
   eliminarAdminEntidad,
