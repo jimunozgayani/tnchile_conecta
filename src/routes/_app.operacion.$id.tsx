@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,6 +14,7 @@ import { DescargarAsignacion } from "@/components/DescargarAsignacion";
 import { AsignarChoferPanel } from "@/components/AsignarChoferPanel";
 import { EjecucionOperacionPanel } from "@/components/EjecucionOperacionPanel";
 import { PagoProveedorPanel } from "@/components/pagos-cierre";
+import { AdminAcciones } from "@/components/AdminAcciones";
 
 import {
   actualizarEstadoOperacion,
@@ -99,6 +100,7 @@ function Foto({ path }: { path: string }) {
 
 function FichaOperacion() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: me } = useStaffIdentity();
   const roles = me?.roles ?? [];
