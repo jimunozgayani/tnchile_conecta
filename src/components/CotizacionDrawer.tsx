@@ -618,6 +618,11 @@ export function CotizacionDrawer({
                 tipo="ov_cliente"
                 visible={puedeTodo || esComercial}
               />
+              <DescargarAsignacion
+                cotizacionId={id}
+                visible={puedeTodo || (esComercial && esPropia)}
+              />
+
               {puedePDF && (
                 <button
                   type="button"
