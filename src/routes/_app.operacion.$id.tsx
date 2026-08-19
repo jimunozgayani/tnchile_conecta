@@ -345,8 +345,15 @@ function FichaOperacion() {
         </section>
       </div>
 
+      <PagoProveedorPanel
+        operacionId={id}
+        puedeEditar={puedeEditar}
+        visible={["finalizada", "cobro_pendiente", "cerrada"].includes(op.estado)}
+      />
+
       {/* Transiciones de estado */}
       {siguiente && (
+
         <section className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Avance de estado
