@@ -126,7 +126,7 @@ async function renderPDF(
   ctx: Ctx,
   folio: string,
 ): Promise<{ buffer: Uint8Array; conLogo: boolean }> {
-  const { renderToBuffer } = await import("@react-pdf/renderer");
+  const { renderOrdenCompra, renderOrdenVenta } = await import("@/lib/pdf/orden-pdf.server");
   const { operacion: o, cotizacion: c, propuesta: p, tipoCamion } = ctx;
   const fecha = new Date().toISOString();
   const numero = numOrNull(o["numero_operacion"]);
@@ -136,13 +136,10 @@ async function renderPDF(
 
   const build = async (conLogo: boolean) => {
     if (tipo === "oc") {
-      const { OrdenCompraPDF } = await import("@/components/pdf/OrdenCompraPDF");
       const pc = ctx.proveedorContacto;
       const chofer = ctx.chofer;
-      return renderToBuffer(
-        <OrdenCompraPDF
-          conLogo={conLogo}
-          data={{
+      return renderOrdenCompra(
+        {
             folio,
             fecha,
             numero_operacion: numero,
@@ -166,17 +163,14 @@ async function renderPDF(
             patente_principal: p ? str(p["patente_principal"]) : null,
             patente_secundaria: p ? str(p["patente_secundaria"]) : null,
             costo_clp: p ? numOrNull(p["costo_clp"]) : null,
-            descripcion_carga: descripcion,
-          }}
-        />,
+          descripcion_carga: descripcion,
+        },
+        conLogo,
       );
     }
-    const { OrdenVentaPDF } = await import("@/components/pdf/OrdenVentaPDF");
     const cc = ctx.clienteContacto;
-    return renderToBuffer(
-      <OrdenVentaPDF
-        conLogo={conLogo}
-        data={{
+    return renderOrdenVenta(
+      {
           folio,
           fecha,
           numero_operacion: numero,
@@ -193,9 +187,9 @@ async function renderPDF(
           precio_clp:
             (c ? numOrNull(c["precio_ofrecido_cliente_clp"]) : null) ??
             numOrNull(o["precio_ofrecido_cliente_clp"]),
-          descripcion_carga: descripcion,
-        }}
-      />,
+        descripcion_carga: descripcion,
+      },
+      conLogo,
     );
   };
 
