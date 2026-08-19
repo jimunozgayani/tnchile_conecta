@@ -71,10 +71,6 @@ export const createContacto = createServerFn({ method: "POST" })
         temperatura: data.temperatura,
         etapa_comercial: data.etapa_comercial,
         notas: clean(data.notas),
-        banco: puedeDatosBancarios ? clean(data.banco) : null,
-        tipo_cuenta: puedeDatosBancarios ? clean(data.tipo_cuenta) : null,
-        numero_cuenta: puedeDatosBancarios ? clean(data.numero_cuenta) : null,
-        email_banco: puedeDatosBancarios ? clean(data.email_banco) : null,
         origen_contacto: "otro",
         responsable_id: userId,
         deleted_at: null,
@@ -83,5 +79,26 @@ export const createContacto = createServerFn({ method: "POST" })
       .single();
 
     if (error) throw new Error(error.message);
-    return { id: (row as { id: string }).id };
+    const id = (row as { id: string }).id;
+
+    // Los datos bancarios viven en una tabla aparte, inaccesible para operaciones.
+    const banco = clean(data.banco);
+    const tipoCuenta = clean(data.tipo_cuenta);
+    const numeroCuenta = clean(data.numero_cuenta);
+    const emailBanco = clean(data.email_banco);
+    if (puedeDatosBancarios && (banco || tipoCuenta || numeroCuenta || emailBanco)) {
+      const { error: bankError } = await supabase
+        .from("contactos_datos_bancarios")
+        .insert({
+          contacto_id: id,
+          banco,
+          tipo_cuenta: tipoCuenta,
+          numero_cuenta: numeroCuenta,
+          email_banco: emailBanco,
+        } as never);
+      if (bankError) throw new Error(bankError.message);
+    }
+
+    return { id };
   });
+

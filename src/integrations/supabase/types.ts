@@ -190,18 +190,15 @@ export type Database = {
       }
       contactos: {
         Row: {
-          banco: string | null
           created_at: string
           deleted_at: string | null
           driver_id: string | null
           email: string | null
-          email_banco: string | null
           empresa: string | null
           etapa_comercial: string
           id: string
           nombre: string
           notas: string | null
-          numero_cuenta: string | null
           origen_contacto: string | null
           profile_id: string | null
           region: string | null
@@ -209,24 +206,20 @@ export type Database = {
           rut: string | null
           telefono: string | null
           temperatura: string
-          tipo_cuenta: string | null
           tipos: string[]
           updated_at: string
           user_id: string | null
         }
         Insert: {
-          banco?: string | null
           created_at?: string
           deleted_at?: string | null
           driver_id?: string | null
           email?: string | null
-          email_banco?: string | null
           empresa?: string | null
           etapa_comercial?: string
           id?: string
           nombre: string
           notas?: string | null
-          numero_cuenta?: string | null
           origen_contacto?: string | null
           profile_id?: string | null
           region?: string | null
@@ -234,24 +227,20 @@ export type Database = {
           rut?: string | null
           telefono?: string | null
           temperatura?: string
-          tipo_cuenta?: string | null
           tipos?: string[]
           updated_at?: string
           user_id?: string | null
         }
         Update: {
-          banco?: string | null
           created_at?: string
           deleted_at?: string | null
           driver_id?: string | null
           email?: string | null
-          email_banco?: string | null
           empresa?: string | null
           etapa_comercial?: string
           id?: string
           nombre?: string
           notas?: string | null
-          numero_cuenta?: string | null
           origen_contacto?: string | null
           profile_id?: string | null
           region?: string | null
@@ -259,7 +248,6 @@ export type Database = {
           rut?: string | null
           telefono?: string | null
           temperatura?: string
-          tipo_cuenta?: string | null
           tipos?: string[]
           updated_at?: string
           user_id?: string | null
@@ -277,6 +265,51 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contactos_datos_bancarios: {
+        Row: {
+          banco: string | null
+          contacto_id: string
+          created_at: string
+          email_banco: string | null
+          numero_cuenta: string | null
+          tipo_cuenta: string | null
+          updated_at: string
+        }
+        Insert: {
+          banco?: string | null
+          contacto_id: string
+          created_at?: string
+          email_banco?: string | null
+          numero_cuenta?: string | null
+          tipo_cuenta?: string | null
+          updated_at?: string
+        }
+        Update: {
+          banco?: string | null
+          contacto_id?: string
+          created_at?: string
+          email_banco?: string | null
+          numero_cuenta?: string | null
+          tipo_cuenta?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contactos_datos_bancarios_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: true
+            referencedRelation: "contactos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactos_datos_bancarios_contacto_id_fkey"
+            columns: ["contacto_id"]
+            isOneToOne: true
+            referencedRelation: "contactos_operaciones"
             referencedColumns: ["id"]
           },
         ]
@@ -1217,24 +1250,20 @@ export type Database = {
           asignacion_id: string | null
           autorizado_at: string | null
           autorizado_por: string | null
-          banco: string | null
           comprobante_path: string | null
           comprobante_subido_at: string | null
           comprobante_subido_por: string | null
           created_at: string
           deleted_at: string | null
-          email_banco: string | null
           estado: string
           fecha_vencimiento: string | null
           id: string
           monto_clp: number
           notas: string | null
-          numero_cuenta: string | null
           numero_cuota: number
           operacion_id: string
           proveedor_nombre: string | null
           proveedor_rut: string | null
-          tipo_cuenta: string | null
           tipo_pago: string
           updated_at: string
         }
@@ -1242,24 +1271,20 @@ export type Database = {
           asignacion_id?: string | null
           autorizado_at?: string | null
           autorizado_por?: string | null
-          banco?: string | null
           comprobante_path?: string | null
           comprobante_subido_at?: string | null
           comprobante_subido_por?: string | null
           created_at?: string
           deleted_at?: string | null
-          email_banco?: string | null
           estado?: string
           fecha_vencimiento?: string | null
           id?: string
           monto_clp: number
           notas?: string | null
-          numero_cuenta?: string | null
           numero_cuota?: number
           operacion_id: string
           proveedor_nombre?: string | null
           proveedor_rut?: string | null
-          tipo_cuenta?: string | null
           tipo_pago?: string
           updated_at?: string
         }
@@ -1267,24 +1292,20 @@ export type Database = {
           asignacion_id?: string | null
           autorizado_at?: string | null
           autorizado_por?: string | null
-          banco?: string | null
           comprobante_path?: string | null
           comprobante_subido_at?: string | null
           comprobante_subido_por?: string | null
           created_at?: string
           deleted_at?: string | null
-          email_banco?: string | null
           estado?: string
           fecha_vencimiento?: string | null
           id?: string
           monto_clp?: number
           notas?: string | null
-          numero_cuenta?: string | null
           numero_cuota?: number
           operacion_id?: string
           proveedor_nombre?: string | null
           proveedor_rut?: string | null
-          tipo_cuenta?: string | null
           tipo_pago?: string
           updated_at?: string
         }
