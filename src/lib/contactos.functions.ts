@@ -51,6 +51,13 @@ export const createContacto = createServerFn({ method: "POST" })
       throw new Error("No tienes permisos para crear contactos.");
     }
 
+    // Los datos bancarios nunca deben ser escritos por roles de operaciones.
+    const puedeDatosBancarios = ["admin", "lider_cuenta", "comercial"].some((r) =>
+      roles.includes(r),
+    );
+
+
+
     const { data: row, error } = await supabase
       .from("contactos")
       .insert({
