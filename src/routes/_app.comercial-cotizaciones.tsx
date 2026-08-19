@@ -74,12 +74,27 @@ export const Route = createFileRoute("/_app/comercial-cotizaciones")({
 
 type Zona = "comercial" | "operaciones" | "cierre";
 
-type Columna = { label: string; estados: string[]; zona: Zona };
+type Columna = {
+  label: string;
+  estados: string[];
+  zona: Zona;
+  /** Incluir sólo cotizaciones selladas (sin operación avanzando). */
+  soloSelladas?: boolean;
+  /** Incluir sólo cotizaciones con operación en zona de operaciones activa. */
+  soloEnOperacion?: boolean;
+};
 
 /**
  * El nombre visible de cada columna y el estado que la alimenta se definen
  * según el pipeline comercial acordado (el label no siempre coincide con el
  * valor del estado en la base de datos).
+ *
+ * La "Zona Operaciones" consolida en UNA sola columna las cotizaciones cuya
+ * operación ya está siendo trabajada (confirmada / en_operación / finalizada).
+ * Como `cotizacion.estado` se congela en "lista_para_operar" mientras la
+ * operación avanza, la columna se alimenta del estado real de la operación
+ * (consultado vía `obtenerProgresoOperaciones`) y un badge de progreso
+ * diferencia cada tarjeta dentro de la columna.
  */
 const COLUMNAS: Columna[] = [
   {
@@ -89,10 +104,18 @@ const COLUMNAS: Columna[] = [
   },
   { label: "Cotizada", estados: ["cotizada", "en_revision"], zona: "comercial" },
   { label: "Aceptada", estados: ["aceptada"], zona: "comercial" },
-  { label: "Cierre sellado", estados: ["lista_para_operar"], zona: "comercial" },
-  { label: "Lista para operar", estados: ["confirmada"], zona: "operaciones" },
-  { label: "Confirmada", estados: ["en_operacion"], zona: "operaciones" },
-  { label: "En operación", estados: ["finalizada"], zona: "operaciones" },
+  {
+    label: "Cierre sellado",
+    estados: ["lista_para_operar"],
+    zona: "comercial",
+    soloSelladas: true,
+  },
+  {
+    label: "Zona Operaciones",
+    estados: ["lista_para_operar"],
+    zona: "operaciones",
+    soloEnOperacion: true,
+  },
   { label: "Cobro pendiente", estados: ["cobro_pendiente"], zona: "cierre" },
   { label: "Cerrada", estados: ["cerrada"], zona: "cierre" },
 ];
