@@ -489,7 +489,7 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
   cobro_pendiente: [{ estado: "cerrada", label: "Marcar como cerrada" }],
 };
 
-function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
+function Card({ c, progreso, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
   const sellar = useServerFn(sellarCierre);
