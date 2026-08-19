@@ -10,6 +10,7 @@ import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import { getSignedUrl } from "@/lib/signed-url";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
 import { AsignarChoferPanel } from "@/components/AsignarChoferPanel";
+import { EjecucionOperacionPanel } from "@/components/EjecucionOperacionPanel";
 import {
   actualizarEstadoOperacion,
   guardarOperacion,
@@ -278,6 +279,9 @@ function FichaOperacion() {
             </label>
           </div>
         </section>
+
+        {/* Ejecución del viaje */}
+        <EjecucionOperacionPanel operacionId={id} puedeEditar={puedeEditar} />
 
         {/* Asignación y precios */}
         <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
