@@ -10,6 +10,8 @@ import { Gate3Actions } from "@/components/Gate3Actions";
 import { CotizacionEditForm } from "@/components/CotizacionEditForm";
 import { HorarioEditForm } from "@/components/HorarioEditForm";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
+import { DescargarAsignacion } from "@/components/DescargarAsignacion";
+
 import { CobroClientePanel } from "@/components/pagos-cierre";
 
 
