@@ -10,6 +10,8 @@ import { Gate3Actions } from "@/components/Gate3Actions";
 import { CotizacionEditForm } from "@/components/CotizacionEditForm";
 import { HorarioEditForm } from "@/components/HorarioEditForm";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
+import { CobroClientePanel } from "@/components/pagos-cierre";
+
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
