@@ -247,8 +247,12 @@ export const avanzarEstadoViaje = createServerFn({ method: "POST" })
           datos_nuevos: { asignacion_id: data.asignacion_id, finalizada_por: userId },
           usuario_id: userId,
         } as never);
+        // Terminada físicamente: pasa de inmediato a la fase de cobro paralelo.
+        const { pasarACobroPendiente } = await import("@/lib/pagos-cierre.server");
+        await pasarACobroPendiente(opId, userId);
       }
     }
+
 
     const { error: audErr } = await supabaseAdmin.from("audit_log").insert({
       tabla_nombre: "asignaciones",
