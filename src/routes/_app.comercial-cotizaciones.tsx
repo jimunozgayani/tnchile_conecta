@@ -25,6 +25,8 @@ import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
 import { CountdownBadge } from "@/components/ExploracionCountdown";
 import { Gate3Actions } from "@/components/Gate3Actions";
+import { obtenerProgresoOperaciones } from "@/lib/progreso-operaciones.functions";
+import { badgeProgreso, type ProgresoInfo } from "@/lib/progreso-badge";
 
 import { createContacto } from "@/lib/contactos.functions";
 import { fmtCLP } from "@/lib/regiones-capitales";
