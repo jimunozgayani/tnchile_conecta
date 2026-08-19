@@ -424,7 +424,7 @@ export default function ComercialCotizacionesPage() {
                     <p className="px-1 py-4 text-center text-xs text-muted-foreground">Sin cotizaciones</p>
                   ) : (
                     cards.map((c) => (
-                      <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
+                      <Card key={c.id} c={c} progreso={progreso} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
                     ))
                   )}
                 </div>
