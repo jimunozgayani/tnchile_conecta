@@ -25,6 +25,8 @@ import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
 import { CotizacionDrawer, ReasignarModal } from "@/components/CotizacionDrawer";
 import { CountdownBadge } from "@/components/ExploracionCountdown";
 import { Gate3Actions } from "@/components/Gate3Actions";
+import { obtenerProgresoOperaciones } from "@/lib/progreso-operaciones.functions";
+import { badgeProgreso, type ProgresoInfo } from "@/lib/progreso-badge";
 
 import { createContacto } from "@/lib/contactos.functions";
 import { fmtCLP } from "@/lib/regiones-capitales";
@@ -72,12 +74,27 @@ export const Route = createFileRoute("/_app/comercial-cotizaciones")({
 
 type Zona = "comercial" | "operaciones" | "cierre";
 
-type Columna = { label: string; estados: string[]; zona: Zona };
+type Columna = {
+  label: string;
+  estados: string[];
+  zona: Zona;
+  /** Incluir sólo cotizaciones selladas (sin operación avanzando). */
+  soloSelladas?: boolean;
+  /** Incluir sólo cotizaciones con operación en zona de operaciones activa. */
+  soloEnOperacion?: boolean;
+};
 
 /**
  * El nombre visible de cada columna y el estado que la alimenta se definen
  * según el pipeline comercial acordado (el label no siempre coincide con el
  * valor del estado en la base de datos).
+ *
+ * La "Zona Operaciones" consolida en UNA sola columna las cotizaciones cuya
+ * operación ya está siendo trabajada (confirmada / en_operación / finalizada).
+ * Como `cotizacion.estado` se congela en "lista_para_operar" mientras la
+ * operación avanza, la columna se alimenta del estado real de la operación
+ * (consultado vía `obtenerProgresoOperaciones`) y un badge de progreso
+ * diferencia cada tarjeta dentro de la columna.
  */
 const COLUMNAS: Columna[] = [
   {
@@ -87,10 +104,18 @@ const COLUMNAS: Columna[] = [
   },
   { label: "Cotizada", estados: ["cotizada", "en_revision"], zona: "comercial" },
   { label: "Aceptada", estados: ["aceptada"], zona: "comercial" },
-  { label: "Cierre sellado", estados: ["lista_para_operar"], zona: "comercial" },
-  { label: "Lista para operar", estados: ["confirmada"], zona: "operaciones" },
-  { label: "Confirmada", estados: ["en_operacion"], zona: "operaciones" },
-  { label: "En operación", estados: ["finalizada"], zona: "operaciones" },
+  {
+    label: "Cierre sellado",
+    estados: ["lista_para_operar"],
+    zona: "comercial",
+    soloSelladas: true,
+  },
+  {
+    label: "Zona Operaciones",
+    estados: ["lista_para_operar"],
+    zona: "operaciones",
+    soloEnOperacion: true,
+  },
   { label: "Cobro pendiente", estados: ["cobro_pendiente"], zona: "cierre" },
   { label: "Cerrada", estados: ["cerrada"], zona: "cierre" },
 ];
@@ -227,6 +252,16 @@ export default function ComercialCotizacionesPage() {
   });
   const nombres = nombresQuery.data ?? {};
 
+  // Progreso de operación en vivo (estado de operación + viaje del chofer)
+  // para alimentar los badges de la "Zona Operaciones".
+  const progresoFn = useServerFn(obtenerProgresoOperaciones);
+  const progresoQuery = useQuery({
+    queryKey: ["progreso-operaciones", rows.map((r) => r.id).join(",")],
+    queryFn: () => progresoFn({ data: { ids: rows.map((r) => r.id) } }),
+    enabled: rows.length > 0,
+  });
+  const progreso: Record<string, ProgresoInfo> = progresoQuery.data ?? {};
+
   const asignablesFn = useServerFn(obtenerAsignables);
   const asignablesQuery = useQuery({
     queryKey: ["cotizaciones-asignables"],
@@ -235,9 +270,26 @@ export default function ComercialCotizacionesPage() {
   });
 
   const rechazadas = useMemo(() => rows.filter((r) => r.estado === "rechazada"), [rows]);
+
+  const ESTADOS_EN_OPE = ["confirmada", "en_operacion", "finalizada"];
   const porColumna = useMemo(
-    () => COLUMNAS.map((c) => ({ col: c, cards: rows.filter((r) => c.estados.includes(r.estado)) })),
-    [rows],
+    () =>
+      COLUMNAS.map((c) => ({
+        col: c,
+        cards: rows.filter((r) => {
+          if (!c.estados.includes(r.estado)) return false;
+          if (c.soloSelladas) {
+            const op = progreso[r.id]?.operacion_estado;
+            return !(op && ESTADOS_EN_OPE.includes(op));
+          }
+          if (c.soloEnOperacion) {
+            const op = progreso[r.id]?.operacion_estado;
+            return !!op && ESTADOS_EN_OPE.includes(op);
+          }
+          return true;
+        }),
+      })),
+    [rows, progreso],
   );
 
   const hasFilters = !!q.trim() || !!desde || !!hasta;
@@ -372,7 +424,7 @@ export default function ComercialCotizacionesPage() {
                     <p className="px-1 py-4 text-center text-xs text-muted-foreground">Sin cotizaciones</p>
                   ) : (
                     cards.map((c) => (
-                      <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
+                      <Card key={c.id} c={c} progreso={progreso} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
                     ))
                   )}
                 </div>
@@ -391,7 +443,7 @@ export default function ComercialCotizacionesPage() {
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {rechazadas.map((c) => (
-                <Card key={c.id} c={c} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
+                <Card key={c.id} c={c} progreso={progreso} puedeActuar={puedeCrear} puedeAsignar={puedeAsignar} asignables={asignablesQuery.data ?? []} nombres={nombres} onPatch={patchRow} onOpen={setFichaId} />
               ))}
             </div>
           )}
@@ -418,6 +470,7 @@ export default function ComercialCotizacionesPage() {
 
 type CardProps = {
   c: Cotizacion;
+  progreso: Record<string, ProgresoInfo>;
   puedeActuar: boolean;
   puedeAsignar: boolean;
   asignables: Asignable[];
@@ -436,7 +489,7 @@ const ACCIONES: Record<string, { estado: string; label: string }[]> = {
   cobro_pendiente: [{ estado: "cerrada", label: "Marcar como cerrada" }],
 };
 
-function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
+function Card({ c, progreso, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOpen }: CardProps) {
   const actualizar = useServerFn(actualizarEstadoCotizacion);
   const asignar = useServerFn(asignarCotizacion);
   const sellar = useServerFn(sellarCierre);
@@ -451,6 +504,7 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
   const enRevision = c.estado === "en_revision" || (revCount > 0 && c.estado === "cotizada");
   const acciones = puedeActuar ? (ACCIONES[c.estado] ?? []) : [];
   const esDeOperaciones = ESTADOS_OPERACIONES.includes(c.estado);
+  const badge = badgeProgreso(progreso[c.id]);
   const puedePDF = c.estado === "cotizada" || c.estado === "aceptada";
 
   const generarPDF = async () => {
@@ -645,6 +699,12 @@ function Card({ c, puedeActuar, puedeAsignar, asignables, nombres, onPatch, onOp
 
       {esDeOperaciones && (
         <p className="mt-1.5 text-[10px] italic text-muted-foreground">En manos de Operaciones</p>
+      )}
+
+      {badge && (
+        <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>
+          {badge.label}
+        </span>
       )}
 
       {c.estado === "lista_para_operar" && puedeAsignar && (

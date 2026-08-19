@@ -14,6 +14,9 @@ import { DescargarAsignacion } from "@/components/DescargarAsignacion";
 
 import { CobroClientePanel } from "@/components/pagos-cierre";
 
+import { obtenerProgresoOperaciones } from "@/lib/progreso-operaciones.functions";
+import { detalleProgreso } from "@/lib/progreso-badge";
+
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
@@ -258,6 +261,15 @@ export function CotizacionDrawer({
     },
   });
   const f = fichaQuery.data ?? null;
+
+  // Progreso de operación en vivo (estado + viaje del chofer) para el badge
+  // del header de la ficha.
+  const progresoFn = useServerFn(obtenerProgresoOperaciones);
+  const progresoQuery = useQuery({
+    queryKey: ["progreso-operacion", id],
+    queryFn: () => progresoFn({ data: { ids: [id] } }),
+  });
+  const detalle = detalleProgreso(progresoQuery.data?.[id]);
 
   useEffect(() => {
     if (f) setNotas(f.notas_admin ?? "");
@@ -514,9 +526,16 @@ export function CotizacionDrawer({
             {/* DERECHA — gestión comercial */}
             <section className="space-y-3 text-sm">
               <div className="flex items-start justify-between gap-2">
-                <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">
-                  {ESTADO_LABEL[f.estado] ?? f.estado}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">
+                    {ESTADO_LABEL[f.estado] ?? f.estado}
+                  </span>
+                  {detalle && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:text-sky-300">
+                      {detalle}
+                    </span>
+                  )}
+                </div>
                 {puedeTodo && (
                   <button
                     type="button"
