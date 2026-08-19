@@ -14,6 +14,9 @@ import { DescargarAsignacion } from "@/components/DescargarAsignacion";
 
 import { CobroClientePanel } from "@/components/pagos-cierre";
 
+import { obtenerProgresoOperaciones } from "@/lib/progreso-operaciones.functions";
+import { detalleProgreso } from "@/lib/progreso-badge";
+
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
