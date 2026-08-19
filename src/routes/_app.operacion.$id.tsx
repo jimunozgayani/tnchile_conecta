@@ -366,6 +366,7 @@ function FichaOperacion() {
       <PagoProveedorPanel
         operacionId={id}
         puedeEditar={puedeEditar}
+        puedeSubirComprobante={["admin", "jefe_operaciones"].some((r) => roles.includes(r))}
         visible={["finalizada", "cobro_pendiente", "cerrada"].includes(op.estado)}
       />
 
