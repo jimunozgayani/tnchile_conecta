@@ -165,3 +165,118 @@ export const registrarCobroCliente = createServerFn({ method: "POST" })
     const cierre = await cerrarSiAmbosResueltos(actual.operacion_id, userId);
     return { ok: true, ...cierre };
   });
+
+// ─────────────────────────────────────────────────────────────
+// Comprobantes de pago al proveedor (adjuntos)
+// ─────────────────────────────────────────────────────────────
+
+export type ComprobantePago = {
+  path: string;
+  nombre_archivo: string;
+  subido_por: string | null;
+  subido_at: string;
+  subido_por_nombre?: string | null;
+};
+
+const SUBEN = ["admin", "jefe_operaciones"];
+const VEN = ["admin", "jefe_operaciones", "operador", "lider_cuenta"];
+
+async function nombresDe(ids: string[]): Promise<Record<string, string>> {
+  const unicos = [...new Set(ids.filter(Boolean))];
+  if (unicos.length === 0) return {};
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id, nombre_contacto, razon_social, correo")
+    .in("id", unicos);
+  const out: Record<string, string> = {};
+  for (const p of (data ?? []) as Array<Record<string, string | null>>) {
+    out[p["id"] as string] =
+      p["nombre_contacto"] || p["razon_social"] || p["correo"] || "Usuario interno";
+  }
+  return out;
+}
+
+async function leerComprobantes(operacionId: string): Promise<ComprobantePago[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("operaciones")
+    .select("comprobantes_pago_proveedor")
+    .eq("id", operacionId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const raw = (data as Record<string, unknown> | null)?.["comprobantes_pago_proveedor"];
+  const lista = Array.isArray(raw) ? (raw as ComprobantePago[]) : [];
+  const nombres = await nombresDe(lista.map((c) => c.subido_por ?? ""));
+  return lista.map((c) => ({
+    ...c,
+    subido_por_nombre: c.subido_por ? (nombres[c.subido_por] ?? null) : null,
+  }));
+}
+
+/** Lista los comprobantes de pago al proveedor de una operación. */
+export const listarComprobantesPagoProveedor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ operacion_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<ComprobantePago[]> => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!VEN.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
+    return await leerComprobantes(data.operacion_id);
+  });
+
+/** Registra un comprobante ya subido al bucket 'documentos-operacion'. */
+export const registrarComprobantePagoProveedor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        operacion_id: z.string().uuid(),
+        path: z.string().trim().min(1).max(500),
+        nombre_archivo: z.string().trim().min(1).max(255),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<ComprobantePago[]> => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!SUBEN.some((r) => roles.includes(r))) {
+      throw new Error("Solo admin o jefe de operaciones puede subir comprobantes.");
+    }
+    if (!data.path.startsWith(`comprobantes/${data.operacion_id}/`)) {
+      throw new Error("Ruta de archivo inválida.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { auditarOperacion } = await import("@/lib/pagos-cierre.server");
+
+    const actuales = await leerComprobantes(data.operacion_id);
+    const entrada = {
+      path: data.path,
+      nombre_archivo: data.nombre_archivo,
+      subido_por: userId,
+      subido_at: new Date().toISOString(),
+    };
+    const nueva = [
+      ...actuales.map(({ subido_por_nombre: _n, ...c }) => c),
+      entrada,
+    ];
+
+    const { error } = await supabaseAdmin
+      .from("operaciones")
+      .update({
+        comprobantes_pago_proveedor: nueva,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", data.operacion_id);
+    if (error) throw new Error(error.message);
+
+    await auditarOperacion(
+      data.operacion_id,
+      "comprobante_pago_proveedor_subido",
+      entrada,
+      userId,
+    );
+
+    return await leerComprobantes(data.operacion_id);
+  });
