@@ -505,6 +505,9 @@ function Card({ c, progreso, puedeActuar, puedeAsignar, asignables, nombres, onP
   const acciones = puedeActuar ? (ACCIONES[c.estado] ?? []) : [];
   const esDeOperaciones = ESTADOS_OPERACIONES.includes(c.estado);
   const badge = badgeProgreso(progreso[c.id]);
+  const opAvanzando =
+    !!progreso[c.id]?.operacion_estado &&
+    ["confirmada", "en_operacion", "finalizada"].includes(progreso[c.id]!.operacion_estado!);
   const puedePDF = c.estado === "cotizada" || c.estado === "aceptada";
 
   const generarPDF = async () => {
