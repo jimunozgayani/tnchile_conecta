@@ -10,6 +10,8 @@ import { Gate3Actions } from "@/components/Gate3Actions";
 import { CotizacionEditForm } from "@/components/CotizacionEditForm";
 import { HorarioEditForm } from "@/components/HorarioEditForm";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
+import { CobroClientePanel } from "@/components/pagos-cierre";
+
 
 import { fmtCLP } from "@/lib/regiones-capitales";
 import { descargarCotizacionPDF } from "@/lib/cotizacion-pdf";
@@ -29,7 +31,9 @@ export const ACCIONES: Record<string, { estado: string; label: string }[]> = {
     { estado: "rechazada", label: "Rechazar" },
   ],
   aceptada: [{ estado: "lista_para_operar", label: "Sellar cierre" }],
-  cobro_pendiente: [{ estado: "cerrada", label: "Marcar como cerrada" }],
+  // El paso a 'cerrada' ya no es manual: ocurre cuando se registran el pago al
+  // proveedor y el cobro al cliente (cierre paralelo).
+
 };
 
 export const ESTADO_LABEL: Record<string, string> = {
@@ -569,7 +573,17 @@ export function CotizacionDrawer({
                   <p className="mt-0.5 whitespace-pre-wrap">{f.comentarios_rechazo}</p>
                 </div>
               )}
+
+              <CobroClientePanel
+                cotizacionId={id}
+                puedeEditar={puedeTodo || (esComercial && esPropia)}
+                onCerrada={() => {
+                  onChanged({ estado: "cerrada" });
+                  void fichaQuery.refetch();
+                }}
+              />
             </section>
+
 
             {/* ABAJO — acciones */}
             <div className="flex flex-wrap gap-2 border-t pt-4 md:col-span-2">

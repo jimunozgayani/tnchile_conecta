@@ -11,6 +11,8 @@ import { getSignedUrl } from "@/lib/signed-url";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
 import { AsignarChoferPanel } from "@/components/AsignarChoferPanel";
 import { EjecucionOperacionPanel } from "@/components/EjecucionOperacionPanel";
+import { PagoProveedorPanel } from "@/components/pagos-cierre";
+
 import {
   actualizarEstadoOperacion,
   guardarOperacion,
@@ -343,8 +345,15 @@ function FichaOperacion() {
         </section>
       </div>
 
+      <PagoProveedorPanel
+        operacionId={id}
+        puedeEditar={puedeEditar}
+        visible={["finalizada", "cobro_pendiente", "cerrada"].includes(op.estado)}
+      />
+
       {/* Transiciones de estado */}
       {siguiente && (
+
         <section className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Avance de estado
