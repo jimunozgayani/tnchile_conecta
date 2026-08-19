@@ -159,6 +159,9 @@ export const actualizarEstadoCotizacion = createServerFn({ method: "POST" })
       patch["exploracion_limite_at"] = null;
       patch["costo_proveedor_fijado_clp"] = null;
       patch["propuesta_ganadora_id"] = null;
+      // El gate de exploración debe volver a aplicarse en esta segunda pasada.
+      patch["preparada_exploracion_at"] = null;
+      patch["preparada_exploracion_por"] = null;
     } else if (data.estado === "rechazada") {
       patch["comentarios_rechazo"] = comentario;
       patch["rechazada_at"] = new Date().toISOString();
