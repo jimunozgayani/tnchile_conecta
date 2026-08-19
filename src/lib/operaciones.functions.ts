@@ -204,7 +204,9 @@ export const obtenerOperacion = createServerFn({ method: "POST" })
       fotos: arr(o["fotos"]),
       fotos_descarga: arr(o["fotos_descarga"]),
       chofer_nombre: o["asignaciones"]?.drivers?.nombre_completo ?? null,
-      camion_patente: o["asignaciones"]?.trucks?.patente ?? null,
+      camion_patente:
+        o["asignaciones"]?.trucks?.patente ??
+        ([o["patente_principal"], o["patente_secundaria"]].filter(Boolean).join(" + ") || null),
       pasada_a_operaciones_at: o["pasada_a_operaciones_at"] ?? null,
     };
   });
@@ -308,7 +310,10 @@ export const listarOperacionesPorAsignacion = createServerFn({ method: "POST" })
     return out;
   });
 
-export type OperacionLista = OperacionResumen & { chofer_nombre: string | null };
+export type OperacionLista = OperacionResumen & {
+  chofer_nombre: string | null;
+  finalizada_at: string | null;
+};
 
 /**
  * Operaciones visibles para "Mis Operaciones".
@@ -327,7 +332,7 @@ export const listarMisOperaciones = createServerFn({ method: "POST" })
     const { data, error } = await supabaseAdmin
       .from("operaciones")
       .select(
-        "id, numero_operacion, estado, origen, destino, fecha_carga, asignacion_id, cotizacion_id, chofer_nombre, contactos(nombre), asignaciones(creado_por, drivers(nombre_completo))",
+        "id, numero_operacion, estado, origen, destino, fecha_carga, asignacion_id, cotizacion_id, chofer_nombre, finalizada_at, contactos(nombre), asignaciones(creado_por, drivers(nombre_completo))",
       )
       .is("deleted_at", null)
       .order("fecha_carga", { ascending: true, nullsFirst: false });
@@ -382,5 +387,6 @@ export const listarMisOperaciones = createServerFn({ method: "POST" })
         fecha_carga: o["fecha_carga"] ?? null,
         asignacion_id: o["asignacion_id"] ?? null,
         chofer_nombre: o["asignaciones"]?.drivers?.nombre_completo ?? o["chofer_nombre"] ?? null,
+        finalizada_at: o["finalizada_at"] ?? null,
       }));
   });

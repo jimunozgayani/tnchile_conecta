@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listarOperacionesActivas, type OperacionResumen } from "@/lib/operaciones.functions";
+import { listarMisOperaciones, type OperacionLista } from "@/lib/operaciones.functions";
 import {
   obtenerActividadOperaciones,
   obtenerEquipoOperaciones,
@@ -10,7 +10,6 @@ import {
 import { ActividadEquipoCard, MetasEquipo, TeamTable } from "@/components/leader-dashboard";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
-import { supabase } from "@/integrations/supabase/client";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import {
   EstadoBadge,
@@ -108,28 +107,23 @@ function OperadorPersonalView({
   rolLabel: string;
 }) {
   const me = { userId, nombre };
-  const listarActivas = useServerFn(listarOperacionesActivas);
+  // Mismo alcance que "Mis Operaciones": propuesta ganadora propia o asignación creada por mí.
+  const listarMias = useServerFn(listarMisOperaciones);
 
   const { data } = useQuery({
     enabled: !!me?.userId,
     queryKey: ["operaciones-home", me?.userId],
     queryFn: async () => {
-      const base = () =>
-        supabase.from("operaciones").select("*", { count: "exact", head: true }).is("deleted_at", null);
+      const mias = (await listarMias({})) as OperacionLista[];
       const hoy = new Date().toISOString().slice(0, 10);
 
-      const [enOperacion, finalizadasHoy, listas, activas] = await Promise.all([
-        base().eq("estado", "en_operacion"),
-        base().eq("estado", "finalizada").gte("updated_at", `${hoy}T00:00:00`),
-        base().eq("estado", "lista_para_operar"),
-        listarActivas({}),
-      ]);
-
       return {
-        enOperacion: enOperacion.count ?? 0,
-        finalizadasHoy: finalizadasHoy.count ?? 0,
-        listas: listas.count ?? 0,
-        activas: (activas as OperacionResumen[]).filter((o) => ACTIVAS.includes(o.estado)),
+        enOperacion: mias.filter((o) => o.estado === "en_operacion").length,
+        finalizadasHoy: mias.filter(
+          (o) => o.estado === "finalizada" && (o.finalizada_at ?? "").slice(0, 10) === hoy,
+        ).length,
+        listas: mias.filter((o) => o.estado === "lista_para_operar").length,
+        activas: mias.filter((o) => ACTIVAS.includes(o.estado)),
       };
     },
   });
@@ -153,7 +147,7 @@ function OperadorPersonalView({
         linkTo="/operaciones-lista"
         empty={(data?.activas.length ?? 0) === 0}
       >
-        {(data?.activas ?? []).map((r: OperacionResumen) => (
+        {(data?.activas ?? []).map((r: OperacionLista) => (
           <li key={r.id}>
             <Link
               to="/operacion/$id"

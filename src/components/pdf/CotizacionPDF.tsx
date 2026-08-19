@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   page: { paddingTop: 32, paddingBottom: 56, paddingHorizontal: 36, fontSize: 9, color: "#1F2937" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   marcaBloque: { flexDirection: "row", alignItems: "center", gap: 8 },
-  logo: { width: 60, height: 60, borderRadius: 30, objectFit: "contain" },
+  logo: { width: 70, height: 70, borderRadius: 35, objectFit: "contain" },
   marca: { fontSize: 24, fontWeight: "bold", color: VERDE, letterSpacing: 1 },
   tagline: { fontSize: 8, fontStyle: "italic", color: GRIS, marginTop: 3 },
   docTitulo: { fontSize: 18, fontWeight: "bold", textAlign: "right" },
@@ -303,7 +303,11 @@ export function CotizacionPDF({
             Este documento es una cotización interna de TN Chile. No constituye factura ni boleta
             electrónica.
           </Text>
-          <Text style={styles.footerTexto}>Válida por 30 días desde su emisión.</Text>
+          <Text style={styles.footerTexto}>
+            {fmtFecha(c.validez_hasta)
+              ? `Válida hasta: ${fmtFecha(c.validez_hasta)}`
+              : "Válida por 30 días desde su emisión."}
+          </Text>
           <Text
             style={styles.footerTexto}
             render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
