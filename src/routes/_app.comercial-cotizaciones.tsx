@@ -252,6 +252,16 @@ export default function ComercialCotizacionesPage() {
   });
   const nombres = nombresQuery.data ?? {};
 
+  // Progreso de operación en vivo (estado de operación + viaje del chofer)
+  // para alimentar los badges de la "Zona Operaciones".
+  const progresoFn = useServerFn(obtenerProgresoOperaciones);
+  const progresoQuery = useQuery({
+    queryKey: ["progreso-operaciones", rows.map((r) => r.id).join(",")],
+    queryFn: () => progresoFn({ data: { ids: rows.map((r) => r.id) } }),
+    enabled: rows.length > 0,
+  });
+  const progreso: Record<string, ProgresoInfo> = progresoQuery.data ?? {};
+
   const asignablesFn = useServerFn(obtenerAsignables);
   const asignablesQuery = useQuery({
     queryKey: ["cotizaciones-asignables"],
@@ -260,9 +270,26 @@ export default function ComercialCotizacionesPage() {
   });
 
   const rechazadas = useMemo(() => rows.filter((r) => r.estado === "rechazada"), [rows]);
+
+  const ESTADOS_EN_OPE = ["confirmada", "en_operacion", "finalizada"];
   const porColumna = useMemo(
-    () => COLUMNAS.map((c) => ({ col: c, cards: rows.filter((r) => c.estados.includes(r.estado)) })),
-    [rows],
+    () =>
+      COLUMNAS.map((c) => ({
+        col: c,
+        cards: rows.filter((r) => {
+          if (!c.estados.includes(r.estado)) return false;
+          if (c.soloSelladas) {
+            const op = progreso[r.id]?.operacion_estado;
+            return !(op && ESTADOS_EN_OPE.includes(op));
+          }
+          if (c.soloEnOperacion) {
+            const op = progreso[r.id]?.operacion_estado;
+            return !!op && ESTADOS_EN_OPE.includes(op);
+          }
+          return true;
+        }),
+      })),
+    [rows, progreso],
   );
 
   const hasFilters = !!q.trim() || !!desde || !!hasta;
