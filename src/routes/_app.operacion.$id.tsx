@@ -9,6 +9,8 @@ import { requireStaffInterno } from "@/lib/require-admin";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import { getSignedUrl } from "@/lib/signed-url";
 import { DescargarDocumentoOperacion } from "@/components/DescargarDocumentoOperacion";
+import { DescargarAsignacion } from "@/components/DescargarAsignacion";
+
 import { AsignarChoferPanel } from "@/components/AsignarChoferPanel";
 import { EjecucionOperacionPanel } from "@/components/EjecucionOperacionPanel";
 import { PagoProveedorPanel } from "@/components/pagos-cierre";
