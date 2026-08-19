@@ -262,6 +262,15 @@ export function CotizacionDrawer({
   });
   const f = fichaQuery.data ?? null;
 
+  // Progreso de operación en vivo (estado + viaje del chofer) para el badge
+  // del header de la ficha.
+  const progresoFn = useServerFn(obtenerProgresoOperaciones);
+  const progresoQuery = useQuery({
+    queryKey: ["progreso-operacion", id],
+    queryFn: () => progresoFn({ data: { ids: [id] } }),
+  });
+  const detalle = detalleProgreso(progresoQuery.data?.[id]);
+
   useEffect(() => {
     if (f) setNotas(f.notas_admin ?? "");
   }, [f?.id, f?.notas_admin]);
