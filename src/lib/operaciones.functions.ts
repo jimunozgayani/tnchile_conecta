@@ -206,8 +206,7 @@ export const obtenerOperacion = createServerFn({ method: "POST" })
       chofer_nombre: o["asignaciones"]?.drivers?.nombre_completo ?? null,
       camion_patente:
         o["asignaciones"]?.trucks?.patente ??
-        [o["patente_principal"], o["patente_secundaria"]].filter(Boolean).join(" + ") ??
-        null,
+        ([o["patente_principal"], o["patente_secundaria"]].filter(Boolean).join(" + ") || null),
       pasada_a_operaciones_at: o["pasada_a_operaciones_at"] ?? null,
     };
   });

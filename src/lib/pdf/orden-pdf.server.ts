@@ -130,8 +130,8 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   let marcaX = M;
   if (conLogo) {
     const logo = await cargarLogo(pdf);
-    const size = 70;
-    page.drawImage(logo, { x: M, y: c.y - 52, width: size, height: size });
+    const size = 60;
+    page.drawImage(logo, { x: M, y: c.y - 46, width: size, height: size });
     marcaX = M + size + 10;
   }
   text(c, d.titulo, { align: "right", size: 16, bold: true });
