@@ -407,6 +407,10 @@ function ExploracionPage() {
           "id, contacto_nombre, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, fecha_despacho, estado, peso_kg, largo_cm, ancho_cm, alto_cm, notas_admin, presupuesto_referencial_cliente_clp, fotos, exploracion_abierta_at, exploracion_limite_at, carga_hora_desde, carga_hora_hasta, descarga_fecha, descarga_hora_desde, descarga_hora_hasta, descarga_notas",
         )
         .in("estado", ["nueva", "en_exploracion", "exploracion_vencida"])
+        // Las cargas 'nueva' solo aparecen cuando el comercial las preparó.
+        .or(
+          "and(estado.eq.nueva,preparada_exploracion_at.not.is.null),estado.in.(en_exploracion,exploracion_vencida)",
+        )
         .order("created_at", { ascending: false }),
       supabase
         .from("tipos_camion")
