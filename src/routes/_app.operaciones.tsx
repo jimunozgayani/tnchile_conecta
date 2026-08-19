@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listarOperacionesActivas, type OperacionResumen } from "@/lib/operaciones.functions";
+import { listarMisOperaciones, type OperacionLista } from "@/lib/operaciones.functions";
 import {
   obtenerActividadOperaciones,
   obtenerEquipoOperaciones,
@@ -10,7 +10,6 @@ import {
 import { ActividadEquipoCard, MetasEquipo, TeamTable } from "@/components/leader-dashboard";
 import { pageHead } from "@/lib/page-head";
 import { requireOperations } from "@/lib/require-admin";
-import { supabase } from "@/integrations/supabase/client";
 import { useStaffIdentity } from "@/hooks/useStaffIdentity";
 import {
   EstadoBadge,
@@ -148,7 +147,7 @@ function OperadorPersonalView({
         linkTo="/operaciones-lista"
         empty={(data?.activas.length ?? 0) === 0}
       >
-        {(data?.activas ?? []).map((r: OperacionResumen) => (
+        {(data?.activas ?? []).map((r: OperacionLista) => (
           <li key={r.id}>
             <Link
               to="/operacion/$id"
