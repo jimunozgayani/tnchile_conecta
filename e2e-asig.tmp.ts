@@ -1,11 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
-const sb = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!, {
-  auth: { persistSession: false },
-});
-const { data } = await sb
-  .from("operaciones")
-  .select("id, numero_operacion, cotizacion_id, chofer_id, chofer_nombre_libre, patente_principal, patente_secundaria, fecha_carga, carga_hora_desde, carga_hora_hasta, descarga_fecha, descarga_notas, updated_at")
-  .is("deleted_at", null)
-  .order("numero_operacion", { ascending: false })
-  .limit(5);
-console.log(JSON.stringify(data, null, 1));
+import { obtenerAsignacionPDF } from "@/lib/asignacion-pdf.server";
+const id = "4860edc1-568d-46a6-9edd-772fdcdfe45f"; // Operación N° 9
+const a = await obtenerAsignacionPDF(id);
+console.log("1er pedido -> regenerado:", a.regenerado, a.storagePath);
+const b = await obtenerAsignacionPDF(id);
+console.log("2do pedido (cache) -> regenerado:", b.regenerado);
+const res = await fetch(a.url);
+const buf = new Uint8Array(await res.arrayBuffer());
+console.log("descarga por URL firmada:", res.status, buf.length, "bytes");
+await Bun.write("/tmp/asig/real.pdf", buf);
