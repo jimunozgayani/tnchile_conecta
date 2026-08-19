@@ -132,7 +132,7 @@ export async function listar(
         r["numero_operacion"] != null ? String(r["numero_operacion"]) : null,
       ),
     )
-    .map((r) => {
+    .map((r): AdminFila => {
       const eliminado = Boolean(r["deleted_at"]);
       if (tipo === "proveedor") {
         return {

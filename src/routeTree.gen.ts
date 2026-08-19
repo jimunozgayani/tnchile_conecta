@@ -50,6 +50,7 @@ import { Route as AppChoferesRouteImport } from './routes/_app.choferes'
 import { Route as AppChoferRouteImport } from './routes/_app.chofer'
 import { Route as AppCamionesRouteImport } from './routes/_app.camiones'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app.admin-usuarios'
+import { Route as AppAdminGestionRouteImport } from './routes/_app.admin-gestion'
 import { Route as AppAdminChoferesRouteImport } from './routes/_app.admin-choferes'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as ApiPublicAlertasVencimientoRouteImport } from './routes/api/public/alertas-vencimiento'
@@ -268,6 +269,11 @@ const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
   path: '/admin-usuarios',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminGestionRoute = AppAdminGestionRouteImport.update({
+  id: '/admin-gestion',
+  path: '/admin-gestion',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminChoferesRoute = AppAdminChoferesRouteImport.update({
   id: '/admin-choferes',
   path: '/admin-choferes',
@@ -301,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
   '/admin-choferes': typeof AppAdminChoferesRoute
+  '/admin-gestion': typeof AppAdminGestionRoute
   '/admin-usuarios': typeof AppAdminUsuariosRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRoute
   '/admin-choferes': typeof AppAdminChoferesRoute
+  '/admin-gestion': typeof AppAdminGestionRoute
   '/admin-usuarios': typeof AppAdminUsuariosRoute
   '/camiones': typeof AppCamionesRoute
   '/chofer': typeof AppChoferRoute
@@ -395,6 +403,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/admin-choferes': typeof AppAdminChoferesRoute
+  '/_app/admin-gestion': typeof AppAdminGestionRoute
   '/_app/admin-usuarios': typeof AppAdminUsuariosRoute
   '/_app/camiones': typeof AppCamionesRoute
   '/_app/chofer': typeof AppChoferRoute
@@ -443,6 +452,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin-choferes'
+    | '/admin-gestion'
     | '/admin-usuarios'
     | '/camiones'
     | '/chofer'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin-choferes'
+    | '/admin-gestion'
     | '/admin-usuarios'
     | '/camiones'
     | '/chofer'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_app/admin'
     | '/_app/admin-choferes'
+    | '/_app/admin-gestion'
     | '/_app/admin-usuarios'
     | '/_app/camiones'
     | '/_app/chofer'
@@ -877,6 +889,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsuariosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin-gestion': {
+      id: '/_app/admin-gestion'
+      path: '/admin-gestion'
+      fullPath: '/admin-gestion'
+      preLoaderRoute: typeof AppAdminGestionRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin-choferes': {
       id: '/_app/admin-choferes'
       path: '/admin-choferes'
@@ -911,6 +930,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAdminChoferesRoute: typeof AppAdminChoferesRoute
+  AppAdminGestionRoute: typeof AppAdminGestionRoute
   AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
   AppCamionesRoute: typeof AppCamionesRoute
   AppChoferRoute: typeof AppChoferRoute
@@ -946,6 +966,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAdminChoferesRoute: AppAdminChoferesRoute,
+  AppAdminGestionRoute: AppAdminGestionRoute,
   AppAdminUsuariosRoute: AppAdminUsuariosRoute,
   AppCamionesRoute: AppCamionesRoute,
   AppChoferRoute: AppChoferRoute,
