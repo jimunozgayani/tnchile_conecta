@@ -573,7 +573,17 @@ export function CotizacionDrawer({
                   <p className="mt-0.5 whitespace-pre-wrap">{f.comentarios_rechazo}</p>
                 </div>
               )}
+
+              <CobroClientePanel
+                cotizacionId={id}
+                puedeEditar={puedeTodo || (esComercial && esPropia)}
+                onCerrada={() => {
+                  onChanged({ estado: "cerrada" });
+                  void fichaQuery.refetch();
+                }}
+              />
             </section>
+
 
             {/* ABAJO — acciones */}
             <div className="flex flex-wrap gap-2 border-t pt-4 md:col-span-2">
