@@ -30,7 +30,7 @@ export function badgeProgreso(p: ProgresoInfo | null | undefined): BadgeStyle | 
     case "confirmada":
       return { label: "Chofer confirmado", className: "bg-sky-500/15 text-sky-700 dark:text-sky-300" };
     case "finalizada":
-      return { label: "Entregado", className: "bg-emerald-500/15 text-emerald-700 dark:text-sky-300".replace("text-sky-300", "text-emerald-300") };
+      return { label: "Entregado", className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" };
     case "en_operacion": {
       const v = p.estado_viaje;
       switch (v) {
