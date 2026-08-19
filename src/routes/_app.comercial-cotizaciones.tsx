@@ -701,6 +701,12 @@ function Card({ c, progreso, puedeActuar, puedeAsignar, asignables, nombres, onP
         <p className="mt-1.5 text-[10px] italic text-muted-foreground">En manos de Operaciones</p>
       )}
 
+      {badge && (
+        <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>
+          {badge.label}
+        </span>
+      )}
+
       {c.estado === "lista_para_operar" && puedeAsignar && (
         <div className="mt-2 border-t pt-2">
           <Gate3Actions
