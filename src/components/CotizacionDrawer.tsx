@@ -752,10 +752,10 @@ export function CotizacionDrawer({
                   onClick={async () => {
                     setPrepBusy(true);
                     try {
-                      await prepararFn({ data: { id: f.id } });
+                      const res = await prepararFn({ data: { id: f.id } });
                       toast.success("Cotización lista para exploración");
                       setPrep(false);
-                      onChanged?.();
+                      onChanged({ preparada_exploracion_at: res.preparada_exploracion_at });
                     } catch (err) {
                       toast.error(
                         err instanceof Error ? err.message : "No se pudo preparar la cotización",
