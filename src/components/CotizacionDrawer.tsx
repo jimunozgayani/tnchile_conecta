@@ -29,7 +29,9 @@ export const ACCIONES: Record<string, { estado: string; label: string }[]> = {
     { estado: "rechazada", label: "Rechazar" },
   ],
   aceptada: [{ estado: "lista_para_operar", label: "Sellar cierre" }],
-  cobro_pendiente: [{ estado: "cerrada", label: "Marcar como cerrada" }],
+  // El paso a 'cerrada' ya no es manual: ocurre cuando se registran el pago al
+  // proveedor y el cobro al cliente (cierre paralelo).
+
 };
 
 export const ESTADO_LABEL: Record<string, string> = {
