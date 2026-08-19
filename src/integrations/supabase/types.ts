@@ -816,6 +816,7 @@ export type Database = {
           id: string
           nota: string | null
           storage_path: string | null
+          subido_por: string | null
           tipo: Database["public"]["Enums"]["evento_viaje_tipo"]
         }
         Insert: {
@@ -826,6 +827,7 @@ export type Database = {
           id?: string
           nota?: string | null
           storage_path?: string | null
+          subido_por?: string | null
           tipo: Database["public"]["Enums"]["evento_viaje_tipo"]
         }
         Update: {
@@ -836,6 +838,7 @@ export type Database = {
           id?: string
           nota?: string | null
           storage_path?: string | null
+          subido_por?: string | null
           tipo?: Database["public"]["Enums"]["evento_viaje_tipo"]
         }
         Relationships: [
