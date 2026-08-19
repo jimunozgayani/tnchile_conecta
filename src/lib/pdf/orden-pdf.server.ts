@@ -130,11 +130,10 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   let marcaX = M;
   if (conLogo) {
     const logo = await cargarLogo(pdf);
-    const size = 44;
-    page.drawImage(logo, { x: M, y: c.y - 30, width: size, height: size });
-    marcaX = M + size + 8;
+    const size = 70;
+    page.drawImage(logo, { x: M, y: c.y - 52, width: size, height: size });
+    marcaX = M + size + 10;
   }
-  text(c, "TN CHILE", { x: marcaX, size: 20, bold: true, color: VERDE });
   text(c, d.titulo, { align: "right", size: 16, bold: true });
   c.y -= 13;
   text(c, "La logística la hacemos juntos.", { x: marcaX, size: 8, color: GRIS });
@@ -296,7 +295,7 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   c.y -= 12;
   fila(c, "Forma de pago:", pagoLabel(d.tipo_pago), M, RIGHT - M);
   fila(c, "Vigencia:", "30 días desde la fecha de emisión", M, RIGHT - M);
-  const nota = `Es obligatorio indicar el N° ${d.folio} de esta ${d.documento} en el documento tributario (factura/boleta) para poder cursar el pago. Documentos sin esta referencia serán devueltos.`;
+  const nota = `Se sugiere indicar el N° ${d.folio} de esta ${d.documento} al realizar el pago, para facilitar la conciliación.`;
   const notaLines = wrap(nota, font, 8.5, RIGHT - M - 12);
   const notaAlto = notaLines.length * 11 + 8;
   c.y -= 6;

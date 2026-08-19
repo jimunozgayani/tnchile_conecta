@@ -35,7 +35,6 @@ export function OrdenHeader({
         <View style={s.marcaBloque}>
           {conLogo ? <Image src={LOGO_URL_ABS} style={s.logo} /> : null}
           <View>
-            <Text style={s.marca}>TN CHILE</Text>
             <Text style={s.tagline}>La logística la hacemos juntos.</Text>
           </View>
         </View>
@@ -127,9 +126,8 @@ export function Condiciones({
       <Fila etiqueta="Vigencia:" valor="30 días desde la fecha de emisión" />
       <View style={s.nota}>
         <Text>
-          Es obligatorio indicar el N° de {documento} {folio} en el documento tributario
-          (factura/boleta) para poder cursar el pago. Documentos sin esta referencia serán
-          devueltos.
+          Se sugiere indicar el N° de esta {documento} {folio} al realizar el pago, para facilitar
+          la conciliación.
         </Text>
       </View>
     </View>

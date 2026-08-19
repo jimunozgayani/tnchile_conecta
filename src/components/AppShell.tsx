@@ -29,7 +29,7 @@ const NAV = [
 
 const OPERACIONES_NAV = [
   { to: "/operaciones-exploracion", label: "Exploración", icon: Search },
-  { to: "/operaciones", label: "Operaciones", icon: Briefcase },
+  { to: "/operaciones", label: "Mi Perfil", icon: Briefcase },
   { to: "/operaciones-lista", label: "Mis Operaciones", icon: Briefcase },
   { to: "/operaciones-disponibilidad", label: "Disponibilidad", icon: Truck },
 ] as const;
