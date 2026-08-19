@@ -137,13 +137,13 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   text(c, "TN CHILE", { x: marcaX, size: 20, bold: true, color: VERDE });
   text(c, d.titulo, { align: "right", size: 16, bold: true });
   c.y -= 13;
-  text(c, "La logistica la hacemos juntos.", { x: marcaX, size: 8, color: GRIS });
-  text(c, `N ${d.folio}`, { align: "right", size: 8, color: GRIS });
+  text(c, "La logística la hacemos juntos.", { x: marcaX, size: 8, color: GRIS });
+  text(c, `N° ${d.folio}`, { align: "right", size: 8, color: GRIS });
   c.y -= 11;
   text(c, `Fecha: ${fmtFechaLarga(d.fecha)}`, { align: "right", size: 8, color: GRIS });
   c.y -= 11;
   if (d.numero_operacion != null) {
-    text(c, `Operacion N ${d.numero_operacion}`, { align: "right", size: 8, color: GRIS });
+    text(c, `Operación N° ${d.numero_operacion}`, { align: "right", size: 8, color: GRIS });
     c.y -= 11;
   }
   c.y -= 6;
@@ -162,10 +162,10 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   text(c, "DE", { size: 9, bold: true, color: VERDE });
   c.y -= 12;
   const emisor: [string, string][] = [
-    ["Razon social:", EMPRESA.razon_social],
+    ["Razón social:", EMPRESA.razon_social],
     ["RUT:", EMPRESA.rut],
     ["Giro:", EMPRESA.giro],
-    ["Direccion:", EMPRESA.direccion],
+    ["Dirección:", EMPRESA.direccion],
     ["Email:", EMPRESA.email],
   ];
   for (const [k, v] of emisor) fila(c, k, v, M, colW);
@@ -217,7 +217,7 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   c.y -= 10;
   const tablaTop = c.y + 10;
   const cols = [
-    { label: "Descripcion", w: 0.5, align: "left" as const },
+    { label: "Descripción", w: 0.5, align: "left" as const },
     { label: "Cant.", w: 0.1, align: "right" as const },
     { label: "Precio unitario", w: 0.2, align: "right" as const },
     { label: "Total neto", w: 0.2, align: "right" as const },
@@ -295,8 +295,8 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   text(c, "CONDICIONES", { size: 9, bold: true, color: VERDE });
   c.y -= 12;
   fila(c, "Forma de pago:", pagoLabel(d.tipo_pago), M, RIGHT - M);
-  fila(c, "Vigencia:", "30 dias desde la fecha de emision", M, RIGHT - M);
-  const nota = `Es obligatorio indicar el N ${d.folio} de esta ${d.documento} en el documento tributario (factura/boleta) para poder cursar el pago. Documentos sin esta referencia seran devueltos.`;
+  fila(c, "Vigencia:", "30 días desde la fecha de emisión", M, RIGHT - M);
+  const nota = `Es obligatorio indicar el N° ${d.folio} de esta ${d.documento} en el documento tributario (factura/boleta) para poder cursar el pago. Documentos sin esta referencia serán devueltos.`;
   const notaLines = wrap(nota, font, 8.5, RIGHT - M - 12);
   const notaAlto = notaLines.length * 11 + 8;
   c.y -= 6;
@@ -315,14 +315,14 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
 
   // ---- Datos de facturación
   c.y -= 12;
-  text(c, "DATOS DE FACTURACION", { size: 9, bold: true, color: VERDE });
+  text(c, "DATOS DE FACTURACIÓN", { size: 9, bold: true, color: VERDE });
   c.y -= 12;
   const yFact = c.y;
   for (const [k, v] of [
-    ["Razon social:", EMPRESA.razon_social],
+    ["Razón social:", EMPRESA.razon_social],
     ["RUT:", EMPRESA.rut],
     ["Giro:", EMPRESA.giro],
-    ["Direccion:", EMPRESA.direccion],
+    ["Dirección:", EMPRESA.direccion],
   ] as [string, string][])
     fila(c, k, v, M, colW);
   const yFactIzq = c.y;
@@ -330,7 +330,7 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
   for (const [k, v] of [
     ["Banco:", EMPRESA.banco],
     ["Tipo cuenta:", EMPRESA.tipo_cuenta],
-    ["N cuenta:", EMPRESA.numero_cuenta],
+    ["N° cuenta:", EMPRESA.numero_cuenta],
     ["Email:", EMPRESA.email],
   ] as [string, string][])
     fila(c, k, v, colRightX, colW);
@@ -343,7 +343,7 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
     thickness: 1,
     color: BORDE,
   });
-  const pie = `${d.titulo.charAt(0)}${d.titulo.slice(1).toLowerCase()} emitida por ${EMPRESA.razon_social} (TN Chile). No constituye factura ni boleta electronica.`;
+  const pie = `${d.titulo.charAt(0)}${d.titulo.slice(1).toLowerCase()} emitida por ${EMPRESA.razon_social} (TN Chile). No constituye factura ni boleta electrónica.`;
   const pieS = sane(pie);
   page.drawText(pieS, {
     x: (A4.w - font.widthOfTextAtSize(pieS, 7.5)) / 2,
@@ -352,7 +352,7 @@ async function renderOrden(d: OrdenComun, conLogo: boolean): Promise<Uint8Array>
     font,
     color: GRIS,
   });
-  const pag = "Pagina 1 de 1";
+  const pag = "Página 1 de 1";
   page.drawText(pag, {
     x: (A4.w - font.widthOfTextAtSize(pag, 7.5)) / 2,
     y: 24,
@@ -379,9 +379,9 @@ export function renderOrdenCompra(d: OrdenCompraData, conLogo: boolean): Promise
       contraparte: [
         ["Nombre:", d.proveedor_nombre ?? "No especificado"],
         ["RUT:", d.proveedor_rut ?? "No especificado"],
-        ["Direccion:", d.proveedor_direccion ?? "No especificada"],
+        ["Dirección:", d.proveedor_direccion ?? "No especificada"],
         ["Email:", d.proveedor_email ?? "No especificado"],
-        ["Telefono:", d.proveedor_telefono ?? "No especificado"],
+        ["Teléfono:", d.proveedor_telefono ?? "No especificado"],
         ["Forma pago:", pagoLabel(d.tipo_pago)],
       ],
       folio: d.folio,
@@ -410,7 +410,7 @@ export function renderOrdenVenta(d: OrdenVentaData, conLogo: boolean): Promise<U
         ["Empresa:", d.cliente_empresa ?? "No especificada"],
         ["RUT:", d.cliente_rut ?? "No especificado"],
         ["Email:", d.cliente_email ?? "No especificado"],
-        ["Telefono:", d.cliente_telefono ?? "No especificado"],
+        ["Teléfono:", d.cliente_telefono ?? "No especificado"],
         ["Forma pago:", pagoLabel(d.tipo_pago)],
       ],
       folio: d.folio,
