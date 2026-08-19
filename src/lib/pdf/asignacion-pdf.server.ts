@@ -102,7 +102,7 @@ function fila(c: Ctx, etiqueta: string, valor: string, x: number, colWidth: numb
 }
 
 function seccion(c: Ctx, titulo: string) {
-  c.y -= 6;
+  c.y -= 10;
   text(c, titulo, { size: 9, bold: true, color: VERDE });
   c.y -= 13;
 }
@@ -197,6 +197,7 @@ export async function renderAsignacion(d: AsignacionData, conLogo: boolean): Pro
     ...(d.patente_secundaria ? [`Patente rampla/carro: ${d.patente_secundaria}`] : []),
   ];
   seccion(c, "CHOFER Y VEHÍCULO ASIGNADO");
+  c.y -= 2;
   const altoChofer = 8 + choferLineas.length * 12;
   page.drawRectangle({
     x: M,
@@ -236,6 +237,7 @@ export async function renderAsignacion(d: AsignacionData, conLogo: boolean): Pro
   // ---- Notas de descarga
   if (d.descarga_notas && d.descarga_notas.trim()) {
     seccion(c, "NOTAS DE DESCARGA");
+    c.y -= 2;
     const lineas = wrap(d.descarga_notas.trim(), font, 8.5, colW - 16);
     const alto = lineas.length * 11 + 10;
     page.drawRectangle({

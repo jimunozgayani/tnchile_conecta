@@ -25,6 +25,6 @@ const buf = await renderAsignacion({
   descarga_hora_desde: "07:00:00",
   descarga_hora_hasta: "09:30:00",
   descarga_notas: "Ingreso solo con credencial vigente y chaleco reflectante. Coordinar con portería 30 minutos antes; la descarga se realiza con grúa del cliente y no se permite maniobra propia dentro de la faena.",
-}, false);
+}, true);
 writeFileSync("/tmp/asig/asignacion.pdf", buf);
 console.log("bytes", buf.length);
