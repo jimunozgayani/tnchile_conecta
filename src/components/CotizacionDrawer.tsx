@@ -526,9 +526,16 @@ export function CotizacionDrawer({
             {/* DERECHA — gestión comercial */}
             <section className="space-y-3 text-sm">
               <div className="flex items-start justify-between gap-2">
-                <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">
-                  {ESTADO_LABEL[f.estado] ?? f.estado}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">
+                    {ESTADO_LABEL[f.estado] ?? f.estado}
+                  </span>
+                  {detalle && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:text-sky-300">
+                      {detalle}
+                    </span>
+                  )}
+                </div>
                 {puedeTodo && (
                   <button
                     type="button"
