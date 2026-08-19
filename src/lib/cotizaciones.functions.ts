@@ -536,3 +536,86 @@ export const actualizarCotizacionCompleta = createServerFn({ method: "POST" })
 
     return { ok: true, campos: Object.keys(campos) };
   });
+
+// ─────────────────────────────────────────────────────────────
+// Gate: preparar para exploración
+// ─────────────────────────────────────────────────────────────
+
+export const prepararParaExploracion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await rolesDe(supabase as never, userId);
+    if (!COMERCIALISH.some((r) => roles.includes(r))) throw new Error("Sin permisos.");
+
+    const { data: actual, error: rErr } = await supabase
+      .from("cotizaciones")
+      .select("id, estado, asignado_a, origen, destinos, tipo_camion, tipo_camion_id, tipo_camion_otro, peso_kg")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (rErr) throw new Error(rErr.message);
+    if (!actual) throw new Error("Cotización no encontrada.");
+
+    const row = actual as {
+      estado: string;
+      asignado_a: string | null;
+      origen: string | null;
+      destinos: unknown;
+      tipo_camion: string | null;
+      tipo_camion_id: string | null;
+      tipo_camion_otro: string | null;
+      peso_kg: number | null;
+    };
+
+    const esAdminish = ADMINISH.some((r) => roles.includes(r));
+    if (!esAdminish && row.asignado_a !== userId) {
+      throw new Error("Solo puedes preparar cargas asignadas a ti.");
+    }
+
+    const primerDestino = Array.isArray(row.destinos)
+      ? (row.destinos as unknown[])
+          .map((d) =>
+            typeof d === "string"
+              ? d
+              : typeof (d as { ciudad?: string } | null)?.ciudad === "string"
+                ? (d as { ciudad: string }).ciudad
+                : "",
+          )
+          .find((s) => s.trim().length > 0)
+      : null;
+
+    const faltantes: string[] = [];
+    if (!row.origen?.trim()) faltantes.push("Origen");
+    if (!primerDestino) faltantes.push("Destino");
+    if (!row.tipo_camion_id && !row.tipo_camion_otro?.trim() && !row.tipo_camion?.trim()) {
+      faltantes.push("Tipo de camión");
+    }
+    if (!row.peso_kg || row.peso_kg <= 0) faltantes.push("Peso");
+    if (faltantes.length > 0) {
+      throw new Error(`Falta completar: ${faltantes.join(", ")}.`);
+    }
+
+    const ahora = new Date().toISOString();
+    const { error } = await supabase
+      .from("cotizaciones")
+      .update({
+        preparada_exploracion_at: ahora,
+        preparada_exploracion_por: userId,
+        updated_at: ahora,
+      } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: aErr } = await supabaseAdmin.from("audit_log").insert({
+      tabla_nombre: "cotizaciones",
+      registro_id: data.id,
+      accion: "preparada_para_exploracion",
+      datos_nuevos: { estado: row.estado, preparada_exploracion_at: ahora },
+      usuario_id: userId,
+    } as never);
+    if (aErr) console.error("audit_log insert failed", aErr.message);
+
+    return { ok: true, preparada_exploracion_at: ahora };
+  });
