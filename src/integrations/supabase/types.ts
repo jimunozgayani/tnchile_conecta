@@ -1060,6 +1060,7 @@ export type Database = {
           chofer_id: string | null
           chofer_nombre_libre: string | null
           chofer_rut_libre: string | null
+          comprobantes_pago_proveedor: Json
           contacto_id: string | null
           cotizacion_id: string | null
           creado_por: string | null
@@ -1112,6 +1113,7 @@ export type Database = {
           chofer_id?: string | null
           chofer_nombre_libre?: string | null
           chofer_rut_libre?: string | null
+          comprobantes_pago_proveedor?: Json
           contacto_id?: string | null
           cotizacion_id?: string | null
           creado_por?: string | null
@@ -1164,6 +1166,7 @@ export type Database = {
           chofer_id?: string | null
           chofer_nombre_libre?: string | null
           chofer_rut_libre?: string | null
+          comprobantes_pago_proveedor?: Json
           contacto_id?: string | null
           cotizacion_id?: string | null
           creado_por?: string | null

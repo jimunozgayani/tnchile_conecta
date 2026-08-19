@@ -2,13 +2,143 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, Download, Loader2, Paperclip } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getSignedUrl } from "@/lib/signed-url";
+import { ALLOWED_UPLOAD_ACCEPT, validateUpload } from "@/lib/upload-validation";
 import {
+  listarComprobantesPagoProveedor,
   obtenerEstadoPagos,
   registrarCobroCliente,
+  registrarComprobantePagoProveedor,
   registrarPagoProveedor,
+  type ComprobantePago,
   type EstadoPagos,
 } from "@/lib/pagos-cierre.functions";
+
+const BUCKET_COMPROBANTES = "documentos-operacion";
+
+const fmtFechaHora = (s: string | null | undefined) => {
+  if (!s) return "—";
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? s : d.toLocaleString("es-CL");
+};
+
+/** Comprobantes de pago al proveedor: suben admin/jefe_operaciones, descarga todo el staff. */
+export function ComprobantesPagoProveedor({
+  operacionId,
+  puedeSubir,
+}: {
+  operacionId: string;
+  puedeSubir: boolean;
+}) {
+  const qc = useQueryClient();
+  const listar = useServerFn(listarComprobantesPagoProveedor);
+  const registrar = useServerFn(registrarComprobantePagoProveedor);
+  const [subiendo, setSubiendo] = useState(false);
+
+  const { data: comprobantes, isLoading } = useQuery({
+    queryKey: ["comprobantes-pago", operacionId],
+    queryFn: () => listar({ data: { operacion_id: operacionId } }),
+  });
+
+  const descargar = async (c: ComprobantePago) => {
+    const url = await getSignedUrl(BUCKET_COMPROBANTES, c.path);
+    if (!url) {
+      toast.error("No se pudo generar el enlace de descarga");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const onFile = async (file: File | null | undefined) => {
+    if (!file) return;
+    const check = validateUpload(file);
+    if (!check.ok) {
+      toast.error(check.error);
+      return;
+    }
+    setSubiendo(true);
+    try {
+      const limpio = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `comprobantes/${operacionId}/${Date.now()}-${limpio}`;
+      const { error } = await supabase.storage
+        .from(BUCKET_COMPROBANTES)
+        .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      if (error) throw new Error(error.message);
+      await registrar({ data: { operacion_id: operacionId, path, nombre_archivo: file.name } });
+      toast.success("Comprobante adjuntado");
+      void qc.invalidateQueries({ queryKey: ["comprobantes-pago", operacionId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo subir el comprobante");
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3 rounded-md border p-3">
+      <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <Paperclip className="h-3.5 w-3.5" aria-hidden="true" /> Comprobantes de pago
+      </h3>
+
+      {puedeSubir && (
+        <label className="block">
+          <span className="mb-1 block text-xs text-muted-foreground">
+            Adjuntar comprobante (PDF, JPG o PNG, máx. 10 MB)
+          </span>
+          <input
+            type="file"
+            accept={ALLOWED_UPLOAD_ACCEPT}
+            disabled={subiendo}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              void onFile(f);
+            }}
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-70"
+          />
+        </label>
+      )}
+
+      {subiendo && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> Subiendo archivo…
+        </p>
+      )}
+
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">Cargando comprobantes…</p>
+      ) : (comprobantes ?? []).length === 0 ? (
+        <p className="text-xs text-muted-foreground">Aún no hay comprobantes adjuntos.</p>
+      ) : (
+        <ul className="space-y-2">
+          {(comprobantes ?? []).map((c) => (
+            <li
+              key={c.path}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs"
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{c.nombre_archivo}</span>
+                <span className="text-muted-foreground">
+                  {fmtFechaHora(c.subido_at)}
+                  {c.subido_por_nombre ? ` · ${c.subido_por_nombre}` : ""}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => void descargar(c)}
+                className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 font-semibold hover:bg-muted"
+              >
+                <Download className="h-3.5 w-3.5" aria-hidden="true" /> Descargar
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const clp = (v: number | null | undefined) =>
   v == null ? "—" : `$${Math.round(v).toLocaleString("es-CL")}`;
@@ -65,10 +195,12 @@ export function PagoProveedorPanel({
   operacionId,
   puedeEditar,
   visible,
+  puedeSubirComprobante = false,
 }: {
   operacionId: string;
   puedeEditar: boolean;
   visible: boolean;
+  puedeSubirComprobante?: boolean;
 }) {
   const qc = useQueryClient();
   const { data: pagos, isLoading } = useEstadoPagos({ operacion_id: operacionId });
@@ -196,6 +328,11 @@ export function PagoProveedorPanel({
               {pagos?.fecha_pago_proveedor ? "Actualizar pago a proveedor" : "Registrar pago a proveedor"}
             </button>
           )}
+
+          <ComprobantesPagoProveedor
+            operacionId={operacionId}
+            puedeSubir={puedeSubirComprobante}
+          />
         </>
       )}
     </section>
