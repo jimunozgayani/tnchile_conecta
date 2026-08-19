@@ -238,6 +238,8 @@ export function CotizacionDrawer({
   const [pdfBusy, setPdfBusy] = useState(false);
   const [comentarioPara, setComentarioPara] = useState<"en_revision" | "rechazada" | null>(null);
   const [prep, setPrep] = useState(false);
+  const [prepBusy, setPrepBusy] = useState(false);
+  const prepararFn = useServerFn(prepararParaExploracion);
   const [editando, setEditando] = useState(false);
   const [editandoHorario, setEditandoHorario] = useState(false);
 
