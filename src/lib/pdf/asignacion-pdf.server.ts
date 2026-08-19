@@ -192,7 +192,7 @@ export async function renderAsignacion(d: AsignacionData, conLogo: boolean): Pro
   // ---- Chofer asignado (bloque destacado)
   const choferLineas = [
     `Chofer: ${d.chofer_nombre ?? "Por confirmar"}${d.chofer_rut ? `   RUT: ${d.chofer_rut}` : ""}`,
-    ...(d.chofer_celular ? [`Teléfono de contacto: ${d.chofer_celular}`] : []),
+    // El teléfono del chofer no se incluye en la asignación (documento compartible con el cliente).
     `Patente tracto/camión: ${d.patente_principal ?? "Por confirmar"}`,
     ...(d.patente_secundaria ? [`Patente rampla/carro: ${d.patente_secundaria}`] : []),
   ];
