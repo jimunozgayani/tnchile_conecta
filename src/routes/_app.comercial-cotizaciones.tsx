@@ -219,6 +219,7 @@ export default function ComercialCotizacionesPage() {
         .select(
           "id, estado, contacto_nombre, origen, destinos, tipo_camion, fecha_despacho, precio_ofrecido_cliente_clp, costo_proveedor_fijado_clp, exploracion_limite_at, created_at, revision_count, comentarios_revision, asignado_a",
         )
+        .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(500);
       if (soloPropias) query = query.eq("asignado_a", uid);
