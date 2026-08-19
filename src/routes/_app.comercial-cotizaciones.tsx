@@ -470,6 +470,7 @@ export default function ComercialCotizacionesPage() {
 
 type CardProps = {
   c: Cotizacion;
+  progreso: Record<string, ProgresoInfo>;
   puedeActuar: boolean;
   puedeAsignar: boolean;
   asignables: Asignable[];
