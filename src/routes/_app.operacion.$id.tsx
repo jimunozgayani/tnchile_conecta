@@ -219,6 +219,11 @@ function FichaOperacion() {
               roles.includes(r),
             )}
           />
+          <DescargarAsignacion
+            operacionId={id}
+            visible={["admin", "jefe_operaciones", "operador"].some((r) => roles.includes(r))}
+          />
+
           <Link to="/operaciones" className="text-sm text-primary hover:underline">
             ← Operaciones
           </Link>
