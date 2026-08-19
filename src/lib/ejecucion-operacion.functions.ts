@@ -2,32 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rolesDe } from "@/lib/cotizaciones-transiciones";
+import { ESTADOS_VIAJE, tipoFotoPara } from "@/lib/ejecucion-viaje";
 
 const OPS = ["admin", "jefe_operaciones", "operador"];
-
-export const ESTADOS_VIAJE = ["por_iniciar", "cargando", "en_ruta", "descargando", "entregado"] as const;
-
-export const SIGUIENTE_VIAJE: Record<string, { estado: string; label: string }> = {
-  por_iniciar: { estado: "cargando", label: "Empezar a cargar" },
-  cargando: { estado: "en_ruta", label: "Salir a ruta" },
-  en_ruta: { estado: "descargando", label: "Llegué, empezar a descargar" },
-  descargando: { estado: "entregado", label: "Marcar como entregado" },
-};
-
-export const ESTADO_VIAJE_LABEL: Record<string, string> = {
-  por_iniciar: "Por iniciar",
-  cargando: "Cargando",
-  en_ruta: "En ruta",
-  descargando: "Descargando",
-  entregado: "Entregado",
-};
-
-/** tipo de evento según el estado al que se avanza (igual que en /mis-viajes) */
-export function tipoFotoPara(estado: string): "foto_carga" | "foto_descarga" | null {
-  if (estado === "cargando") return "foto_carga";
-  if (estado === "descargando") return "foto_descarga";
-  return null;
-}
 
 export type EventoViajeItem = {
   id: string;
@@ -98,7 +75,7 @@ export const obtenerEjecucion = createServerFn({ method: "POST" })
       driver?.["id"]
         ? supabaseAdmin
             .from("disponibilidad_chofer")
-            .select("fecha_desde, lugar_texto, ciudades_chile!disponibilidad_chofer_lugar_ciudad_id_fkey(nombre)")
+            .select("fecha_desde, lugar_texto, lugar_ciudad_id")
             .eq("driver_id", driver["id"])
             .order("fecha_desde", { ascending: false })
             .limit(1)
@@ -124,6 +101,15 @@ export const obtenerEjecucion = createServerFn({ method: "POST" })
 
     const driverUserId = driver?.["user_id"] ?? null;
     const disp = ((dispRes as any).data ?? [])[0] as Record<string, any> | undefined;
+    let ciudadNombre: string | null = null;
+    if (disp?.["lugar_ciudad_id"]) {
+      const { data: ciudad } = await supabaseAdmin
+        .from("ciudades_chile")
+        .select("nombre")
+        .eq("id", disp["lugar_ciudad_id"])
+        .maybeSingle();
+      ciudadNombre = (ciudad as Record<string, any> | null)?.["nombre"] ?? null;
+    }
 
     return {
       asignacion_id: asignacionId,
@@ -147,7 +133,7 @@ export const obtenerEjecucion = createServerFn({ method: "POST" })
       }),
       ultima_ubicacion: disp
         ? {
-            lugar: disp["ciudades_chile"]?.nombre ?? disp["lugar_texto"] ?? "Sin ubicación declarada",
+            lugar: ciudadNombre ?? disp["lugar_texto"] ?? "Sin ubicación declarada",
             fecha: disp["fecha_desde"],
           }
         : null,
