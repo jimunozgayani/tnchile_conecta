@@ -710,7 +710,7 @@ function Card({ c, progreso, puedeActuar, puedeAsignar, asignables, nombres, onP
         </span>
       )}
 
-      {c.estado === "lista_para_operar" && puedeAsignar && (
+      {c.estado === "lista_para_operar" && puedeAsignar && !opAvanzando && (
         <div className="mt-2 border-t pt-2">
           <Gate3Actions
             id={c.id}
