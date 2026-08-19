@@ -25,6 +25,7 @@ import {
   actualizarCotizacion,
   actualizarEstadoCotizacion,
   asignarCotizacion,
+  prepararParaExploracion,
   type Asignable,
 } from "@/lib/cotizaciones.functions";
 
@@ -747,14 +748,25 @@ export function CotizacionDrawer({
                 </button>
                 <button
                   type="button"
-                  disabled={faltantes.length > 0}
-                  onClick={() => {
-                    toast.success("Cotización lista para exploración");
-                    setPrep(false);
+                  disabled={faltantes.length > 0 || prepBusy}
+                  onClick={async () => {
+                    setPrepBusy(true);
+                    try {
+                      await prepararFn({ data: { id: f.id } });
+                      toast.success("Cotización lista para exploración");
+                      setPrep(false);
+                      onChanged?.();
+                    } catch (err) {
+                      toast.error(
+                        err instanceof Error ? err.message : "No se pudo preparar la cotización",
+                      );
+                    } finally {
+                      setPrepBusy(false);
+                    }
                   }}
                   className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
                 >
-                  Confirmar
+                  {prepBusy ? "Guardando…" : "Confirmar"}
                 </button>
               </div>
             </div>
