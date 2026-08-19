@@ -20,7 +20,7 @@ export type AdminFila = {
   subtitulo: string | null;
   detalle: string | null;
   eliminado: boolean;
-  extra: Record<string, unknown>;
+  extra: Record<string, string | number | boolean | null>;
 };
 
 export const ENTIDAD_LABEL: Record<AdminEntidad, string> = {
@@ -83,7 +83,7 @@ export async function listar(
         subtitulo: (rolesByUser.get(u.id) ?? []).join(", ") || "sin roles",
         detalle: u.last_sign_in_at ? `Último ingreso: ${u.last_sign_in_at}` : "Nunca ingresó",
         eliminado: false,
-        extra: { roles: rolesByUser.get(u.id) ?? [] },
+        extra: { roles: (rolesByUser.get(u.id) ?? []).join(",") },
       }))
       .sort((a, b) => a.titulo.localeCompare(b.titulo));
   }
