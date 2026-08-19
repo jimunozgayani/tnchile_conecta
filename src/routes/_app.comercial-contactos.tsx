@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { AdminAcciones } from "@/components/AdminAcciones";
 import { pageHead } from "@/lib/page-head";
 import { supabase } from "@/integrations/supabase/client";
 import { createContacto } from "@/lib/contactos.functions";
@@ -216,6 +217,13 @@ function ComercialContactosPage() {
               >
                 Ver detalle
               </button>
+              <AdminAcciones
+                tipo="cliente"
+                id={c.id}
+                nombre={c.nombre}
+                esAdmin={roles.includes("admin")}
+                onDone={() => void listQuery.refetch()}
+              />
             </article>
           ))}
         </div>
