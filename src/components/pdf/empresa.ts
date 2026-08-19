@@ -1,5 +1,6 @@
 /** Datos legales de la empresa y estilos compartidos por los PDF de OC/OV. */
 import { StyleSheet } from "@react-pdf/renderer";
+import { VERDE, VERDE_SUAVE, GRIS } from "./empresa-datos";
 
 export {
   EMPRESA,
