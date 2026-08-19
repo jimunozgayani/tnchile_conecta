@@ -163,7 +163,7 @@ export async function renderAsignacion(d: AsignacionData, conLogo: boolean): Pro
   text(c, `Fecha de emisión: ${fmtFechaLarga(d.fecha)}`, { align: "right", size: 8, color: GRIS });
   c.y -= 11;
   text(c, EMPRESA.razon_social, { x: marcaX, size: 8, color: GRIS });
-  c.y -= 8;
+  c.y -= 14;
   page.drawLine({ start: { x: M, y: c.y }, end: { x: RIGHT, y: c.y }, thickness: 2, color: VERDE });
   c.y -= 18;
 
