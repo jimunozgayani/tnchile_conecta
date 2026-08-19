@@ -330,6 +330,7 @@ export type Database = {
           contacto_telefono: string | null
           costo_proveedor_fijado_clp: number | null
           created_at: string
+          deleted_at: string | null
           descarga_fecha: string | null
           descarga_hora_desde: string | null
           descarga_hora_hasta: string | null
@@ -384,6 +385,7 @@ export type Database = {
           contacto_telefono?: string | null
           costo_proveedor_fijado_clp?: number | null
           created_at?: string
+          deleted_at?: string | null
           descarga_fecha?: string | null
           descarga_hora_desde?: string | null
           descarga_hora_hasta?: string | null
@@ -438,6 +440,7 @@ export type Database = {
           contacto_telefono?: string | null
           costo_proveedor_fijado_clp?: number | null
           created_at?: string
+          deleted_at?: string | null
           descarga_fecha?: string | null
           descarga_hora_desde?: string | null
           descarga_hora_hasta?: string | null
